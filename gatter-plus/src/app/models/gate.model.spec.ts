@@ -24,13 +24,13 @@ describe('getOutputPinMaxConnections', () => {
     'input', 'output', 'clock-gen', 'text-label',
   ];
 
-  it('gibt 1 für alle Basistypen zurück (kein Fan-out)', () => {
+  it('erlaubt Fan-out für alle Basistypen (beliebig viele Leitungen je Ausgang)', () => {
     for (const type of basicTypes) {
-      expect(getOutputPinMaxConnections(type)).toBe(1);
+      expect(getOutputPinMaxConnections(type)).toBe(Infinity);
     }
   });
 
-  it('gibt eine positive ganze Zahl zurück', () => {
+  it('gibt eine positive Zahl zurück', () => {
     for (const type of basicTypes) {
       expect(getOutputPinMaxConnections(type)).toBeGreaterThan(0);
     }

@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1–5.5a)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -149,8 +149,8 @@ Beispiel Menüeintrag (analog Undo):
 ## Verbindungsregeln und Simulation
 
 **Verbindungen** (`Whiteboard.handleWireClick`, nur im Werkzeug `wire`; Klick-Klick, kein Ziehen):
-- Start: Ausgangs-Pin mit `canStartWireFromOutput` (Anzahl < `getOutputPinMaxConnections(type)` = **1** für alle Typen) **oder** Klick auf beliebige Stelle einer bestehenden Leitung → Abzweig (`branchPoint`, elektrisch gleiche Quelle; **umgeht das Limit** = Fan-out-Weg). Stub direkt am Ausgang (20 px) ist für Abzweige gesperrt.
-- Ende: nur Eingangs-Pin eines **anderen** Bauteils, Eingang darf **nicht belegt** sein (max. 1 Leitung pro Eingang). Sonst Abbruch ohne Leitung. Escape bricht ab.
+- Start (Phase 6A): Ausgangs-Pin – auch belegt (**Fan-out**, `getOutputPinMaxConnections` = `Infinity`, Verbindungspunkt am Pin) – **oder** Klick auf beliebige Stelle einer Leitung → Abzweig (`branchPoint`, elektrisch gleiche Quelle); Klick auf den Ausgangs-Stummel (20 px) startet am Ausgang selbst. **Oder umgekehrt:** Start an freiem Eingang (`WireDrawingState.reverse`), Ende an Ausgang oder auf einer Leitung (Abzweig, Richtung zum Ziel). Anlegen zentral in `addWire()`. Hover-Hervorhebung `hoverWireId` im Leitungs-Modus.
+- Ende (normal gezogen): nur Eingangs-Pin eines **anderen** Bauteils, Eingang darf **nicht belegt** sein (max. 1 Leitung pro Eingang). Sonst Abbruch ohne Leitung. Escape bricht ab.
 - Routing orthogonal: `computeOrthogonalWaypoints` (Z-Form, U-Kurve, gemischte Rotationen).
 - Negation: Im Pan-Modus (nicht Simulation) Klick auf Ausgangs-Stub → `toggleNegation` (`negatedOutputs`).
 - Löschen eines Bauteils entfernt alle anhängenden Leitungen.
@@ -180,7 +180,7 @@ Alle Befehle in `gatter-plus/`:
 | Deploy (Standard) | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 | Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
 
-- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out-Limit, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
+- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
 - **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (5 Spec-Dateien). `ng test` noch nicht ausgeführt.
 - Formatierung: Prettier (`printWidth 100`, `singleQuote`), `.editorconfig` 2 Leerzeichen.
 
@@ -199,7 +199,7 @@ Alle Befehle in `gatter-plus/`:
 - **Whiteboard ist God-Component** (1312 Zeilen): State, Eingabe, Routing-Updates, Takte, Clipboard in einer Klasse.
 - **`wire.points` wird beim Rendern ignoriert:** `getWireDisplayPoints` berechnet den Verlauf immer neu; `points` ist nur gespeichert/redundant.
 - **`inputCount` verringern** entfernt Leitungen an weggefallenen Pins nicht (Simulation überspringt sie, Rendering fällt auf `gate.x/y` zurück).
-- **Fan-out-Regel inkonsistent:** Limit 1 pro Ausgang, aber Abzweige erlauben beliebig viele Ziele. Tests prüfen Limit = 1.
+- **Leitungen überlagern sich:** Routing je Leitung isoliert (`computeOrthogonalWaypoints`), gleiche Verläufe liegen übereinander → Phase 6 B (Knickpunkte) / C (Routing).
 - **Mutation in `computeSignals`** (`ffState`, `ffPrevClock`) widerspricht dem Immutable-Pattern; Objekte werden nicht ersetzt.
 - **`app.spec.ts`** ist das CLI-Template (erwartet `<h1>Hello, gatter-plus`) → schlägt bei `ng test` vermutlich fehl, falls `ng test` `vitest.config.ts` nicht nutzt (**unsicher, nicht verifiziert**).
 - Tooltip „Simulation starten (F5)“ – **kein F5-Handler** implementiert.

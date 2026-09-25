@@ -186,6 +186,7 @@
           [class.wire-high]="simulationMode && isWireHigh(wire)"
           [class.wire-low]="simulationMode && !isWireHigh(wire)"
           [class.wire-selected]="wire.id === selectedWireId"
+          [class.wire-hover]="wire.id === hoverWireId"
           (click)="onWireClick(wire, $event)"
         />
       }

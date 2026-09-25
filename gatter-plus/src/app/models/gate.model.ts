@@ -399,14 +399,15 @@ export function createGateInstance(
 /**
  * Gibt an, wie viele Leitungen von einem Ausgangs-Pin abgehen dürfen.
  *
- * Standardmäßig ist Fan-out (1 Ausgang → mehrere Eingänge) für alle Bausteine
- * deaktiviert (Rückgabewert 1), da dies in einem Lern-Simulator übersichtlicher
- * ist. Um Fan-out für einen bestimmten Typ zu erlauben, kann der Wert auf
- * `Infinity` gesetzt werden.
+ * Fan-out (1 Ausgang → mehrere Eingänge) ist für alle Bausteine erlaubt
+ * (Phase 6): Ein Klick auf einen belegten Ausgang startet eine weitere
+ * Leitung, der Verbindungspunkt am Pin zeigt die Verzweigung. Früher war der
+ * Wert 1 (Abzweig nur über Klick auf eine bestehende Leitung) — das war beim
+ * Aufbau von Schaltungen wie in LogikSim (eine Signalleitung → viele Gatter)
+ * zu umständlich. Pro Typ lässt sich hier wieder ein Limit setzen.
  */
 export function getOutputPinMaxConnections(_gateType: GateType): number {
-  // Für alle Typen: maximal 1 Verbindung pro Ausgangs-Pin (kein Fan-out)
-  return 1;
+  return Infinity;
 }
 
 /**

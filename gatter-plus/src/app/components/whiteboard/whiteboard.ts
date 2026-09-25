@@ -48,6 +48,13 @@ interface WireDrawingState {
    * (x1,y1) ist in diesem Fall bereits der Abzweigpunkt, nicht der Pin.
    */
   branchPoint?: { x: number; y: number };
+  /**
+   * Gesetzt, wenn die Leitung umgekehrt gezogen wird: Start an einem freien
+   * EINGANG (gateId/pinIndex), Ende an einem Ausgang oder auf einer Leitung.
+   * (x1,y1)/fromDir beschreiben dann den Eingangs-Pin (nur für die Vorschau);
+   * fromGateId/fromPinIndex sind bis zum Abschluss leer ('' / -1).
+   */
+  reverse?: { gateId: string; pinIndex: number };
 }
 
 /** Zustand während des Verschiebens eines oder mehrerer Bauteile */
@@ -129,6 +136,8 @@ export class Whiteboard implements OnDestroy {
   wireDrawing: WireDrawingState | null = null;
   tentativeX = 0;
   tentativeY = 0;
+  /** Leitung unter der Maus im Leitungs-Modus (Hervorhebung), sonst null. */
+  hoverWireId: string | null = null;
 
   // ─── Gatter verschieben ────────────────────────────────────────────────────
   private gateDragState:   GateDragState | null = null;
@@ -452,6 +461,7 @@ export class Whiteboard implements OnDestroy {
   setToolMode(mode: ToolMode): void {
     this.toolMode   = mode;
     this.wireDrawing = null;
+    this.hoverWireId = null;
   }
 
   /** Schaltet den Simulations-Modus um */
@@ -871,6 +881,12 @@ export class Whiteboard implements OnDestroy {
       this.tentativeX = lx;
       this.tentativeY = ly;
     }
+
+    // Leitungs-Modus: Leitung unter der Maus hervorheben (zeigt, wovon abgezweigt wird)
+    if (this.toolMode === 'wire') {
+      const { lx, ly } = this.toLogical(event);
+      this.hoverWireId = this.findNearestPin(lx, ly) ? null : (this.findWireHitAt(lx, ly)?.wire.id ?? null);
+    }
   }
 
   @HostListener('document:mouseup', ['$event'])
@@ -944,29 +960,41 @@ export class Whiteboard implements OnDestroy {
     const near = this.findNearestPin(lx, ly);
 
     if (!this.wireDrawing) {
-      // 1. Priorität: freier Ausgangs-Pin (noch unter dem Verbindungs-Limit)
+      // 1. Priorität: Ausgangs-Pin — auch wenn schon belegt (Fan-out, s.
+      //    getOutputPinMaxConnections); der Verbindungspunkt am Pin zeigt es an.
       if (near?.pinType === 'output' && this.canStartWireFromOutput(near.gate.id, near.pinIndex)) {
-        const pos = getPinWorldPos(near.gate, 'output', near.pinIndex);
+        this.startWireAtOutput(near.gate, near.pinIndex);
+        return;
+      }
+
+      // 2. Priorität: freier Eingangs-Pin → Leitung UMGEKEHRT ziehen (wie in
+      //    LogikSim vom Gatter-Eingang zur Signalleitung); Ende an einem
+      //    Ausgang oder auf einer Leitung.
+      if (near?.pinType === 'input' && !this.isInputPinConnected(near.gate.id, near.pinIndex)) {
+        const pos = getPinWorldPos(near.gate, 'input', near.pinIndex);
         this.wireDrawing = {
-          fromGateId:   near.gate.id,
-          fromPinIndex: near.pinIndex,
+          fromGateId: '', fromPinIndex: -1,
           x1: pos.x, y1: pos.y,
-          fromDir: getPinDirection(near.gate, 'output'),
+          fromDir: getPinDirection(near.gate, 'input'),
+          reverse: { gateId: near.gate.id, pinIndex: near.pinIndex },
         };
         this.tentativeX = pos.x;
         this.tentativeY = pos.y;
         return;
       }
 
-      // 2. Priorität: Klick auf eine BELIEBIGE Stelle einer bestehenden
-      //    Leitung → Abzweigung (Fan-out) genau an diesem Punkt starten,
-      //    nicht nur am Ausgangs-Pin. Elektrisch bleibt die Quelle weiterhin
-      //    derselbe Ausgangs-Pin (fromGateId/fromPinIndex der Original-
-      //    Leitung) — branchPoint ist rein für die Darstellung.
-      //    AUSNAHME: Stubs direkt am Ausgangs-Pin sind gesperrt (dort wird
-      //    stattdessen die Verneinung gesetzt, kein Abzweig erlaubt).
+      // 3. Priorität: Klick auf eine BELIEBIGE Stelle einer bestehenden
+      //    Leitung → Abzweigung (Fan-out) genau an diesem Punkt starten.
+      //    Elektrisch bleibt die Quelle derselbe Ausgangs-Pin — branchPoint
+      //    ist rein für die Darstellung. Auf dem Stummel direkt am Ausgang
+      //    (im Pan-Modus: Verneinung) startet die Leitung am Ausgang selbst.
       const hit = this.findWireHitAt(lx, ly);
-      if (hit && !this.findOutputStubAt(hit.point.x, hit.point.y)) {
+      if (hit) {
+        const stub = this.findOutputStubAt(hit.point.x, hit.point.y);
+        if (stub) {
+          this.startWireAtOutput(stub.gate, stub.pinIndex);
+          return;
+        }
         this.wireDrawing = {
           fromGateId:   hit.wire.fromGateId,
           fromPinIndex: hit.wire.fromPinIndex,
@@ -977,44 +1005,99 @@ export class Whiteboard implements OnDestroy {
         this.tentativeX = hit.point.x;
         this.tentativeY = hit.point.y;
       }
-    } else {
-      if (near?.pinType === 'input' && near.gate.id !== this.wireDrawing.fromGateId) {
-        const alreadyUsed = this.wires.some(
-          w => w.toGateId === near.gate.id && w.toPinIndex === near.pinIndex
-        );
-        if (!alreadyUsed) {
-          const endPos   = getPinWorldPos(near.gate, 'input', near.pinIndex);
-          const fromGate = this.gates.find(g => g.id === this.wireDrawing!.fromGateId);
-          // Bei einer Abzweigung (branchPoint gesetzt) liegt der Startpunkt
-          // frei im Raum, nicht an einer Gatter-Kante — die Ober-/Unterkante
-          // des ursprünglichen Quell-Gatters ist dafür irrelevant und wird
-          // bewusst weggelassen (sonst könnte die Route unnötig ausweichen).
-          const isBranch   = !!this.wireDrawing.branchPoint;
-          const fromBottom = !isBranch && fromGate ? fromGate.y + getGateDimensions(fromGate).h : undefined;
-          const fromTop    = !isBranch ? fromGate?.y : undefined;
-          const toBottom   = near.gate.y + getGateDimensions(near.gate).h;
-          const toDir      = getPinDirection(near.gate, 'input');
-          const newWire: WireConnection = {
-            id:           `wire-${++this.wireIdCounter}`,
-            fromGateId:   this.wireDrawing.fromGateId,
-            fromPinIndex: this.wireDrawing.fromPinIndex,
-            toGateId:     near.gate.id,
-            toPinIndex:   near.pinIndex,
-            points: computeOrthogonalWaypoints(
-              this.wireDrawing.x1, this.wireDrawing.y1, endPos.x, endPos.y,
-              fromBottom, toBottom, fromTop, near.gate.y,
-              this.wireDrawing.fromDir, toDir
-            ),
-            branchPoint: this.wireDrawing.branchPoint,
-            fromDir: this.wireDrawing.branchPoint ? this.wireDrawing.fromDir : undefined,
-          };
-          this.pushHistory(); // Zustand vor dem Hinzufügen der Leitung sichern
-          this.wires = [...this.wires, newWire];
-          if (this.simulationMode) this.recomputeSimulation();
-        }
-      }
-      this.wireDrawing = null;
+      return;
     }
+
+    const drawing = this.wireDrawing;
+    this.wireDrawing = null;
+
+    // ── Umgekehrt gezogen: Ziel-Eingang steht fest, Quelle wird jetzt gewählt
+    if (drawing.reverse) {
+      const target = this.gates.find(g => g.id === drawing.reverse!.gateId);
+      if (!target || this.isInputPinConnected(target.id, drawing.reverse.pinIndex)) return;
+      const toPin = drawing.reverse.pinIndex;
+
+      if (near?.pinType === 'output' && near.gate.id !== target.id) {
+        this.addWire(near.gate.id, near.pinIndex, getPinWorldPos(near.gate, 'output', near.pinIndex),
+          getPinDirection(near.gate, 'output'), undefined, target, toPin);
+        return;
+      }
+      const hit = near ? null : this.findWireHitAt(lx, ly);
+      if (!hit || hit.wire.fromGateId === target.id) return;
+      const stub = this.findOutputStubAt(hit.point.x, hit.point.y);
+      if (stub) {
+        this.addWire(stub.gate.id, stub.pinIndex, getPinWorldPos(stub.gate, 'output', stub.pinIndex),
+          getPinDirection(stub.gate, 'output'), undefined, target, toPin);
+        return;
+      }
+      // Abzweig-Richtung: senkrecht zum getroffenen Segment, zum Ziel hin
+      const inPos = getPinWorldPos(target, 'input', toPin);
+      const dir: PinDirection = hit.dir.dx !== 0
+        ? { dx: Math.sign(inPos.x - hit.point.x) || 1, dy: 0 }
+        : { dx: 0, dy: Math.sign(inPos.y - hit.point.y) || 1 };
+      this.addWire(hit.wire.fromGateId, hit.wire.fromPinIndex, hit.point, dir, hit.point, target, toPin);
+      return;
+    }
+
+    // ── Normal gezogen: Ende an einem freien Eingang eines anderen Bauteils
+    if (near?.pinType === 'input' && near.gate.id !== drawing.fromGateId
+        && !this.isInputPinConnected(near.gate.id, near.pinIndex)) {
+      this.addWire(drawing.fromGateId, drawing.fromPinIndex, { x: drawing.x1, y: drawing.y1 },
+        drawing.fromDir, drawing.branchPoint, near.gate, near.pinIndex);
+    }
+  }
+
+  /** Beginnt eine neue Leitung direkt an einem Ausgangs-Pin. */
+  private startWireAtOutput(gate: GateInstance, pinIndex: number): void {
+    const pos = getPinWorldPos(gate, 'output', pinIndex);
+    this.wireDrawing = {
+      fromGateId:   gate.id,
+      fromPinIndex: pinIndex,
+      x1: pos.x, y1: pos.y,
+      fromDir: getPinDirection(gate, 'output'),
+    };
+    this.tentativeX = pos.x;
+    this.tentativeY = pos.y;
+  }
+
+  /**
+   * Legt eine Leitung an (mit Undo-Sicherung).
+   * start/fromDir: Ausgangs-Pin bzw. Abzweigpunkt (branchPoint) und Austrittsrichtung.
+   */
+  private addWire(
+    fromGateId: string, fromPinIndex: number,
+    start: { x: number; y: number }, fromDir: PinDirection,
+    branchPoint: { x: number; y: number } | undefined,
+    to: GateInstance, toPinIndex: number,
+  ): void {
+    const endPos   = getPinWorldPos(to, 'input', toPinIndex);
+    const fromGate = this.gates.find(g => g.id === fromGateId);
+    // Bei einer Abzweigung (branchPoint gesetzt) liegt der Startpunkt
+    // frei im Raum, nicht an einer Gatter-Kante — die Ober-/Unterkante
+    // des ursprünglichen Quell-Gatters ist dafür irrelevant und wird
+    // bewusst weggelassen (sonst könnte die Route unnötig ausweichen).
+    const isBranch   = !!branchPoint;
+    const fromBottom = !isBranch && fromGate ? fromGate.y + getGateDimensions(fromGate).h : undefined;
+    const fromTop    = !isBranch ? fromGate?.y : undefined;
+    const toBottom   = to.y + getGateDimensions(to).h;
+    const toDir      = getPinDirection(to, 'input');
+    const newWire: WireConnection = {
+      id:           `wire-${++this.wireIdCounter}`,
+      fromGateId,
+      fromPinIndex,
+      toGateId:     to.id,
+      toPinIndex,
+      points: computeOrthogonalWaypoints(
+        start.x, start.y, endPos.x, endPos.y,
+        fromBottom, toBottom, fromTop, to.y,
+        fromDir, toDir
+      ),
+      branchPoint,
+      fromDir: branchPoint ? fromDir : undefined,
+    };
+    this.pushHistory(); // Zustand vor dem Hinzufügen der Leitung sichern
+    this.wires = [...this.wires, newWire];
+    if (this.simulationMode) this.recomputeSimulation();
   }
 
   // ─── Simulations-Hilfsmethoden ─────────────────────────────────────────────
@@ -1330,7 +1413,9 @@ export class Whiteboard implements OnDestroy {
     const x1 = this.wireDrawing.x1;
     const y1 = this.wireDrawing.y1;
     const fromGate = this.gates.find(g => g.id === this.wireDrawing!.fromGateId);
-    const dir = fromGate ? getPinDirection(fromGate, 'output') : { dx: 1, dy: 0 };
+    // Umgekehrt gezogen: Vorschau startet am Eingangs-Pin in dessen Richtung
+    const dir = this.wireDrawing.reverse ? this.wireDrawing.fromDir
+      : fromGate ? getPinDirection(fromGate, 'output') : { dx: 1, dy: 0 };
 
     if (dir.dy === 0) {
       const midX = Math.round((x1 + this.tentativeX) / 2);
