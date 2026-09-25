@@ -1,0 +1,90 @@
+@if (selectedWireId && !selectedGate) {
+<!--
+  Leitung ausgewählt (kein Bauteil): eigener schlanker Block mit
+  Löschen-Button. Das Löschen entfernt NUR die Leitung, die angeschlossenen
+  Bauteile bleiben unangetastet (siehe deleteWire() im Whiteboard).
+-->
+<div class="panel">
+  <div class="panel-header">
+    <span class="gate-type">Leitung</span>
+    <button class="delete-btn" (click)="deleteWire()" title="Leitung löschen (Del)">🗑</button>
+  </div>
+  <div class="section">
+    <div class="section-title">Hinweis</div>
+    <p class="wire-hint">Verbindet zwei Bauteile. Löschen entfernt nur diese Leitung — die Bauteile bleiben erhalten.</p>
+  </div>
+</div>
+}
+@if (selectedGate) {
+<div class="panel">
+  <div class="panel-header">
+    <span class="gate-type">{{ getTypeName() }}</span>
+    <button class="delete-btn" (click)="deleteGate()" title="Löschen (Del)">🗑</button>
+  </div>
+
+  @if (selectedGate.type !== 'text-label') {
+  <div class="section">
+    <div class="section-title">Ausrichtung</div>
+    <div class="rotation-btns">
+      @for (r of [0, 90, 180, 270]; track r) {
+        <button class="rot-btn" [class.active]="selectedGate.rotation === r" (click)="setRotation($any(r))">{{ r }}°</button>
+      }
+    </div>
+  </div>
+  }
+
+  <div class="section">
+    <div class="section-title">Farbe</div>
+    <div class="color-swatches">
+      @for (c of ['default','yellow','green','red','orange']; track c) {
+        <button class="color-swatch color-{{ c }}" [class.active]="selectedGate.color === c" (click)="setColor(c)" [title]="c"></button>
+      }
+    </div>
+  </div>
+
+  @if (hasVariableInputs) {
+  <div class="section">
+    <div class="section-title">Eingangsanzahl</div>
+    <div class="input-count-row">
+      <button (click)="setInputCount(selectedGate.inputCount - 1)" [disabled]="selectedGate.inputCount <= 2">−</button>
+      <span class="count-val">{{ selectedGate.inputCount }}</span>
+      <button (click)="setInputCount(selectedGate.inputCount + 1)" [disabled]="selectedGate.inputCount >= 8">+</button>
+    </div>
+  </div>
+  }
+
+  @if (isClockGen) {
+  <div class="section">
+    <div class="section-title">Taktperiode (ms)</div>
+    <input type="number" class="period-input" min="100" max="10000" step="100"
+      [value]="selectedGate.clockPeriodMs ?? 1000"
+      (change)="setClockPeriod(+$any($event).target.value)"
+    />
+  </div>
+  }
+
+  <div class="section">
+    <div class="section-title">Beschriftung</div>
+    <!--
+      (change) statt (input): Undo-Schritt wird erst nach Verlassen des Felds
+      (Enter/Tab/Klick außerhalb) gespeichert, nicht bei jedem Tastendruck.
+    -->
+    <input type="text" class="label-input"
+      [value]="selectedGate.label ?? ''"
+      (change)="setLabel($any($event).target.value)"
+      [placeholder]="isTextLabel ? 'Label-Text' : 'Bauteil-Name…'"
+    />
+  </div>
+
+  @if (getGateDescription()) {
+  <div class="section info-section">
+    <div class="section-title">Funktionsweise</div>
+    <p class="gate-description">{{ getGateDescription() }}</p>
+    @if (simulationMode && getCurrentStateDescription()) {
+    <div class="section-title state-title">Aktueller Zustand</div>
+    <pre class="gate-state">{{ getCurrentStateDescription() }}</pre>
+    }
+  </div>
+  }
+</div>
+}

@@ -1,0 +1,334 @@
+/* Host-Element (app-whiteboard) muss den gesamten restlichen Platz einnehmen.
+   Ohne :host bleibt das Custom-Element display:inline mit 0px Höhe/Breite,
+   wodurch das Raster unsichtbar und Drag-Drop nie auf dem Whiteboard landet. */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;        /* füllt den Rest von .main-area (flex row) */
+  min-width: 0;   /* verhindert Flex-Overflow auf der Hauptachse */
+  min-height: 0;  /* verhindert Flex-Overflow auf der Kreuzachse */
+  /* Weiße Arbeitsfläche mit dünnem hellgrauem Rahmen (wie Referenzbild).
+     Rahmen liegt am :host, damit die Koordinatenberechnung im Viewport
+     (getBoundingClientRect) unverändert bleibt. */
+  margin: 8px;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--canvas-bg);
+}
+
+/* Whiteboard */
+
+.whiteboard-viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  /* Zeichenflächen-Hintergrund – das gepunktete Raster liegt darüber */
+  background: var(--canvas-bg);
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+/* SVG-Raster: füllt den gesamten Viewport, liegt unter allen anderen Layern */
+.grid-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;  /* Klicks gehen durch zum whiteboard-viewport */
+}
+
+/* Farbe der Raster-Punkte (per Theme-Variable, hell- oder dunkelgrau) */
+.grid-dot {
+  fill: var(--grid-dot);
+}
+
+.whiteboard-viewport.panning       { cursor: grabbing; }
+.whiteboard-viewport.dragging      { cursor: copy; }
+.whiteboard-viewport.wire-mode     { cursor: crosshair; }
+
+/* ── Komponenten-Layer ──────────────────────────────────────────────────── */
+
+.gates-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* Maus-Events gehen durch zum Viewport */
+  z-index: 2;  /* Gatter-Körper überdecken Leitungs-Enden → saubere Anschlüsse */
+  transform-origin: 0 0;
+}
+
+.placed-gate {
+  position: absolute;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+/* Ausgewähltes Bauteil: blauer Rahmen */
+.placed-gate.selected::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* ── SVG-Leitungs-Layer ──────────────────────────────────────────────────── */
+
+.wires-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 99999px;
+  height: 99999px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;  /* unter den Gatter-Körpern → Leitungsenden verschwinden sauber im Gate */
+  transform-origin: 0 0;
+}
+
+/* Normale Leitung — Farbe passt sich dem Theme an (--wire-stroke), damit sie
+   im Dark Mode nicht in der dunklen Zeichenfläche verschwindet. */
+.wire-line {
+  stroke: var(--wire-stroke, #334155);
+  stroke-width: 2;
+  fill: none;
+  pointer-events: stroke;  /* Klick nur auf dem Strich (nicht im leeren Bereich) */
+  cursor: pointer;
+}
+
+/* Ausgewählte Leitung: blau hervorgehoben */
+.wire-line.wire-selected {
+  stroke: #3b82f6;
+  stroke-width: 3;
+}
+
+/* Leitung führt HIGH-Signal: grün */
+.wire-line.wire-high {
+  stroke: #16a34a;
+  stroke-width: 2.5;
+}
+
+/* Leitung führt LOW-Signal: dunkelgrau */
+.wire-line.wire-low {
+  stroke: #64748b;
+  stroke-width: 2;
+}
+
+/* Vorschau-Leitung (gestrichelt) */
+.wire-tentative {
+  stroke: #3b82f6;
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 6 4;
+  opacity: 0.8;
+}
+
+/* Verbindungs-Punkt (T-Junction): ein Ausgang → mehrere Eingänge */
+.wire-junction {
+  fill: var(--wire-stroke, #1e293b);
+  pointer-events: none;
+}
+.wire-junction.junction-high { fill: #16a34a; }
+.wire-junction.junction-low  { fill: #64748b; }
+
+/* ── Pin-Highlight-Layer ─────────────────────────────────────────────────── */
+
+.pins-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 3;  /* über Gatter und Leitungen → Pin-Dots immer sichtbar */
+  transform-origin: 0 0;
+}
+
+/* Pin-Punkt: kleiner Kreis */
+.pin-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid;
+  pointer-events: none;
+}
+
+/* Ausgangs-Pin: grün */
+.output-pin {
+  background: #dcfce7;
+  border-color: #16a34a;
+}
+
+/* Eingangs-Pin: blau */
+.input-pin {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+}
+
+/* Aktiver Start-Pin (Leitung begonnen): heller hervorgehoben */
+.drawing-start {
+  background: #fef08a;
+  border-color: #ca8a04;
+  width: 12px;
+  height: 12px;
+  margin: -1px; /* Kompensiert die größere Size */
+}
+
+/* ── Label-Overlay + Inline-Bearbeitung ──────────────────────────────────── */
+
+/* Schreibgeschütztes Label unter dem Bauteil */
+.gate-label-overlay {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--surface-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid var(--surface-border);
+  line-height: 1.3;
+}
+
+/* Inline-Eingabefeld beim Bearbeiten des Labels */
+.label-edit-input {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--input-text);
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: var(--input-bg);
+  outline: none;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  pointer-events: all;
+}
+
+/* ── Auswahlrahmen (Ctrl+Drag) ────────────────────────────────────────────── */
+
+.selection-rect {
+  position: absolute;
+  border: 2px dashed #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* ── Verneinungs-Punkt am Ausgangs-Stub ──────────────────────────────────── */
+
+.negation-dot {
+  fill: var(--canvas-bg, #ffffff);
+  stroke: var(--wire-stroke, #1e293b);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.negation-high { stroke: #16a34a; fill: #dcfce7; }
+.negation-low  { stroke: #64748b; }
+
+/* ── Text-Label Inline-Bearbeitung ────────────────────────────────────────── */
+
+.text-label-inline-edit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: monospace;
+  border: 2px solid var(--accent, #3b82f6);
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: var(--input-bg, #ffffff);
+  color: var(--input-text, #1e293b);
+  outline: none;
+  z-index: 10;
+  pointer-events: all;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+/* ── Zoom-Leiste + Minimap (unten links) ─────────────────────────────────── */
+
+.zoom-bar {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+  background: var(--surface-bg, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--surface-border, #cbd5e1);
+  border-radius: 8px;
+  padding: 5px 8px;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.zoom-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  min-width: 38px;
+  text-align: center;
+}
+
+.minimap-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  color: var(--text-secondary, #475569);
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: background 0.1s;
+
+  &:hover { background: var(--menu-hover-bg, rgba(0, 0, 0, 0.07)); }
+  &.active { color: var(--accent, #3b82f6); }
+}
+
+/* Minimap: absolut, direkt über der Zoom-Leiste */
+.minimap {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: 160px;
+  height: 100px;
+  background: var(--surface-bg, #ffffff);
+  border: 1px solid var(--surface-border, #cbd5e1);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.minimap-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.minimap-gate {
+  fill: var(--accent, #3b82f6);
+  fill-opacity: 0.45;
+  stroke: var(--accent, #3b82f6);
+  stroke-width: 1;
+}
+
+.minimap-viewport-rect {
+  fill: rgba(239, 68, 68, 0.1);
+  stroke: #ef4444;
+  stroke-width: 3;
+}

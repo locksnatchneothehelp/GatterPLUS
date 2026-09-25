@@ -1,0 +1,49 @@
+<!-- JK-Flipflop nach DIN 40900 -->
+<div
+  class="gate"
+  [class.toolbar-mode]="toolbarMode"
+  [class.signal-high]="signalOutputQ === true"
+  [class.signal-low]="signalOutputQ === false"
+>
+  <!-- Eingangs-Pins (links, oben→unten): S, J, C (Clock), K, R -->
+  <div class="pins-in">
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">S</span>
+    </div>
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">J</span>
+    </div>
+    <div class="pin-row clock-row">
+      <div class="wire"></div>
+      <span class="pin-label">C <span class="clock-triangle">&#x25B7;</span></span>
+    </div>
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">K</span>
+    </div>
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">R</span>
+    </div>
+  </div>
+
+  <!-- Gatter-Körper -->
+  <div class="gate-body">
+    <span class="symbol">JK-FF</span>
+  </div>
+
+  <!-- Ausgangs-Pins (rechts, oben→unten): Q, Q̄.
+       Jeder Pin färbt sich unabhängig grün, wenn sein eigenes Signal HIGH ist. -->
+  <div class="pins-out">
+    <div class="pin-row-out">
+      <span class="pin-label-out">Q</span>
+      <div class="wire" [class.signal-high]="signalOutputQ === true"></div>
+    </div>
+    <div class="pin-row-out">
+      <span class="pin-label-out">Q&#x0305;</span>
+      <div class="wire" [class.signal-high]="signalOutputQBar === true"></div>
+    </div>
+  </div>
+</div>

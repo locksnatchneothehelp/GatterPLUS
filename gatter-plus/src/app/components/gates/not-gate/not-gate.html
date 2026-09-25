@@ -1,0 +1,24 @@
+<!-- NICHT-Gatter (NOT/Inverter) nach DIN 40900 – Symbol "1" + Invertierkreis -->
+<div
+  class="gate"
+  [class.toolbar-mode]="toolbarMode"
+  [class.signal-high]="signalOutput === true"
+  [class.signal-low]="signalOutput === false"
+>
+  <!-- Eingangs-Draht (1 Stück, vertikal zentriert) -->
+  <div class="pin-in">
+    <div class="wire"></div>
+  </div>
+
+  <!-- Gatter-Körper mit "1"-Symbol -->
+  <div class="gate-body">
+    <span class="symbol">1</span>
+  </div>
+
+  <!-- Ausgangs-Seite: Invertierkreis + Draht -->
+  <div class="pin-out">
+    <!-- Kleiner Kreis signalisiert Invertierung (Bubble-Notation) -->
+    <div class="invert-bubble"></div>
+    <div class="wire"></div>
+  </div>
+</div>

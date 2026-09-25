@@ -1,0 +1,49 @@
+<!-- GatterPLUS Haupt-Layout -->
+<div class="app-layout">
+
+  <!--
+    Klassische Menüleiste: Datei / Bearbeiten / Hilfe + Theme-Umschalter.
+    Bearbeiten (Undo/Redo/Copy/Paste) nutzt die echte Whiteboard-Logik,
+    die zuvor über die obere Toolbar angebunden war.
+  -->
+  <app-menu-bar
+    [canUndo]="canUndo"
+    [canRedo]="canRedo"
+    [canPaste]="canPaste"
+    (undoClicked)="onUndo()"
+    (redoClicked)="onRedo()"
+    (copyClicked)="onCopy()"
+    (pasteClicked)="onPaste()"
+  ></app-menu-bar>
+
+  <!--
+    Obere Toolbar: Paletten + Werkzeug (Pan/Leitung, ehemals linke Toolbar) +
+    Simulations-Toggle.
+  -->
+  <app-toolbar-top
+    [simulationMode]="simulationMode"
+    [activeTool]="activeTool"
+    (simulationToggle)="onSimulationToggle()"
+    (toolSelected)="onToolSelected($event)"
+  ></app-toolbar-top>
+
+  <!-- Hauptbereich: Whiteboard + Properties Panel -->
+  <div class="main-area">
+
+    <!-- Whiteboard: Schaltkreis-Editor -->
+    <app-whiteboard></app-whiteboard>
+
+    <!-- Properties Panel: erscheint wenn ein Bauteil ODER eine Leitung angeklickt wurde -->
+    <app-properties-panel
+      [selectedGate]="selectedGate"
+      [selectedWireId]="selectedWireId"
+      [simulationMode]="simulationMode"
+      [signalState]="selectedGateSignalState"
+      (gateChange)="onGateChange($event)"
+      (gateDelete)="onGateDelete($event)"
+      (wireDelete)="onWireDelete($event)"
+    ></app-properties-panel>
+
+  </div>
+
+</div>

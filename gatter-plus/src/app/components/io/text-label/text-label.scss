@@ -1,0 +1,43 @@
+/* Text-Beschriftung */
+.text-label {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  min-width: 60px;
+  user-select: none;
+}
+
+.text-label.toolbar-mode {
+  height: 24px;
+
+  .label-body {
+    height: 20px;
+    padding: 0 8px;
+  }
+
+  .label-text {
+    font-size: 10px;
+  }
+}
+
+/* Beschriftungs-Körper */
+.label-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  height: 26px;
+  padding: 0 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.label-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  font-family: monospace;
+  white-space: nowrap;
+  line-height: 1;
+}

@@ -1,0 +1,67 @@
+/* Taktgeber */
+.clock-gen {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 52px;
+  user-select: none;
+}
+
+.clock-gen.toolbar-mode {
+  height: 44px;
+
+  .clock-body {
+    width: 42px;
+    height: 34px;
+  }
+
+  .label {
+    font-size: 9px;
+  }
+}
+
+/* Takt-Körper */
+.clock-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 64px;   /* 64 + 12px Stub = 76px gesamt → passt zum Modell */
+  height: 42px;
+  background: #eff6ff;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  gap: 2px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+/* HIGH-Zustand: hellblauer Körper */
+.clock-body.active {
+  background: #bfdbfe;
+  border-color: #1d4ed8;
+}
+
+/* Ausgangs-Pin ebenfalls grün einfärben, wenn Strom fließt */
+.clock-gen.value-high .pin-out .wire {
+  background: #16a34a;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1d4ed8;
+  font-family: monospace;
+  line-height: 1;
+}
+
+.period {
+  font-size: 9px;
+  font-weight: 500;
+  color: #3b82f6;
+  font-family: monospace;
+  line-height: 1;
+}
+
+/* Ausgangs-Draht (rechts) */
+.pin-out { display: flex; align-items: center; align-self: stretch; }
+.wire { width: 12px; height: 2px; background: var(--wire-stroke, #1e293b); flex-shrink: 0; }

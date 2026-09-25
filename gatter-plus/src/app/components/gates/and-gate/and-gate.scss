@@ -1,0 +1,89 @@
+/* AND-Gatter Styling – verwendet gemeinsame Gate-Stile */
+
+/* Äußerer Wrapper: Flexbox-Zeile [Drähte links] [Körper] [Draht rechts] */
+.gate {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 52px;    /* Wächst mit inputCount – per [style.height.px] gesteuert */
+  user-select: none;
+}
+
+/* Toolbar-Modus: etwas kompakter.
+   Körper wird gold/gelb eingefärbt (--btn-bg, siehe styles.scss) — die
+   Bauteil-Vorschau in der Palette soll farbig sein, nicht der umgebende
+   Kasten (siehe toolbar-top.scss: .palette-item hat bewusst keine eigene
+   Hintergrundfarbe). Gilt NUR im Toolbar-Modus, Gatter auf dem Whiteboard
+   bleiben unverändert weiß/signalabhängig eingefärbt. */
+.gate.toolbar-mode {
+  height: 44px;
+  .gate-body { width: 44px; background: var(--btn-bg, #f5b342); }
+  .wire { width: 8px; }
+  .symbol { font-size: 15px; }
+}
+
+/* Simulations-Zustand HIGH: grüner Körper */
+.gate.signal-high .gate-body {
+  background: #bbf7d0;
+  border-color: #16a34a;
+}
+
+/* Simulations-Zustand LOW: grauer Körper */
+.gate.signal-low .gate-body {
+  background: #f1f5f9;
+  border-color: #64748b;
+}
+
+/* Ausgangs-Pin (Verbindungs-Draht) ebenfalls grün einfärben, wenn Strom fließt */
+.gate.signal-high .pins-out .wire {
+  background: #16a34a;
+}
+.gate.signal-high.pins-in.wire {
+	backround: #16a34a; 
+}
+
+/* Container für Eingangs-Drähte (links) */
+.pins-in {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-self: stretch;
+  padding: 10px 0;
+}
+
+/* Container für Ausgangs-Draht (rechts) */
+.pins-out {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+}
+
+/* Einzelner Draht (Ein- oder Ausgangs-Linie) */
+.wire {
+  width: 12px;
+  height: 2px;
+  background: var(--wire-stroke, #1e293b);
+  flex-shrink: 0;
+}
+
+/* Gatter-Körper: DIN-Rechteck – streckt sich zur vollen Gatterhöhe */
+.gate-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  align-self: stretch;
+  background: #f5b342;
+  border: 2px solid #1e293b;
+  border-radius: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+/* IEC/DIN-Symbol im Körper */
+.symbol {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: monospace;
+  line-height: 1;
+}

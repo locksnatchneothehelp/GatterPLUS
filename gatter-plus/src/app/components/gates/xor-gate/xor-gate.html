@@ -1,0 +1,25 @@
+<!-- XOR-Gatter nach DIN 40900 – Symbol "=1" -->
+<div
+  class="gate"
+  [class.toolbar-mode]="toolbarMode"
+  [class.signal-high]="signalOutput === true"
+  [class.signal-low]="signalOutput === false"
+  [style.height.px]="toolbarMode ? 44 : gateHeight"
+>
+  <!-- Eingangs-Drähte (links), Anzahl abhängig von inputCount -->
+  <div class="pins-in">
+    @for (wire of wireArray; track wire) {
+      <div class="wire"></div>
+    }
+  </div>
+
+  <!-- Gatter-Körper: Rechteck mit "=1" -->
+  <div class="gate-body">
+    <span class="symbol">=1</span>
+  </div>
+
+  <!-- Ausgangs-Draht (rechts, 1 Stück) -->
+  <div class="pins-out">
+    <div class="wire"></div>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+/* Linke vertikale Werkzeug-Toolbar */
+.toolbar-left {
+  width: 56px;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  gap: 4px;
+  height: 100%;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Werkzeug-Button */
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  gap: 2px;
+  transition: background 0.15s, color 0.15s;
+  font-size: 18px;
+  color: var(--text-secondary);
+
+  &:hover {
+    background: var(--menu-hover-bg);
+  }
+
+  /* Aktives Werkzeug: Akzent-Hervorhebung */
+  &.active {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+}
+
+/* Kleines Text-Label unter dem Symbol */
+.tool-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: inherit;
+}

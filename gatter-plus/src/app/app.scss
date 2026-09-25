@@ -1,0 +1,27 @@
+/* Root-Layout der GatterPLUS Anwendung */
+
+/* Äußerer Flexbox-Container: Spalte, füllt den gesamten Viewport */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  /* Volle Browser-Viewport-Höhe */
+  height: 100vh;
+  /* Volle Browser-Viewport-Breite */
+  width: 100vw;
+  /* Kein Scrollbalken auf der Root-Ebene */
+  overflow: hidden;
+  /* App-Hintergrund (zeigt sich u.a. im Rand um die Zeichenfläche) */
+  background: var(--bg-app);
+  transition: background-color 0.2s ease;
+}
+
+/* Hauptbereich: linke Toolbar und Whiteboard nebeneinander */
+.main-area {
+  display: flex;
+  flex-direction: row;
+  /* Füllt den restlichen Platz unterhalb der oberen Toolbar */
+  flex: 1;
+  /* Kein Überlauf, Whiteboard verwaltet seinen eigenen Scroll */
+  overflow: hidden;
+  background: var(--bg-app);
+}

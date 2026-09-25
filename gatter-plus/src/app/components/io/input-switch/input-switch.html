@@ -1,0 +1,19 @@
+<!-- Eingangs-Schalter: Signalquelle ohne Eingangs-Draht, mit Ausgangs-Draht -->
+<div
+  class="input-switch"
+  [class.toolbar-mode]="toolbarMode"
+  [class.value-high]="value === true && simulationMode"
+  [class.simulation-mode]="simulationMode"
+>
+  <!-- Körper: zeigt aktuellen Wert und "IN"-Beschriftung -->
+  <div class="switch-body">
+    <span class="label">IN</span>
+    <!-- Wert-Anzeige: 0 oder 1 -->
+    <span class="value-display">{{ value ? '1' : '0' }}</span>
+  </div>
+
+  <!-- Ausgangs-Draht (rechts) -->
+  <div class="pin-out">
+    <div class="wire"></div>
+  </div>
+</div>

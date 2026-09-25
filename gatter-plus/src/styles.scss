@@ -1,0 +1,192 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Globale Stile für GatterPLUS
+   ───────────────────────────────────────────────────────────────────────────
+   Alle Farben werden zentral als CSS Custom Properties definiert.
+   - :root                    → Light Mode (Standard)
+   - :root[data-theme="dark"] → Dark Mode
+
+   Der ThemeService setzt nur das Attribut data-theme am <html>-Element;
+   dadurch schaltet die gesamte Oberfläche ohne Neuladen um.
+   Neue Themes lassen sich ergänzen, indem ein weiterer
+   :root[data-theme="…"]-Block mit denselben Variablennamen hinzugefügt wird.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Light Mode (Standard) ─────────────────────────────────────────────────*/
+:root {
+  /* App-Hintergrund hinter der Zeichenfläche */
+  --bg-app:              #eef1f7;
+
+  /* Menüleiste (Datei / Hilfe) */
+  --menu-bg:             #e8ebf5;
+  --menu-text:           #1e2340;
+  --menu-hover-bg:       #d3d9ee;
+  --menu-border:         #c2c8dc;
+
+  /* Obere Werkzeugleiste (hell blaugrau, wie Referenzbild) */
+  --toolbar-bg:          #c3cbe8;
+  --toolbar-title:       #1e2340;
+  --toolbar-text:        #2a2f45;
+  --divider:             rgba(30, 35, 64, 0.18);
+
+  /* Bauteil-/Werkzeug-Buttons: gelb-orange Quadrate mit dunklem Rahmen
+     (Referenzdesign) — nur deaktivierte Elemente sind grau. */
+  --btn-bg:              #f5b342;
+  --btn-border:          #3a3a3a;
+  --btn-text:            #3a2a00;
+  --btn-hover-bg:        #f8c364;
+  /* Zustand "gedrückt" (Bauteil wird gerade gezogen) — kräftigeres Orange */
+  --btn-active-bg:       #e89b1f;
+  --btn-active-border:   #8a5a12;
+  --btn-active-text:     #2a1d00;
+  /* Zustand "ausgewählt" (z.B. aktuell aktives Werkzeug Pan/Leitung) —
+     eigener Blau-Akzent-Rahmen, damit er sich vom gelben Grundton abhebt */
+  --btn-selected-bg:     #e89b1f;
+  --btn-selected-border: #1d4ed8;
+  --btn-selected-text:   #2a1d00;
+  /* Deaktivierte Elemente: grau (einzige erlaubte graue Fläche) */
+  --btn-disabled-bg:     #d4d4d4;
+  --btn-disabled-border: #9a9a9a;
+  --btn-disabled-text:   #7a7a7a;
+
+  /* Seitenpanels (links, rechts) */
+  --panel-bg:            #f8fafc;
+  --panel-header-bg:     #ffffff;
+  --panel-border:        #e2e8f0;
+
+  /* Flächen & Rahmen allgemein */
+  --surface-bg:          #ffffff;
+  --surface-border:      #cbd5e1;
+
+  /* Zeichenfläche (Canvas) + gepunktetes Raster */
+  --canvas-bg:           #ffffff;
+  --grid-dot:            #c0c8d4;
+
+  /* Leitungen + Anschluss-Pins (Bauteil-Drähte, Verbindungslinien, T-Punkte).
+     Eine gemeinsame Variable, damit Pin-Drähte am Bauteil und die eigentliche
+     Verbindungslinie farblich zusammenpassen — und im Dark Mode hell genug
+     bleiben, um sich von der dunklen Zeichenfläche abzuheben. */
+  --wire-stroke:         #334155;
+
+  /* Eingabefelder */
+  --input-bg:            #ffffff;
+  --input-border:        #cbd5e1;
+  --input-text:          #1e293b;
+  --input-focus:         #3b82f6;
+
+  /* Texte */
+  --text-primary:        #1e293b;
+  --text-secondary:      #475569;
+  --text-muted:          #64748b;
+
+  /* Akzentfarbe (Auswahl, Fokus) */
+  --accent:              #3b82f6;
+  --accent-soft:         #dbeafe;
+  --accent-strong:       #1d4ed8;
+
+  /* Dropdown-Menüs / Dialoge */
+  --dropdown-bg:         #ffffff;
+  --dropdown-border:     #b8bfd4;
+  --dropdown-shadow:     rgba(0, 0, 0, 0.18);
+  --dropdown-sep:        #e2e8f0;
+
+  /* Ein-/Aus-Button (Power / Simulation) */
+  --power-bg:            #cbd5e1;
+  --power-border:        #64748b;
+  --power-icon:          #334155;
+  --power-on-bg:         #f5b342;
+  --power-on-border:     #b9791a;
+  --power-on-icon:       #3a2a00;
+}
+
+/* ─── Dark Mode ─────────────────────────────────────────────────────────────*/
+:root[data-theme="dark"] {
+  --bg-app:              #12141c;
+
+  --menu-bg:             #1f2333;
+  --menu-text:           #e2e8f0;
+  --menu-hover-bg:       #2d3348;
+  --menu-border:         #333a52;
+
+  --toolbar-bg:          #2a3050;
+  --toolbar-title:       #aab4e8;
+  --toolbar-text:        #cbd3f0;
+  --divider:             rgba(255, 255, 255, 0.14);
+
+  --btn-bg:              #f5b342;
+  --btn-border:          #10131b;
+  --btn-text:            #2a1d00;
+  --btn-hover-bg:        #f8c364;
+  --btn-active-bg:       #e89b1f;
+  --btn-active-border:   #8a5a12;
+  --btn-active-text:     #2a1d00;
+  --btn-selected-bg:     #e89b1f;
+  --btn-selected-border: #60a5fa;
+  --btn-selected-text:   #2a1d00;
+  --btn-disabled-bg:     #3a4055;
+  --btn-disabled-border: #4a5170;
+  --btn-disabled-text:   #6b7590;
+
+  --panel-bg:            #1c1f2b;
+  --panel-header-bg:     #242836;
+  --panel-border:        #2f3446;
+
+  --surface-bg:          #242836;
+  --surface-border:      #2f3446;
+
+  --canvas-bg:           #171a24;
+  --grid-dot:            #2f3650;
+
+  /* Hell genug, um sich klar von der dunklen Zeichenfläche abzuheben
+     (das bisherige dunkle Navy #1e293b der Pin-Drähte wäre hier fast
+     unsichtbar gewesen). */
+  --wire-stroke:         #94a3b8;
+
+  --input-bg:            #242836;
+  --input-border:        #3a4055;
+  --input-text:          #e2e8f0;
+  --input-focus:         #60a5fa;
+
+  --text-primary:        #e2e8f0;
+  --text-secondary:      #aab2c5;
+  --text-muted:          #7d879e;
+
+  --accent:              #60a5fa;
+  --accent-soft:         #1e3a5f;
+  --accent-strong:       #93c5fd;
+
+  --dropdown-bg:         #242836;
+  --dropdown-border:     #3a4055;
+  --dropdown-shadow:     rgba(0, 0, 0, 0.5);
+  --dropdown-sep:        #333a52;
+
+  --power-bg:            #3a4055;
+  --power-border:        #64748b;
+  --power-icon:          #cbd5e1;
+  --power-on-bg:         #f5b342;
+  --power-on-border:     #8a5a12;
+  --power-on-icon:       #2a1d00;
+}
+
+/* ─── CSS-Reset ─────────────────────────────────────────────────────────────*/
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body und HTML: füllen den vollen Viewport ohne Scrollbars */
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  /* Moderne serifenlose Schrift */
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-app);
+  /* Weicher Übergang beim Theme-Wechsel */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

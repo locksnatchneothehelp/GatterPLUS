@@ -1,0 +1,130 @@
+/* JK-Flipflop Styling */
+
+.gate {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 76px;
+  height: 100px;
+  user-select: none;
+}
+
+/* Toolbar-Modus: Körper wird gold/gelb eingefärbt (--btn-bg) — nur die
+   Palette-Vorschau, nicht das Gatter auf dem Whiteboard. */
+.gate.toolbar-mode {
+  height: 44px;
+  .gate-body { width: 44px; font-size: 9px; background: var(--btn-bg, #f5b342); }
+  .wire { width: 8px; }
+  .symbol { font-size: 9px; }
+  .pin-label, .pin-label-out { display: none; }
+}
+
+/* Simulations-Zustand HIGH (bezogen auf Q) */
+.gate.signal-high .gate-body {
+  background: #bbf7d0;
+  border-color: #16a34a;
+}
+
+/* Simulations-Zustand LOW */
+.gate.signal-low .gate-body {
+  background: #f1f5f9;
+  border-color: #64748b;
+}
+
+/* Container für Eingangs-Pins (links) */
+.pins-in {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-self: stretch;
+  padding: 8px 0;
+}
+
+/* Container für Ausgangs-Pins (rechts) */
+.pins-out {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-self: stretch;
+  padding: 20px 0;
+}
+
+/* Einzelner Draht */
+.wire {
+  width: 12px;
+  height: 2px;
+  background: var(--wire-stroke, #1e293b);
+  flex-shrink: 0;
+}
+
+/* Ausgangs-Pin (Q oder Q̄) grün, wenn sein eigenes Signal HIGH ist */
+.wire.signal-high {
+  background: #16a34a;
+}
+
+/* Gatter-Körper: DIN-Rechteck */
+.gate-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  align-self: stretch;
+  background: #ffffff;
+  border: 2px solid #1e293b;
+  border-radius: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+/* Symbol im Körper */
+.symbol {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: monospace;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Eingangs-Pin-Zeile (Draht + Label) */
+.pin-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Pin-Label links (rechts vom Draht, in Richtung Körper) */
+.pin-label {
+  position: absolute;
+  left: 14px;
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 700;
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Clock-Symbol leicht größer */
+.clock-triangle {
+  font-size: 9px;
+  vertical-align: middle;
+}
+
+/* Ausgangs-Pin-Zeile (Label + Draht) */
+.pin-row-out {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Ausgangs-Label rechts (links vom Draht, in Richtung Körper) */
+.pin-label-out {
+  position: absolute;
+  right: 14px;
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 700;
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+}

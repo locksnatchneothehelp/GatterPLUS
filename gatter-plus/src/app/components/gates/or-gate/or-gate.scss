@@ -1,0 +1,14 @@
+/* OR-Gatter – identisches Layout wie AND-Gatter */
+.gate { display: flex; flex-direction: row; align-items: center; min-height: 52px; user-select: none; }
+/* Toolbar-Modus: Körper wird gold/gelb eingefärbt (--btn-bg) — nur die
+   Palette-Vorschau, nicht das Gatter auf dem Whiteboard. */
+.gate.toolbar-mode { height: 44px; .gate-body { width: 44px; background: var(--btn-bg, #f5b342); } .wire { width: 8px; } .symbol { font-size: 12px; } }
+.gate.signal-high .gate-body { background: #bbf7d0; border-color: #16a34a; }
+.gate.signal-low .gate-body { background: #f1f5f9; border-color: #64748b; }
+/* Ausgangs-Pin ebenfalls grün einfärben, wenn Strom fließt */
+.gate.signal-high .pins-out .wire { background: #16a34a; }
+.pins-in { display: flex; flex-direction: column; justify-content: space-around; align-self: stretch; padding: 10px 0; }
+.pins-out { display: flex; align-items: center; align-self: stretch; }
+.wire { width: 12px; height: 2px; background: var(--wire-stroke, #1e293b); flex-shrink: 0; }
+.gate-body { display: flex; align-items: center; justify-content: center; width: 52px; align-self: stretch; background: #ffffff; border: 2px solid #1e293b; border-radius: 0; transition: background 0.15s, border-color 0.15s; }
+.symbol { font-size: 14px; font-weight: 700; color: #1e293b; font-family: monospace; line-height: 1; }

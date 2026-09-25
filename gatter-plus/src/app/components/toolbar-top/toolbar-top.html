@@ -1,0 +1,141 @@
+<!-- Obere Toolbar: Titel + Paletten (Gatter, Kombi, FF, I/O) + Simulations-Toggle -->
+<header class="toolbar-top">
+
+  <div class="app-title">GatterPLUS</div>
+
+  <div class="divider"></div>
+
+  <!--
+    Gatter-Palette: AND, OR, NOT, XOR.
+    Simulation AUS → gelb-orange (bereit zum Ziehen).
+    Simulation AN  → grau + deaktiviert (Platzieren neuer Gatter ergibt
+    während der laufenden Simulation keinen Sinn).
+  -->
+  <div class="palette-group">
+    <span class="group-label">Gatter</span>
+    <div class="palette-items">
+      <div class="palette-item" [class.disabled]="simulationMode" title="UND-Gatter (AND)" (mousedown)="onGateMouseDown($event, 'and')">
+        <app-and-gate [toolbarMode]="true"></app-and-gate>
+      </div>
+      <div class="palette-item" [class.disabled]="simulationMode" title="ODER-Gatter (OR)" (mousedown)="onGateMouseDown($event, 'or')">
+        <app-or-gate [toolbarMode]="true"></app-or-gate>
+      </div>
+      <div class="palette-item" [class.disabled]="simulationMode" title="NICHT-Gatter (NOT)" (mousedown)="onGateMouseDown($event, 'not')">
+        <app-not-gate [toolbarMode]="true"></app-not-gate>
+      </div>
+      <div class="palette-item" [class.disabled]="simulationMode" title="Exklusiv-ODER-Gatter (XOR)" (mousedown)="onGateMouseDown($event, 'xor')">
+        <app-xor-gate [toolbarMode]="true"></app-xor-gate>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Kombinatorik: Halbaddierer, Volladdierer -->
+  <div class="palette-group">
+    <span class="group-label">Kombinatorik</span>
+    <div class="palette-items">
+      <div class="palette-item" [class.disabled]="simulationMode" title="Halbaddierer (HA)" (mousedown)="onGateMouseDown($event, 'half-adder')">
+        <app-half-adder [toolbarMode]="true"></app-half-adder>
+      </div>
+      <div class="palette-item" [class.disabled]="simulationMode" title="Volladdierer (VA)" (mousedown)="onGateMouseDown($event, 'full-adder')">
+        <app-full-adder [toolbarMode]="true"></app-full-adder>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Flip-Flops -->
+  <div class="palette-group">
+    <span class="group-label">Flip-Flop</span>
+    <div class="palette-items">
+      <div class="palette-item" [class.disabled]="simulationMode" title="JK-Flip-Flop" (mousedown)="onGateMouseDown($event, 'jk-ff')">
+        <app-jk-flipflop [toolbarMode]="true"></app-jk-flipflop>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!--
+    Ein-/Ausgabe + Sonderkomponenten.
+    Klasse "io-item": behält die eigene (nicht-gelbe) Optik der Bauteile
+    bei — nur der Deaktiviert-Zustand (grau, simulationMode) greift hier
+    genau wie bei den Gattern.
+  -->
+  <div class="palette-group">
+    <span class="group-label">Ein/Ausgang</span>
+    <div class="palette-items">
+      <div class="palette-item io-item" [class.disabled]="simulationMode" title="Eingangs-Schalter (gibt 0 oder 1 aus)" (mousedown)="onGateMouseDown($event, 'input')">
+        <app-input-switch [toolbarMode]="true"></app-input-switch>
+      </div>
+      <div class="palette-item io-item" [class.disabled]="simulationMode" title="Ausgangs-LED (zeigt Signal an)" (mousedown)="onGateMouseDown($event, 'output')">
+        <app-output-led [toolbarMode]="true"></app-output-led>
+      </div>
+      <div class="palette-item io-item" [class.disabled]="simulationMode" title="Taktgeber – erzeugt periodisches Signal" (mousedown)="onGateMouseDown($event, 'clock-gen')">
+        <app-clock-gen [toolbarMode]="true"></app-clock-gen>
+      </div>
+      <div class="palette-item io-item" [class.disabled]="simulationMode" title="Beschriftungs-Label" (mousedown)="onGateMouseDown($event, 'text-label')">
+        <app-text-label [toolbarMode]="true"></app-text-label>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!--
+    Werkzeug: Pan (Verschieben) / Leitung (Wire).
+    Steht an der Stelle, an der zuvor die Bearbeiten-Buttons (Undo/Redo/Copy/
+    Paste) waren — diese sind jetzt im Bearbeiten-Menü der Menüleiste.
+    SVG-Icons statt Emoji, kein Text-Label, exakt zentriert.
+  -->
+  <div class="palette-group">
+    <span class="group-label">Werkzeug</span>
+    <div class="palette-items">
+      <button
+        class="tool-toggle"
+        [class.selected]="activeTool === 'pan'"
+        title="Verschieben (Pan)"
+        (click)="selectTool('pan')"
+      >
+        <!-- Feather-Style "move"-Icon: 4-Wege-Pfeilkreuz -->
+        <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="5 9 2 12 5 15"></polyline>
+          <polyline points="9 5 12 2 15 5"></polyline>
+          <polyline points="15 19 12 22 9 19"></polyline>
+          <polyline points="19 9 22 12 19 15"></polyline>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <line x1="12" y1="2" x2="12" y2="22"></line>
+        </svg>
+      </button>
+      <button
+        class="tool-toggle"
+        [class.selected]="activeTool === 'wire'"
+        title="Leitung ziehen (Wire)"
+        (click)="selectTool('wire')"
+      >
+        <!-- Feather-Style "zap"-Icon: Blitz für Leitungs-/Verbindungswerkzeug -->
+        <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Spacer schiebt Simulations-Button nach rechts -->
+  <div class="spacer"></div>
+
+  <!-- Simulations-Toggle: runder Power-Button (gelb = läuft, grau = gestoppt) -->
+  <button
+    class="sim-btn"
+    [class.active]="simulationMode"
+    title="{{ simulationMode ? 'Simulation stoppen' : 'Simulation starten (F5)' }}"
+    (click)="simulationToggle.emit()"
+  >
+    ⏻
+  </button>
+
+</header>

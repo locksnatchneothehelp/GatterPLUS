@@ -1,0 +1,189 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Obere Werkzeugleiste
+   Farben kommen zentral aus den CSS Custom Properties (styles.scss),
+   dadurch funktioniert Light/Dark Mode automatisch.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.toolbar-top {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  /* Heller blaugrauer Hintergrund (wie Referenzbild) */
+  background: var(--toolbar-bg);
+  color: var(--toolbar-text);
+  padding: 0 12px;
+  gap: 0;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--menu-border);
+  z-index: 10;
+  overflow-x: auto; /* horizontales Scrollen auf kleinen Bildschirmen */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* App-Name links */
+.app-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--toolbar-title);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Vertikale Trennlinie zwischen Gruppen */
+.divider {
+  width: 1px;
+  height: 36px;
+  background: var(--divider);
+  margin: 0 10px;
+  flex-shrink: 0;
+}
+
+/* Gruppe: Label oben + Items darunter */
+.palette-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.group-label {
+  font-size: 9px;
+  color: var(--toolbar-text);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+.palette-items {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+/*
+ * Einzelnes Palette-Item: der KASTEN selbst ist bewusst farblos/leer — kein
+ * eigener Hintergrund, kein eigener Rahmen. Dadurch scheint die Taskleisten-
+ * Farbe (--toolbar-bg) überall dort durch, wo kein Bauteil-Icon sitzt.
+ *
+ * Die Gold/Gelb-Färbung DES BAUTEILS selbst (nicht des Kastens) passiert
+ * NICHT hier, sondern direkt in der jeweiligen Gatter-SCSS
+ * (z.B. and-gate.scss: `.gate.toolbar-mode .gate-body { background:
+ * var(--btn-bg) }`). Ein früherer Versuch mit einem ::after-Overlay +
+ * mix-blend-mode auf Toolbar-Ebene wurde verworfen: der Blend-Modus färbte
+ * einerseits die TRANSPARENTEN Zwischenräume ungewollt mit ein (der Kasten
+ * sollte aber leer bleiben) und färbte andererseits den weißen Gatter-Körper
+ * kaum sichtbar (hohe Luminanz von Weiß dominiert den Blend). Die direkte
+ * CSS-Variable in der Gatter-SCSS trifft exakt nur die gewünschte Fläche.
+ */
+.palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 56px;
+  cursor: grab;
+  transition: filter 0.15s, opacity 0.15s;
+
+  /* Dezentes Hover-Feedback auf dem sonst leeren Kasten (rein interaktiv,
+     keine dauerhafte Farbe) */
+  &:hover {
+    background: var(--menu-hover-bg);
+    border-radius: 6px;
+  }
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/*
+ * Deaktivierter Zustand: nur während die Simulation läuft.
+ * "Nur deaktivierte Elemente dürfen grau wirken" — hier via Graustufen-Filter
+ * auf dem gesamten Palette-Item (färbt das jetzt tatsächlich goldene
+ * Bauteil-Icon grau, der Kasten selbst bleibt ohnehin farblos). Zusätzlich
+ * pointer-events:none und ein Guard in onGateMouseDown() verhindern das
+ * tatsächliche Platzieren.
+ */
+.palette-item.disabled {
+  filter: grayscale(1) opacity(0.55);
+  cursor: not-allowed;
+  pointer-events: none;
+
+  &:hover {
+    background: none; /* kein Hover-Feedback auf deaktivierten Items */
+  }
+}
+
+/*
+ * Werkzeug-Toggle-Buttons (Pan / Leitung): gleiche Größe und Grundfarbe wie
+ * die Bauteil-Buttons, damit sie optisch zur restlichen gelben Toolbar passen.
+ * Der SVG-Icon-Inhalt wird über Flexbox exakt horizontal und vertikal zentriert.
+ */
+.tool-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid var(--btn-border);
+  border-radius: 6px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--btn-hover-bg);
+  }
+
+  /* Aktuell ausgewähltes Werkzeug: eigener Rahmen-Akzent statt reinem Gelb,
+     damit die Auswahl trotz durchgängig gelber Buttons klar erkennbar bleibt */
+  &.selected {
+    background: var(--btn-selected-bg);
+    border-color: var(--btn-selected-border);
+    border-width: 2px;
+    color: var(--btn-selected-text);
+  }
+}
+
+/* SVG-Icon innerhalb der Werkzeug-Buttons: feste Größe, exakt zentriert */
+.tool-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+/* Spacer schiebt den Power-Button nach rechts */
+.spacer { flex: 1; }
+
+/* ─── Simulations-/Power-Button (rund, oben rechts) ────────────────────────── */
+.sim-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--power-border);
+  background: var(--power-bg);
+  color: var(--power-icon);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  /* Simulation aktiv: gelb-orange leuchtend */
+  &.active {
+    background: var(--power-on-bg);
+    border-color: var(--power-on-border);
+    color: var(--power-on-icon);
+  }
+}

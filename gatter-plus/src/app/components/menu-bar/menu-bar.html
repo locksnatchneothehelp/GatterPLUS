@@ -1,0 +1,85 @@
+<!--
+  Klassische Menüleiste: Datei | Bearbeiten | Hilfe   ...   Theme-Umschalter
+  Dropdowns öffnen per Klick; ein Klick außerhalb schließt sie (siehe menu-bar.ts).
+-->
+<nav class="menu-bar">
+
+  <!-- ── Menü: Datei ─────────────────────────────────────────────────────── -->
+  <div class="menu-item" [class.open]="openMenu === 'datei'">
+    <button class="menu-title" (click)="toggleMenu('datei', $event)">Datei</button>
+
+    @if (openMenu === 'datei') {
+      <!-- stopPropagation, damit ein Klick INS Dropdown es nicht sofort schließt -->
+      <div class="dropdown" (click)="$event.stopPropagation()">
+        <button class="dropdown-item" (click)="onNew()">Neu</button>
+
+        <div class="dropdown-sep"></div>
+
+        <button class="dropdown-item" (click)="onOpen()">Öffnen</button>
+        <button class="dropdown-item" (click)="onSave()">Speichern</button>
+        <button class="dropdown-item" (click)="onSaveAs()">Speichern unter</button>
+
+        <div class="dropdown-sep"></div>
+
+        <button class="dropdown-item" (click)="onImportLws()">Importieren (LWS)</button>
+        <button class="dropdown-item" (click)="onConvertLws()">Konvertieren (LWS)</button>
+
+        <div class="dropdown-sep"></div>
+
+        <button class="dropdown-item" (click)="onExit()">Beenden</button>
+      </div>
+    }
+  </div>
+
+  <!-- ── Menü: Bearbeiten ────────────────────────────────────────────────── -->
+  <div class="menu-item" [class.open]="openMenu === 'bearbeiten'">
+    <button class="menu-title" (click)="toggleMenu('bearbeiten', $event)">Bearbeiten</button>
+
+    @if (openMenu === 'bearbeiten') {
+      <div class="dropdown" (click)="$event.stopPropagation()">
+        <!-- Jeder Eintrag zeigt rechts das zugehörige Tastenkürzel an.
+             Deaktivierte Einträge (z.B. Undo ohne Historie) sind grau. -->
+        <button class="dropdown-item" [disabled]="!canUndo" (click)="onUndo()">
+          <span>Undo</span>
+          <span class="shortcut">Strg+Z</span>
+        </button>
+        <button class="dropdown-item" [disabled]="!canRedo" (click)="onRedo()">
+          <span>Redo</span>
+          <span class="shortcut">Strg+Y</span>
+        </button>
+        <button class="dropdown-item" (click)="onCopy()">
+          <span>Copy</span>
+          <span class="shortcut">Strg+C</span>
+        </button>
+        <button class="dropdown-item" [disabled]="!canPaste" (click)="onPaste()">
+          <span>Paste</span>
+          <span class="shortcut">Strg+V</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ── Menü: Hilfe ─────────────────────────────────────────────────────── -->
+  <div class="menu-item" [class.open]="openMenu === 'hilfe'">
+    <button class="menu-title" (click)="toggleMenu('hilfe', $event)">Hilfe</button>
+
+    @if (openMenu === 'hilfe') {
+      <div class="dropdown" (click)="$event.stopPropagation()">
+        <button class="dropdown-item" (click)="onAbout()">About</button>
+      </div>
+    }
+  </div>
+
+  <!-- Spacer schiebt den Theme-Umschalter nach rechts -->
+  <div class="spacer"></div>
+
+  <!-- ── Theme-Umschalter (Light/Dark) ───────────────────────────────────── -->
+  <button
+    class="theme-toggle"
+    [title]="isDark ? 'Zu Light Mode wechseln' : 'Zu Dark Mode wechseln'"
+    (click)="toggleTheme()"
+  >
+    {{ isDark ? '☀️ Light' : '🌙 Dark' }}
+  </button>
+
+</nav>

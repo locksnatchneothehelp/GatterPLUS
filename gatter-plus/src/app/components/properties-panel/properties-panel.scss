@@ -1,0 +1,201 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--panel-bg);
+  border-left: 1px solid var(--panel-border);
+  overflow-y: auto;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel-header-bg);
+}
+
+.gate-type {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #ef4444;
+  padding: 2px 4px;
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.15);
+  }
+}
+
+.section {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+/* Kurzer Hinweistext im Leitungs-Block (siehe properties-panel.html) */
+.wire-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.rotation-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.rot-btn {
+  flex: 1;
+  padding: 4px 2px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--text-secondary);
+
+  &:hover {
+    background: var(--menu-hover-bg);
+  }
+
+  &.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+}
+
+.color-swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+
+  &.active {
+    border-color: var(--text-primary);
+    transform: scale(1.2);
+  }
+}
+
+.color-default { background: #ffffff; border: 2px solid #cbd5e1; }
+.color-yellow  { background: #fde047; }
+.color-green   { background: #4ade80; }
+.color-red     { background: #f87171; }
+.color-orange  { background: #fb923c; }
+
+.input-count-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--menu-hover-bg);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+}
+
+.count-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 24px;
+  text-align: center;
+}
+
+.period-input,
+.label-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--input-text);
+  background: var(--input-bg);
+  box-sizing: border-box;
+
+  &:focus {
+    outline: 2px solid var(--input-focus);
+    border-color: transparent;
+  }
+}
+
+/* ── Gatter-Info-Block ────────────────────────────────────────────────────── */
+
+.info-section {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.025));
+}
+
+.gate-description {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 2px 0 0 0;
+  white-space: pre-line;
+}
+
+.state-title {
+  margin-top: 10px !important;
+}
+
+.gate-state {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-primary);
+  background: var(--input-bg, rgba(0, 0, 0, 0.04));
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin: 4px 0 0 0;
+  white-space: pre;
+  line-height: 1.6;
+  border: 1px solid var(--surface-border);
+  overflow-x: auto;
+}

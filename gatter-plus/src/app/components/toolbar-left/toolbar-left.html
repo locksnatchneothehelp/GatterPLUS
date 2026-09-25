@@ -1,0 +1,34 @@
+<!-- Linke vertikale Werkzeug-Toolbar -->
+<aside class="toolbar-left">
+
+  <!--
+    Pan-Werkzeug: Whiteboard verschieben.
+    Aktiv = blaue Hervorhebung.
+  -->
+  <button
+    class="tool-btn"
+    [class.active]="activeTool === 'pan'"
+    title="Verschieben (Pan)"
+    (click)="selectTool('pan')"
+  >
+    <!-- Hand-Symbol (Unicode) -->
+    ✋
+    <span class="tool-label">Pan</span>
+  </button>
+
+  <!--
+    Leitungs-Werkzeug: Pins miteinander verbinden.
+    Klick auf Ausgangs-Pin → Klick auf Eingangs-Pin.
+  -->
+  <button
+    class="tool-btn"
+    [class.active]="activeTool === 'wire'"
+    title="Leitung ziehen (Wire)"
+    (click)="selectTool('wire')"
+  >
+    <!-- Verbindungs-Symbol -->
+    ⚡
+    <span class="tool-label">Leitung</span>
+  </button>
+
+</aside>

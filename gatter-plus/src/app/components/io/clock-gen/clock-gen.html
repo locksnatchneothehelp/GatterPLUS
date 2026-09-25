@@ -1,0 +1,19 @@
+<!-- Taktgeber: kein Eingangs-Draht, 1 Ausgangs-Draht rechts -->
+<div
+  class="clock-gen"
+  [class.toolbar-mode]="toolbarMode"
+  [class.value-high]="value === true"
+>
+  <!-- Körper: zeigt TG-Beschriftung und Taktperiode -->
+  <div class="clock-body" [class.active]="value === true">
+    <span class="label">TG</span>
+    @if (!toolbarMode) {
+      <span class="period">{{ periodMs }}ms</span>
+    }
+  </div>
+
+  <!-- Ausgangs-Draht (rechts) -->
+  <div class="pin-out">
+    <div class="wire"></div>
+  </div>
+</div>

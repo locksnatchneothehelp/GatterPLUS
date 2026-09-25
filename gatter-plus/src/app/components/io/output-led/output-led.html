@@ -1,0 +1,19 @@
+<!-- Ausgangs-LED: Eingangs-Draht + LED-Körper -->
+<div
+  class="output-led"
+  [class.toolbar-mode]="toolbarMode"
+  [class.signal-high]="signalInput === true"
+  [class.signal-low]="signalInput === false"
+>
+  <!-- Eingangs-Draht (links) -->
+  <div class="pin-in">
+    <div class="wire"></div>
+  </div>
+
+  <!-- LED-Körper mit "OUT"-Beschriftung und LED-Kreis -->
+  <div class="led-body">
+    <span class="label">OUT</span>
+    <!-- LED-Kreis: leuchtet je nach Signalzustand -->
+    <div class="led-circle"></div>
+  </div>
+</div>

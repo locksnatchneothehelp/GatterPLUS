@@ -1,0 +1,35 @@
+/* NOT-Gatter (Inverter) – 1 Eingang, Invertierkreis am Ausgang */
+.gate { display: flex; flex-direction: row; align-items: center; height: 52px; user-select: none; }
+/* Toolbar-Modus: Körper + Invertierkreis werden gold/gelb eingefärbt
+   (--btn-bg) — nur die Palette-Vorschau, nicht das Gatter auf dem Whiteboard. */
+.gate.toolbar-mode {
+  height: 44px;
+  .gate-body { width: 44px; height: 34px; background: var(--btn-bg, #f5b342); }
+  .wire { width: 6px; }
+  .invert-bubble { width: 7px; height: 7px; background: var(--btn-bg, #f5b342); }
+}
+.gate.signal-high .gate-body { background: #bbf7d0; border-color: #16a34a; }
+.gate.signal-low .gate-body { background: #f1f5f9; border-color: #64748b; }
+/* Ausgangs-Pin + Invertierkreis ebenfalls grün einfärben, wenn Strom fließt */
+.gate.signal-high .pin-out .wire { background: #16a34a; }
+.gate.signal-high .pin-out .invert-bubble { background: #16a34a; border-color: #16a34a; }
+
+/* Eingangs-Seite: 1 zentrierter Draht */
+.pin-in { display: flex; align-items: center; align-self: stretch; }
+
+/* Ausgangs-Seite: Invertierkreis + Draht nebeneinander */
+.pin-out { display: flex; flex-direction: row; align-items: center; align-self: stretch; }
+
+/* Invertierkreis (Bubble) – kleiner Hohlkreis */
+.invert-bubble {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid #1e293b;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.wire { width: 8px; height: 2px; background: var(--wire-stroke, #1e293b); flex-shrink: 0; }
+.gate-body { display: flex; align-items: center; justify-content: center; width: 52px; height: 42px; background: #ffffff; border: 2px solid #1e293b; border-radius: 0; transition: background 0.15s, border-color 0.15s; }
+.symbol { font-size: 18px; font-weight: 700; color: #1e293b; font-family: monospace; }

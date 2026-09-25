@@ -1,0 +1,132 @@
+/* Klassische Desktop-Menüleiste */
+.menu-bar {
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  background: var(--menu-bg);
+  border-bottom: 1px solid var(--menu-border);
+  padding: 0 4px;
+  flex-shrink: 0;
+  z-index: 30; /* über Toolbar und Dropdowns */
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Ein Menüpunkt (Titel + zugehöriges Dropdown) */
+.menu-item {
+  position: relative; /* Anker für das absolut positionierte Dropdown */
+  display: flex;
+  align-items: stretch;
+}
+
+/* Menü-Titel („Datei", „Hilfe") */
+.menu-title {
+  border: none;
+  background: transparent;
+  color: var(--menu-text);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 0 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+
+  &:hover {
+    background: var(--menu-hover-bg);
+  }
+}
+
+/* Geöffnetes Menü: Titel hervorgehoben */
+.menu-item.open .menu-title {
+  background: var(--menu-hover-bg);
+}
+
+/* Dropdown-Container: klassisches Windows-Menü */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 190px;
+  background: var(--dropdown-bg);
+  border: 1px solid var(--dropdown-border);
+  border-radius: 4px;
+  box-shadow: 0 6px 18px var(--dropdown-shadow);
+  padding: 4px 0;
+  z-index: 40;
+}
+
+/* Einzelner Menüeintrag im Dropdown.
+   Flex-Row, damit Label links und Tastenkürzel rechts ausgerichtet werden. */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 6px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+
+  &:hover:not(:disabled) {
+    background: var(--accent);
+    color: #ffffff;
+
+    /* Shortcut-Text im Hover an die weiße Textfarbe angleichen */
+    .shortcut {
+      color: inherit;
+      opacity: 0.85;
+    }
+  }
+
+  /* Deaktivierter Eintrag (z.B. Undo ohne Historie): grau, nicht klickbar.
+     Einzige Stelle, an der ein Bearbeiten-Element grau wirken darf. */
+  &:disabled {
+    color: var(--btn-disabled-text);
+    cursor: default;
+  }
+}
+
+/* Tastenkürzel-Anzeige rechts im Menüeintrag (z.B. "Strg+Z") */
+.shortcut {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: inherit;
+}
+
+/* Trennlinie zwischen Menügruppen */
+.dropdown-sep {
+  height: 1px;
+  background: var(--dropdown-sep);
+  margin: 4px 0;
+}
+
+/* Schiebt den Theme-Umschalter nach rechts */
+.spacer {
+  flex: 1;
+}
+
+/* Theme-Umschalter (Light/Dark) */
+.theme-toggle {
+  align-self: center;
+  border: 1px solid var(--menu-border);
+  background: transparent;
+  color: var(--menu-text);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 3px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+
+  &:hover {
+    background: var(--menu-hover-bg);
+  }
+}

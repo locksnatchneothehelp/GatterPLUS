@@ -1,0 +1,306 @@
+<!--
+  Whiteboard-Layer-Struktur (unten → oben):
+  1. whiteboard-viewport  – Hintergrund, empfängt alle Maus-Events
+  2. grid-svg             – SVG-Raster (scrollt mit panX/panY)
+  3. gates-layer          – platzierte Bauteile (CSS transform für Pan)
+  4. wires-layer (SVG)    – Leitungen als Polylines (rechtwinklig)
+  5. pins-layer           – Pin-Highlights im Wire-Modus
+-->
+<div
+  #viewport
+  class="whiteboard-viewport"
+  [class.panning]="isPanning"
+  [class.dragging]="isDraggingGate"
+  [class.wire-mode]="toolMode === 'wire'"
+  (mousedown)="onMouseDown($event)"
+  (dblclick)="onDblClick($event)"
+>
+
+  <!-- ── Gepunktetes Raster via SVG-Pattern ────────────────────────────────
+       Punkt-Farbe kommt per CSS-Klasse .grid-dot aus einer Theme-Variable. -->
+  <svg class="grid-svg" aria-hidden="true">
+    <defs>
+      <pattern
+        id="wb-grid"
+        [attr.width]="24 * zoom"
+        [attr.height]="24 * zoom"
+        patternUnits="userSpaceOnUse"
+        [attr.x]="panX % (24 * zoom)"
+        [attr.y]="panY % (24 * zoom)"
+      >
+        <circle [attr.cx]="2 * zoom" [attr.cy]="2 * zoom" [attr.r]="1.2 * zoom" class="grid-dot"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#wb-grid)"/>
+  </svg>
+
+  <!-- ── Komponenten-Layer ──────────────────────────────────────────────── -->
+  <div class="gates-layer" [style.transform]="getGatesLayerTransform()">
+    @for (gate of gates; track gate.id) {
+
+      <div
+        class="placed-gate"
+        [style.left.px]="gate.x"
+        [style.top.px]="gate.y"
+        [style.transform]="getGateTransform(gate)"
+        [style.filter]="getGateColorFilter(gate)"
+        [class.selected]="selectedGateIds.has(gate.id)"
+      >
+
+        @if (gate.type === 'and') {
+          <app-and-gate
+            [inputCount]="gate.inputCount"
+            [signalOutput]="simulationMode ? getSignalOutput(gate.id) : null"
+          ></app-and-gate>
+        }
+        @if (gate.type === 'or') {
+          <app-or-gate
+            [inputCount]="gate.inputCount"
+            [signalOutput]="simulationMode ? getSignalOutput(gate.id) : null"
+          ></app-or-gate>
+        }
+        @if (gate.type === 'not') {
+          <app-not-gate
+            [signalOutput]="simulationMode ? getSignalOutput(gate.id) : null"
+          ></app-not-gate>
+        }
+        @if (gate.type === 'xor') {
+          <app-xor-gate
+            [inputCount]="gate.inputCount"
+            [signalOutput]="simulationMode ? getSignalOutput(gate.id) : null"
+          ></app-xor-gate>
+        }
+        @if (gate.type === 'jk-ff') {
+          <app-jk-flipflop
+            [signalOutputQ]="simulationMode ? getSignalOutput(gate.id, 0) : null"
+            [signalOutputQBar]="simulationMode ? getSignalOutput(gate.id, 1) : null"
+          ></app-jk-flipflop>
+        }
+        @if (gate.type === 'half-adder') {
+          <app-half-adder
+            [signalOutputS]="simulationMode ? getSignalOutput(gate.id, 0) : null"
+            [signalOutputC]="simulationMode ? getSignalOutput(gate.id, 1) : null"
+          ></app-half-adder>
+        }
+        @if (gate.type === 'full-adder') {
+          <app-full-adder
+            [signalOutputS]="simulationMode ? getSignalOutput(gate.id, 0) : null"
+            [signalOutputCout]="simulationMode ? getSignalOutput(gate.id, 1) : null"
+          ></app-full-adder>
+        }
+        @if (gate.type === 'input') {
+          <app-input-switch
+            [value]="gate.inputValue ?? false"
+            [simulationMode]="simulationMode"
+          ></app-input-switch>
+        }
+        @if (gate.type === 'output') {
+          <app-output-led
+            [signalInput]="simulationMode ? getSignalInput(gate.id) : null"
+          ></app-output-led>
+        }
+        @if (gate.type === 'clock-gen') {
+          <app-clock-gen
+            [value]="gate.inputValue ?? false"
+            [periodMs]="gate.clockPeriodMs ?? 1000"
+          ></app-clock-gen>
+        }
+        @if (gate.type === 'text-label') {
+          @if (editingLabelGateId === gate.id) {
+            <!-- Text-Label Inline-Bearbeitung (Doppelklick) -->
+            <input
+              class="label-edit-input text-label-inline-edit"
+              type="text"
+              [(ngModel)]="editingLabelValue"
+              (keydown.enter)="commitLabel()"
+              (keydown.escape)="cancelEditLabel()"
+              (blur)="commitLabel()"
+              (mousedown)="$event.stopPropagation()"
+              (click)="$event.stopPropagation()"
+            />
+          } @else {
+            <app-text-label
+              [label]="gate.label ?? 'Label'"
+            ></app-text-label>
+          }
+        }
+
+        <!-- Label-Overlay: sichtbar wenn das Bauteil ein Label hat -->
+        @if (gate.label && gate.type !== 'text-label') {
+          @if (editingLabelGateId === gate.id) {
+            <!-- Inline-Eingabefeld (aktiv bei Doppelklick) -->
+            <input
+              class="label-edit-input"
+              type="text"
+              [(ngModel)]="editingLabelValue"
+              (keydown.enter)="commitLabel()"
+              (keydown.escape)="cancelEditLabel()"
+              (blur)="commitLabel()"
+              (mousedown)="$event.stopPropagation()"
+              (click)="$event.stopPropagation()"
+            />
+          } @else {
+            <!-- Label-Text (Lese-Ansicht) -->
+            <div class="gate-label-overlay">{{ gate.label }}</div>
+          }
+        }
+
+        <!-- Leeres Inline-Eingabefeld: wird gezeigt wenn kein Label vorhanden, aber Bearbeitung aktiv -->
+        @if (!gate.label && editingLabelGateId === gate.id && gate.type !== 'text-label') {
+          <input
+            class="label-edit-input"
+            type="text"
+            [(ngModel)]="editingLabelValue"
+            (keydown.enter)="commitLabel()"
+            (keydown.escape)="cancelEditLabel()"
+            (blur)="commitLabel()"
+            (mousedown)="$event.stopPropagation()"
+            (click)="$event.stopPropagation()"
+          />
+        }
+
+      </div>
+    }
+
+    <!-- Auswahlrahmen (Ctrl+Drag auf leerer Fläche) -->
+    @if (selectionRectDisplay) {
+      <div
+        class="selection-rect"
+        [style.left.px]="selectionRectDisplay.left"
+        [style.top.px]="selectionRectDisplay.top"
+        [style.width.px]="selectionRectDisplay.width"
+        [style.height.px]="selectionRectDisplay.height"
+      ></div>
+    }
+  </div>
+
+  <!-- ── SVG-Leitungs-Layer (rechtwinklige Polylines) ──────────────────── -->
+  <svg class="wires-layer" [style.transform]="getGatesLayerTransform()">
+
+    @for (wire of wires; track wire.id) {
+      @let pts = getWirePointsString(wire);
+      @if (pts) {
+        <polyline
+          [attr.points]="pts"
+          class="wire-line"
+          [class.wire-high]="simulationMode && isWireHigh(wire)"
+          [class.wire-low]="simulationMode && !isWireHigh(wire)"
+          [class.wire-selected]="wire.id === selectedWireId"
+          (click)="onWireClick(wire, $event)"
+        />
+      }
+    }
+
+    <!-- Vorschau-Leitung (orthogonal, gestrichelt) -->
+    @if (wireDrawing) {
+      <polyline
+        [attr.points]="getTentativePointsString()"
+        class="wire-tentative"
+      />
+    }
+
+    <!-- Verbindungs-Dots: ein Ausgang versorgt mehrere Eingänge (T-Junction) -->
+    @for (pt of getWireJunctions(); track $index) {
+      <circle
+        [attr.cx]="pt.x"
+        [attr.cy]="pt.y"
+        r="4"
+        class="wire-junction"
+        [class.junction-high]="simulationMode && getSignalOutput(pt.gateId, pt.pinIndex) === true"
+        [class.junction-low]="simulationMode && getSignalOutput(pt.gateId, pt.pinIndex) === false"
+      />
+    }
+
+    <!-- Verneinungs-Punkte an Ausgangs-Stubs -->
+    @for (dot of getNegationDots(); track $index) {
+      <circle
+        [attr.cx]="dot.x"
+        [attr.cy]="dot.y"
+        r="6"
+        class="negation-dot"
+        [class.negation-high]="simulationMode && getSignalOutput(dot.gateId, dot.pinIndex) === true"
+        [class.negation-low]="simulationMode && getSignalOutput(dot.gateId, dot.pinIndex) === false"
+      />
+    }
+
+  </svg>
+
+  <!-- ── Pin-Highlight-Layer (nur im Wire-Modus) ────────────────────────── -->
+  @if (toolMode === 'wire') {
+    <div class="pins-layer" [style.transform]="getGatesLayerTransform()">
+      @for (gate of gates; track gate.id) {
+
+        @let offsets = getPinOffsets(gate);
+
+        <!-- Ausgangs-Pins: grüne Punkte, nur wenn noch eine Verbindung erlaubt ist
+             oder dieser Pin gerade als Startpunkt einer Leitung dient -->
+        @for (pin of offsets.outputs; track $index) {
+          @let outPos = getPinWorldPosForTemplate(gate, 'output', $index);
+          @if (canStartWireFromOutput(gate.id, $index) || (wireDrawing?.fromGateId === gate.id && wireDrawing?.fromPinIndex === $index)) {
+            <div
+              class="pin-dot output-pin"
+              [style.left.px]="outPos.x - 5"
+              [style.top.px]="outPos.y - 5"
+              [class.drawing-start]="wireDrawing?.fromGateId === gate.id && wireDrawing?.fromPinIndex === $index"
+            ></div>
+          }
+        }
+
+        <!-- Eingangs-Pins: blaue Punkte (nur für nicht verbundene Pins) -->
+        @for (pin of offsets.inputs; track $index) {
+          @let inPos = getPinWorldPosForTemplate(gate, 'input', $index);
+          @if (!isInputPinConnected(gate.id, $index)) {
+            <div
+              class="pin-dot input-pin"
+              [style.left.px]="inPos.x - 5"
+              [style.top.px]="inPos.y - 5"
+            ></div>
+          }
+        }
+
+      }
+    </div>
+  }
+
+  <!-- ── Zoom-Anzeige + Minimap (unten links) ──────────────────────────── -->
+  <div class="zoom-bar">
+    <span class="zoom-pct">{{ (zoom * 100).toFixed(0) }}%</span>
+    <button
+      class="minimap-toggle-btn"
+      (click)="minimapVisible = !minimapVisible"
+      [class.active]="minimapVisible"
+      title="Minimap ein-/ausblenden"
+      (mousedown)="$event.stopPropagation()"
+    >
+      <!-- 2×2-Gitter-Symbol -->
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <rect x="1"   y="1"   width="5" height="5" stroke="currentColor" stroke-width="1.5" rx="0.5"/>
+        <rect x="8"   y="1"   width="5" height="5" stroke="currentColor" stroke-width="1.5" rx="0.5"/>
+        <rect x="1"   y="8"   width="5" height="5" stroke="currentColor" stroke-width="1.5" rx="0.5"/>
+        <rect x="8"   y="8"   width="5" height="5" stroke="currentColor" stroke-width="1.5" rx="0.5"/>
+      </svg>
+    </button>
+
+    @if (minimapVisible) {
+      <div class="minimap" (mousedown)="$event.stopPropagation()">
+        <svg class="minimap-svg" [attr.viewBox]="minimapData.viewBox" preserveAspectRatio="xMidYMid meet">
+          @for (r of minimapData.gateRects; track $index) {
+            <rect
+              [attr.x]="r.x" [attr.y]="r.y"
+              [attr.width]="r.w" [attr.height]="r.h"
+              class="minimap-gate"
+            />
+          }
+          <rect
+            [attr.x]="minimapData.viewportRect.x"
+            [attr.y]="minimapData.viewportRect.y"
+            [attr.width]="minimapData.viewportRect.w"
+            [attr.height]="minimapData.viewportRect.h"
+            class="minimap-viewport-rect"
+          />
+        </svg>
+      </div>
+    }
+  </div>
+
+</div>

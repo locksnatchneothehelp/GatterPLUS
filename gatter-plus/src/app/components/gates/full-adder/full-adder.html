@@ -1,0 +1,41 @@
+<!-- Volladdierer (Full Adder / Volladder) -->
+<div
+  class="gate"
+  [class.toolbar-mode]="toolbarMode"
+  [class.signal-high]="signalOutputS === true"
+  [class.signal-low]="signalOutputS === false"
+>
+  <!-- Eingangs-Pins (links): A (oben), B (Mitte), Cin (unten) -->
+  <div class="pins-in">
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">A</span>
+    </div>
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">B</span>
+    </div>
+    <div class="pin-row">
+      <div class="wire"></div>
+      <span class="pin-label">Cin</span>
+    </div>
+  </div>
+
+  <!-- Gatter-Körper -->
+  <div class="gate-body">
+    <span class="symbol">VA</span>
+  </div>
+
+  <!-- Ausgangs-Pins (rechts): S – Summe (oben), Cout – Carry-out (unten).
+       Jeder Pin färbt sich unabhängig grün, wenn sein eigenes Signal HIGH ist. -->
+  <div class="pins-out">
+    <div class="pin-row-out">
+      <span class="pin-label-out">S</span>
+      <div class="wire" [class.signal-high]="signalOutputS === true"></div>
+    </div>
+    <div class="pin-row-out">
+      <span class="pin-label-out">Cout</span>
+      <div class="wire" [class.signal-high]="signalOutputCout === true"></div>
+    </div>
+  </div>
+</div>
