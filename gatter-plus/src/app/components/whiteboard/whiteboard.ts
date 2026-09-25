@@ -763,6 +763,12 @@ export class Whiteboard implements OnDestroy {
         this.toggleNegation(stubHit.gate.id, stubHit.pinIndex);
         return;
       }
+      // Eingangs-Stub: negierter Eingang (Kreis wie in LogikSim)
+      const inStubHit = this.findStubAt(lx, ly, 'input');
+      if (inStubHit) {
+        this.toggleNegation(inStubHit.gate.id, inStubHit.pinIndex, 'input');
+        return;
+      }
     }
 
     if (event.ctrlKey || event.shiftKey) {
@@ -1180,24 +1186,25 @@ export class Whiteboard implements OnDestroy {
     return false;
   }
 
-  // ─── Negation (Ausgangs-Verneinung per Klick auf Ausgangs-Stub) ──────────────
+  // ─── Negation (Verneinung per Klick auf Ausgangs-/Eingangs-Stub) ─────────────
 
   /**
-   * Gibt zurück, ob sich der Punkt (lx,ly) im Ausgangs-Stub-Bereich
-   * (erste ~20 px nach dem Ausgangs-Pin) eines Gatters befindet.
-   * Nur im Pan-Modus sinnvoll (Verneinung setzen/entfernen).
+   * Gibt zurück, ob sich der Punkt (lx,ly) im Stub-Bereich (erste ~20 px
+   * außerhalb des Pins) eines Ausgangs bzw. Eingangs befindet.
+   * Im Pan-Modus: Verneinung setzen/entfernen; im Leitungs-Modus: Start am Ausgang.
    */
-  private findOutputStubAt(
-    lx: number, ly: number
+  private findStubAt(
+    lx: number, ly: number, kind: 'input' | 'output'
   ): { gate: GateInstance; pinIndex: number } | null {
     const STUB_LEN = 20;
     const HIT_R    = 8;
     for (const gate of this.gates) {
-      if (gate.type === 'text-label' || gate.type === 'output') continue;
+      if (gate.type === 'text-label') continue;
       const offsets = getGatePinOffsets(gate);
-      for (let i = 0; i < offsets.outputs.length; i++) {
-        const pos = getPinWorldPos(gate, 'output', i);
-        const dir = getPinDirection(gate, 'output');
+      const pins = kind === 'output' ? offsets.outputs : offsets.inputs;
+      for (let i = 0; i < pins.length; i++) {
+        const pos = getPinWorldPos(gate, kind, i);
+        const dir = getPinDirection(gate, kind);
         const { dist } = this.closestPointOnSegment(
           lx, ly,
           pos.x, pos.y,
@@ -1209,29 +1216,43 @@ export class Whiteboard implements OnDestroy {
     return null;
   }
 
-  /** Setzt/entfernt die Verneinung für einen Ausgangs-Pin. */
-  toggleNegation(gateId: string, pinIndex: number): void {
+  private findOutputStubAt(lx: number, ly: number): { gate: GateInstance; pinIndex: number } | null {
+    return this.findStubAt(lx, ly, 'output');
+  }
+
+  /** Setzt/entfernt die Verneinung für einen Ausgangs- bzw. Eingangs-Pin. */
+  toggleNegation(gateId: string, pinIndex: number, kind: 'input' | 'output' = 'output'): void {
     this.pushHistory();
+    const key = kind === 'output' ? 'negatedOutputs' : 'negatedInputs';
     this.gates = this.gates.map(g => {
       if (g.id !== gateId) return g;
-      const cur  = g.negatedOutputs ?? [];
+      const cur  = g[key] ?? [];
       const next = cur.includes(pinIndex)
         ? cur.filter(i => i !== pinIndex)
         : [...cur, pinIndex];
-      return { ...g, negatedOutputs: next };
+      return { ...g, [key]: next };
     });
     if (this.simulationMode) this.recomputeSimulation();
   }
 
-  /** Alle Verneinungs-Punkte für die SVG-Darstellung. */
-  getNegationDots(): { x: number; y: number; gateId: string; pinIndex: number }[] {
-    const res: { x: number; y: number; gateId: string; pinIndex: number }[] = [];
+  /**
+   * Alle Verneinungs-Punkte für die SVG-Darstellung (Ausgänge und Eingänge).
+   * high = Signal auf der LEITUNG am Kreis (Ausgang: nach der Verneinung;
+   * Eingang: vor der Verneinung, also der Wert der ankommenden Leitung).
+   */
+  getNegationDots(): { x: number; y: number; high: boolean | null }[] {
+    const res: { x: number; y: number; high: boolean | null }[] = [];
     for (const gate of this.gates) {
-      if (!gate.negatedOutputs?.length) continue;
-      for (const pi of gate.negatedOutputs) {
+      for (const pi of gate.negatedOutputs ?? []) {
         const pos = getPinWorldPos(gate, 'output', pi);
         const dir = getPinDirection(gate, 'output');
-        res.push({ x: pos.x + dir.dx * 10, y: pos.y + dir.dy * 10, gateId: gate.id, pinIndex: pi });
+        res.push({ x: pos.x + dir.dx * 10, y: pos.y + dir.dy * 10, high: this.getSignalOutput(gate.id, pi) });
+      }
+      for (const pi of gate.negatedInputs ?? []) {
+        const pos = getPinWorldPos(gate, 'input', pi);
+        const dir = getPinDirection(gate, 'input');
+        const v   = this.getSignalInput(gate.id, pi);
+        res.push({ x: pos.x + dir.dx * 10, y: pos.y + dir.dy * 10, high: v === null ? null : !v });
       }
     }
     return res;

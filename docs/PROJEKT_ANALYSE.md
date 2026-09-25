@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -20,7 +20,7 @@
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
-| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, NOT für negierte Eingänge) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
+| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
 | PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
 | Undo/Redo-Stacks | `services/history.service.ts` |
@@ -32,7 +32,7 @@
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |
 | `ToolMode`-Typ (Komponente selbst ungenutzt) | `components/toolbar-left/toolbar-left.ts` |
-| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
+| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `services/simulation.service.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
 | Build/Test-Konfiguration | `gatter-plus/angular.json`, `package.json`, `vitest.config.ts`, `tsconfig*.json` |
 | CI/Deployment (GitHub Pages) | `.github/workflows/main.yml` (Repo-Root) |
 
@@ -75,6 +75,7 @@ interface GateInstance {
   label?: string;        // Beschriftung (alle Typen; text-label: Inhalt)
   clockPeriodMs?: number;// clock-gen, Default 1000
   negatedOutputs?: number[]; // invertierte Ausgangs-Pin-Indizes
+  negatedInputs?: number[];  // invertierte Eingangs-Pin-Indizes (Phase 6, Kreis wie LogikSim)
 }
 
 interface WireConnection {
@@ -153,7 +154,7 @@ Beispiel Menüeintrag (analog Undo):
 - Start (Phase 6A): Ausgangs-Pin – auch belegt (**Fan-out**, `getOutputPinMaxConnections` = `Infinity`, Verbindungspunkt am Pin) – **oder** Klick auf beliebige Stelle einer Leitung → Abzweig (`branchPoint`, elektrisch gleiche Quelle); Klick auf den Ausgangs-Stummel (20 px) startet am Ausgang selbst. **Oder umgekehrt:** Start an freiem Eingang (`WireDrawingState.reverse`), Ende an Ausgang oder auf einer Leitung (Abzweig, Richtung zum Ziel). Anlegen zentral in `addWire()`. **Knickpunkte (6B):** Klick auf freie Fläche beim Zeichnen setzt Knick (`wireDrawing.bends`, normal gezogen auch auf Leitungen); Escape bricht ab. Knicke wandern beim Verschieben nur mit, wenn beide Enden bewegt werden; „Verlauf automatisch“ im Eigenschaften-Panel (`resetWireRoute`). Hover-Hervorhebung `hoverWireId` im Leitungs-Modus.
 - Ende (normal gezogen): nur Eingangs-Pin eines **anderen** Bauteils, Eingang darf **nicht belegt** sein (max. 1 Leitung pro Eingang). Sonst Abbruch ohne Leitung. Escape bricht ab.
 - Routing orthogonal: `computeOrthogonalWaypoints` (Z-Form, U-Kurve, gemischte Rotationen).
-- Negation: Im Pan-Modus (nicht Simulation) Klick auf Ausgangs-Stub → `toggleNegation` (`negatedOutputs`).
+- Negation: Im Pan-Modus (nicht Simulation) Klick auf Ausgangs- bzw. Eingangs-Stub (20 px außerhalb des Pins, `findStubAt`) → `toggleNegation(id, pin, kind)` (`negatedOutputs`/`negatedInputs`); Kreise via `getNegationDots` (Farbe = Signal auf der Leitung am Kreis).
 - Löschen eines Bauteils entfernt alle anhängenden Leitungen.
 
 **Simulation** (`SimulationService.computeSignals(gates, wires) → Map<id, {inputSignals, outputSignals}>`; Werte `true|false|null`):
@@ -162,7 +163,7 @@ Beispiel Menüeintrag (analog Undo):
 3. JK-FF fortschreiben (`nextFlipFlopState`): S=1 → Q=1 (Vorrang), R=1 → Q=0 (asynchron, pegelaktiv); steigende Flanke an C: J/K = setzen/rücksetzen/toggeln; offene Pins = LOW.
 4. Bei FF-Änderung erneut `settle`.
 - `null`-Semantik: AND → false, sobald ein Eingang false; OR → true, sobald einer true; sonst null bei unverbundenem Eingang.
-- Negation wird auf Ausgänge angewandt (auch bei Quellen und JK-FF).
+- Negation wird auf Ausgänge angewandt (auch bei Quellen und JK-FF); negierte Eingänge invertiert `propagate` beim Übertragen (`inputSignals` = Rechenwert, offener Eingang bleibt `null`).
 - Auslöser: `Whiteboard.recomputeSimulation()` bei jeder Mutation, Schalter-Klick (`tryToggleSwitch`) und jedem Takt-Tick.
 - Taktgeber: `setInterval` pro `clock-gen` im Whiteboard, toggelt `inputValue` alle `max(100, clockPeriodMs)` ms (= Halbperiode). Panel begrenzt 100–10000.
 - Simulation aus: Intervalle stoppen, `inputValue`, `ffState`, `ffPrevClock` → false, `signalStates` + `prevOutputs` leeren. Simulation an: Werkzeug → Pan, Palette deaktiviert.
@@ -181,8 +182,8 @@ Alle Befehle in `gatter-plus/`:
 | Deploy (Standard) | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 | Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
 
-- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
-- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (5 Spec-Dateien). `ng test` noch nicht ausgeführt.
+- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). `simulation.service.spec.ts`: negierte Eingänge. Keine Komponenten-Tests.
+- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (6 Spec-Dateien). `ng test` noch nicht ausgeführt.
 - Formatierung: Prettier (`printWidth 100`, `singleQuote`), `.editorconfig` 2 Leerzeichen.
 
 ## Code-Stil und Konventionen

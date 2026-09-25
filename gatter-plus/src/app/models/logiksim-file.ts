@@ -1,6 +1,6 @@
 import {
   GateInstance, GateType, WireConnection,
-  createGateInstance, getGateDimensions, getPinWorldPos,
+  createGateInstance,
 } from './gate.model';
 import { ProjectData } from './project-file';
 
@@ -111,7 +111,6 @@ interface Pin {
   kind:    'in' | 'out';
   x:       number;
   y:       number;
-  negated: boolean;
 }
 
 const child = (n: LogikSimNode | undefined, name: string) =>
@@ -152,12 +151,12 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
 
     if (name === 'TSwitchModule') {
       const g = newGate('input', ux, uy);
-      pins.push({ gate: g, index: 0, kind: 'out', x: ux, y: uy, negated: false });
+      pins.push({ gate: g, index: 0, kind: 'out', x: ux, y: uy });
       continue;
     }
     if (name === 'TLedModule') {
       const g = newGate('output', ux, uy);
-      pins.push({ gate: g, index: 0, kind: 'in', x: ux, y: uy, negated: false });
+      pins.push({ gate: g, index: 0, kind: 'in', x: ux, y: uy });
       continue;
     }
     if (name === 'TTextModule') {
@@ -179,15 +178,13 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
       warnings.push(`${name} bei (${ux}|${uy}) ist in LogikSim gedreht – Drehung wurde nicht übernommen.`);
     }
 
-    ins.forEach((c, i) => pins.push({
-      gate: g, index: i, kind: 'in',
-      x: num(c.props['PositionX']), y: num(c.props['PositionY']), negated: c.props['Negatived'] === true,
-    }));
+    ins.forEach((c, i) => {
+      if (c.props['Negatived'] === true) g.negatedInputs = [...(g.negatedInputs ?? []), i];
+      pins.push({ gate: g, index: i, kind: 'in', x: num(c.props['PositionX']), y: num(c.props['PositionY']) });
+    });
     outs.forEach((c, i) => {
-      const negated = c.props['Negatived'] === true;
-      if (negated) g.negatedOutputs = [...(g.negatedOutputs ?? []), i];
-      pins.push({ gate: g, index: i, kind: 'out',
-        x: num(c.props['PositionX']), y: num(c.props['PositionY']), negated });
+      if (c.props['Negatived'] === true) g.negatedOutputs = [...(g.negatedOutputs ?? []), i];
+      pins.push({ gate: g, index: i, kind: 'out', x: num(c.props['PositionX']), y: num(c.props['PositionY']) });
     });
   }
   for (const [name, n] of unknown) {
@@ -227,21 +224,8 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
     if (sinks.length === 0) continue;
     if (sources.length !== 1) { if (sources.length > 1) multiSource++; continue; }
     const src = sources[0];
-
-    for (const sink of sinks) {
-      if (!sink.negated) { connect(src.gate, src.index, sink.gate, sink.index); continue; }
-      // GatterPLUS kennt keine negierten Eingänge → NOT-Gatter davorsetzen.
-      const pos = getPinWorldPos(sink.gate, 'input', sink.index);
-      const inv = createGateInstance(`gate-${++gateNo}`, 'not', 0, 0);
-      const dim = getGateDimensions(inv);
-      // Je Eingang eine Spalte weiter links — sonst überlappen NOTs benachbarter
-      // Eingänge (Pin-Abstand 16 px < NOT-Höhe 52 px).
-      inv.x = pos.x - (dim.w + 12) * (sink.index + 1);
-      inv.y = pos.y - dim.h / 2;
-      gates.push(inv);
-      connect(src.gate, src.index, inv, 0);
-      connect(inv, 0, sink.gate, sink.index);
-    }
+    // Negierte Eingänge stehen bereits in gate.negatedInputs (s. o.)
+    for (const sink of sinks) connect(src.gate, src.index, sink.gate, sink.index);
   }
   if (multiSource > 0) {
     warnings.push(`${multiSource} Leitung(en) mit mehreren Signalquellen wurden nicht übernommen.`);

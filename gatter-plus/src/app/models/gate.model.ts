@@ -74,6 +74,12 @@ export interface GateInstance {
    * Wird im Pan-Modus durch Klick auf den Ausgangs-Stub gesetzt/entfernt.
    */
   negatedOutputs?: number[];
+  /**
+   * Indizes der Eingangs-Pins, deren Signal invertiert (verneint) wird
+   * (Phase 6, wie die Kreise an Eingängen in LogikSim). Wird im Pan-Modus
+   * durch Klick auf den Eingangs-Stub gesetzt/entfernt.
+   */
+  negatedInputs?: number[];
 }
 
 /**

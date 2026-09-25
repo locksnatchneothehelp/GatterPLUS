@@ -47,7 +47,7 @@
 - **Nur Import** `.sim` → GatterPLUS. **Export nach `.sim` entfällt** (Entscheidung Nutzer 2026-09-25: Format nur teilweise bekannt, Ergebnis nicht prüfbar).
 - **5.5a Import `.sim` → GatterPLUS (umgesetzt):** `parseLogikSim(bytes)` in `models/logiksim-file.ts`, Menü „Importieren (LogikSim)“ → `App.onImportLogikSim`. Menüpunkt `Konvertieren (LWS)` wurde entfernt (Entscheidung Nutzer).
 - Abbildung: `TSwitchModule`→`input`, `TLedModule`→`output`, `TTextModule`→`text-label` (`Caption`), `TAnd/TOr/TXorModule`→`and/or/xor` (Eingänge = Anzahl Connectoren), `THalf/TFullAdderModule`→`half/full-adder`. Pin-Index = Reihenfolge in `Input/OutputConnectorList`. 1 Rastereinheit = 80 px, Ansicht 50 %.
-- **Negierte Eingänge** (`Negatived` am Eingang; GatterPLUS kennt nur negierte Ausgänge) → eingefügtes NOT-Gatter, je Eingangsindex eine Spalte weiter links. Negierte Ausgänge → `negatedOutputs`.
+- **Negierte Eingänge** (`Negatived` am Eingang) → `negatedInputs` (seit Phase 6; anfangs eingefügte NOT-Gatter). Negierte Ausgänge → `negatedOutputs`.
 - **Annahmen:** Schalter an einem Bauteil-Ausgang → Anzeige (`output`, mit Hinweis). Netze: Segment-Endpunkte verbunden; Punkt auf einem Segment = T-Abzweig; reine Kreuzung im Inneren = nicht verbunden.
 - Nicht Abbildbares (unbekannte Module, gedrehte Module, Netze mit mehreren Quellen) wird per Hinweis gemeldet. Nach dem Import wird die .sim nie als Speicherziel gemerkt.
 - **Verifikation:** 12 Unit-Tests mit 4 echten Dateien (`models/fixtures/*.sim`), u. a. importierter 4-Bit-Addierer rechnet alle 256 Fälle korrekt (SimulationService); E2E headless Edge 7/7 + Screenshots.

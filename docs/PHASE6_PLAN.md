@@ -1,6 +1,6 @@
 # Phase 6 – Leitungen: Abzweigen, Knickpunkte, negierte Eingänge, Routing
 
-- **Stand:** 2026-09-25 · Basis `main` @ `afc7a18` · Branch `feature/phase6-leitungen` · Status: **A, B erledigt – negierte Eingänge als nächstes**
+- **Stand:** 2026-09-25 · Basis `main` @ `afc7a18` · Branch `feature/phase6-leitungen` · Status: **A, B, negierte Eingänge erledigt – C (Routing) optional offen**
 - Arbeitsweise nach CLAUDE.md: je Schritt Plan → OK → umsetzen → verifizieren → eigener Commit.
 - Anlass: Nutzer-Screenshot – Leitungen liegen übereinander, Abzweigen am belegten Ausgang kaum möglich; Ziel ist ein Aufbau wie in LogikSim (senkrechte Signalleitungen, T-Abzweige zu den Gattern).
 
@@ -33,5 +33,5 @@
 |---|---|---|
 | A Abzweigen | erledigt (E2E mit echten Mausklicks 8/8) | siehe `git log` |
 | B Knickpunkte | erledigt (Zielbild per Klick nachgebaut, E2E 9/9; + Button „Verlauf automatisch“) | siehe `git log` |
-| Negierte Eingänge | offen | – |
+| Negierte Eingänge | erledigt (Sim-Tests, Äquivalenz „Tür darf schließen“ 8/8, E2E 7/7; Import ohne NOT-Gatter) | siehe `git log` |
 | C Routing | offen (optional) | – |

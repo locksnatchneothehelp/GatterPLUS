@@ -147,7 +147,7 @@ export class SimulationService {
   ): void {
     for (let iter = 0; iter < SimulationService.MAX_ITERATIONS; iter++) {
       // a) Leitungen propagieren: jeder Eingang erhält den Ausgang seiner Quelle
-      this.propagate(wires, result);
+      this.propagate(gates, wires, result);
 
       // b) kombinatorische Gatter neu berechnen
       let changed = false;
@@ -166,11 +166,16 @@ export class SimulationService {
 
     // Abschluss-Propagation, damit Eingangs-Anzeigen (LEDs, FF-Eingänge)
     // den finalen Ausgangszustand widerspiegeln.
-    this.propagate(wires, result);
+    this.propagate(gates, wires, result);
   }
 
-  /** Überträgt jeden Gatter-Ausgang über die Leitungen auf die Ziel-Eingänge. */
+  /**
+   * Überträgt jeden Gatter-Ausgang über die Leitungen auf die Ziel-Eingänge.
+   * Negierte Eingänge (gate.negatedInputs) erhalten das invertierte Signal —
+   * inputSignals enthält also den Wert, mit dem das Bauteil rechnet.
+   */
   private propagate(
+    gates: GateInstance[],
     wires: WireConnection[],
     result: Map<string, ComponentSignalState>
   ): void {
@@ -178,13 +183,15 @@ export class SimulationService {
     for (const state of result.values()) {
       state.inputSignals.fill(null);
     }
+    const negatedInputs = new Map(gates.map(g => [g.id, g.negatedInputs]));
     for (const wire of wires) {
       const src = result.get(wire.fromGateId);
       const dst = result.get(wire.toGateId);
       if (!src || !dst) continue;
       if (wire.toPinIndex >= dst.inputSignals.length) continue;
-      dst.inputSignals[wire.toPinIndex] =
-        src.outputSignals[wire.fromPinIndex] ?? null;
+      const value = src.outputSignals[wire.fromPinIndex] ?? null;
+      const negate = negatedInputs.get(wire.toGateId)?.includes(wire.toPinIndex) && value !== null;
+      dst.inputSignals[wire.toPinIndex] = negate ? !value : value;
     }
   }
 

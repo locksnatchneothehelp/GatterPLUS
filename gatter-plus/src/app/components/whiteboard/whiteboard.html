@@ -219,8 +219,8 @@
         [attr.cy]="dot.y"
         r="6"
         class="negation-dot"
-        [class.negation-high]="simulationMode && getSignalOutput(dot.gateId, dot.pinIndex) === true"
-        [class.negation-low]="simulationMode && getSignalOutput(dot.gateId, dot.pinIndex) === false"
+        [class.negation-high]="simulationMode && dot.high === true"
+        [class.negation-low]="simulationMode && dot.high === false"
       />
     }
 

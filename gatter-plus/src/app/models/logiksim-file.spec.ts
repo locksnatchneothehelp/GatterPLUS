@@ -1,4 +1,4 @@
-import { GateInstance } from './gate.model';
+import { GateInstance, WireConnection, createGateInstance } from './gate.model';
 import { LogikSimImport, parseLogikSim } from './logiksim-file';
 import { SimulationService } from '../services/simulation.service';
 
@@ -43,10 +43,12 @@ describe('LogikSim-Import', () => {
     ]);
   });
 
-  it('AND/OR/XOR, LED und negierte Eingänge (→ NOT-Gatter)', async () => {
+  it('AND/OR/XOR, LED und negierte Eingänge (→ negatedInputs)', async () => {
     const { project, warnings } = await load('logiksim-aufgabe2-negiert.sim');
     expect(countTypes(project.gates))
-      .toEqual({ and: 12, or: 4, xor: 2, input: 3, output: 3, not: 12 });
+      .toEqual({ and: 12, or: 4, xor: 2, input: 3, output: 3 });
+    // alle 12 negierten Eingänge der Datei, ohne eingefügte NOT-Gatter
+    expect(project.gates.reduce((n, g) => n + (g.negatedInputs?.length ?? 0), 0)).toBe(12);
     expect(warnings).toEqual([]);
   });
 
@@ -115,6 +117,41 @@ describe('LogikSim-Import', () => {
         expect(sum, `${a} + ${b}`).toBe((a + b) % 16); // Übertrag des letzten VA ist nicht angeschlossen
       }
     }
+  });
+
+  it('„Tür darf schließen“: negierte Eingänge rechnen wie NOT-Gatter davor (alle 8 Fälle)', async () => {
+    const { project } = await load('logiksim-aufgabe3-text.sim');
+    expect(project.gates.reduce((n, g) => n + (g.negatedInputs?.length ?? 0), 0)).toBe(5);
+
+    // Vergleichsschaltung: jeden negierten Eingang durch ein NOT-Gatter davor ersetzen
+    const refGates: GateInstance[] = project.gates.map(g => ({ ...g, negatedInputs: undefined }));
+    const refWires: WireConnection[] = project.wires.flatMap(w => {
+      const to = project.gates.find(g => g.id === w.toGateId)!;
+      if (!to.negatedInputs?.includes(w.toPinIndex)) return [w];
+      const not = createGateInstance('not-' + w.id, 'not', 0, 0);
+      refGates.push(not);
+      return [{ ...w, id: w.id + '-a', toGateId: not.id, toPinIndex: 0 },
+              { ...w, id: w.id + '-b', fromGateId: not.id, fromPinIndex: 0 }];
+    });
+
+    const switches = project.gates.filter(g => g.type === 'input');
+    const led = project.gates.find(g => g.type === 'output')!;
+    const sim = new SimulationService();
+    let ledOn = 0;
+    for (let v = 0; v < 8; v++) {
+      const set = (gs: GateInstance[]) => gs.map(g => {
+        const i = switches.findIndex(s => s.id === g.id);
+        return i >= 0 ? { ...g, inputValue: ((v >> i) & 1) === 1 } : g;
+      });
+      sim.clearState();
+      const actual = sim.computeSignals(set(project.gates), project.wires).get(led.id)!.inputSignals[0];
+      sim.clearState();
+      const expected = sim.computeSignals(set(refGates), refWires).get(led.id)!.inputSignals[0];
+      expect(actual, 'Schalterstellung ' + v).toBe(expected);
+      expect(actual).not.toBeNull();
+      if (actual) ledOn++;
+    }
+    expect(ledOn).toBeGreaterThan(0); // Schaltung ist nicht trivial immer aus
   });
 
   // ── Fehlerfälle ──────────────────────────────────────────────────────────
