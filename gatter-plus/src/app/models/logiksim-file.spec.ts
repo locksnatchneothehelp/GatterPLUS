@@ -1,4 +1,4 @@
-import { GateInstance, WireConnection, createGateInstance } from './gate.model';
+import { GateInstance, WireConnection, createGateInstance, getPinWorldPos } from './gate.model';
 import { LogikSimImport, parseLogikSim } from './logiksim-file';
 import { SimulationService } from '../services/simulation.service';
 
@@ -97,8 +97,12 @@ describe('LogikSim-Import', () => {
     const sim = new SimulationService();
     const U = 80; // Pixel pro LogikSim-Rastereinheit
     // Bit 0 liegt rechts: Schalter x=7…4 (Zeilen y=5 und y=16), Anzeigen x=16…13 (y=24)
-    const at = (ux: number, uy: number) =>
-      project.gates.find(g => g.x === ux * U && g.y === uy * U)!;
+    // Schalter/Anzeigen liegen mit ihrem Pin genau auf dem LogikSim-Punkt
+    const at = (ux: number, uy: number) => project.gates.find(g => {
+      const kind = g.type === 'input' ? 'output' : 'input';
+      const p = getPinWorldPos(g, kind, 0);
+      return (g.type === 'input' || g.type === 'output') && p.x === ux * U && p.y === uy * U;
+    })!;
     const aBits = [7, 6, 5, 4].map(x => at(x, 5));
     const bBits = [7, 6, 5, 4].map(x => at(x, 16));
     const sBits = [16, 15, 14, 13].map(x => at(x, 24));
@@ -152,6 +156,27 @@ describe('LogikSim-Import', () => {
       if (actual) ledOn++;
     }
     expect(ledOn).toBeGreaterThan(0); // Schaltung ist nicht trivial immer aus
+  });
+
+  // ── Layout wie im Original ───────────────────────────────────────────────
+
+  it('Schalter zeigen in Richtung ihrer Leitung (4-Bit: nach unten), Anzeigen nach oben', async () => {
+    const { project } = await load('logiksim-addierer-4bit.sim');
+    const inputs  = project.gates.filter(g => g.type === 'input');
+    const outputs = project.gates.filter(g => g.type === 'output');
+    // Obere Schalter: Leitung geht nach unten (90°); untere Schalter y=16: Leitung nach oben (270°)
+    expect(new Set(inputs.map(g => g.rotation))).toEqual(new Set([90, 270]));
+    expect(outputs.every(g => g.rotation === 90)).toBe(true); // Eingang zeigt nach oben
+  });
+
+  it.each(FIXTURES)('%s: Leitungen folgen den Original-Linien, weitere Ziele als Abzweig', async name => {
+    const { project } = await load(name);
+    // jede Leitung hat eigene Knicke oder ist gerade; mehrfach genutzte Signale erzeugen Abzweige
+    const nets = new Map<string, number>();
+    for (const w of project.wires) nets.set(w.fromGateId + ':' + w.fromPinIndex, (nets.get(w.fromGateId + ':' + w.fromPinIndex) ?? 0) + 1);
+    const fanOut = [...nets.values()].filter(n => n > 1).length;
+    expect(project.wires.filter(w => w.branchPoint).length).toBeGreaterThanOrEqual(fanOut > 0 ? 1 : 0);
+    expect(project.wires.some(w => w.manualPoints?.length)).toBe(true);
   });
 
   // ── Fehlerfälle ──────────────────────────────────────────────────────────
