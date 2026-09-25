@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `7545a21` (Initial commit)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `0f1ca4d`
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -8,10 +8,10 @@
 
 - **Zweck:** Browser-basierter Logikschaltungs-Simulator (Lernwerkzeug, Stil LogikSim): Bauteile aus Palette ziehen, verdrahten, simulieren.
 - **Stack:** Angular 21 (Standalone-Komponenten, `@Input`/`@Output`, `@if`/`@for`), TypeScript ~5.9 strict, SCSS, Vitest 4, jsdom. Kein Router, kein Store, kein Backend.
-- **App-Verzeichnis:** `gatter-plus/` (Repo-Root enthält nur `README.md`, `SETUP.md`, `LICENSE`, `docs/`, `CLAUDE.md`).
+- **App-Verzeichnis:** `gatter-plus/` (Repo-Root enthält nur `README.md`, `SETUP.md`, `LICENSE`, `docs/`, `CLAUDE.md`, `.github/workflows/`).
 - **Einstiege:** `gatter-plus/src/main.ts` → `app.ts` (Root, Layout + Event-Weiterleitung) → `components/whiteboard/whiteboard.ts` (**gesamter Editor-Zustand + Interaktion**).
 - **Kernlogik ohne Angular:** `models/gate.model.ts` (Typen, Geometrie, Routing), `services/simulation.service.ts` (Simulation).
-- **Deployment:** GitHub Pages via `npm run deploy` (Live: https://markheimlich.github.io/ProjektInformatikLK/).
+- **Deployment:** GitHub Pages automatisch per GitHub Actions bei Push auf `main` (`.github/workflows/main.yml`); zusätzlich Alt-Weg `npm run deploy` (s. Fallstricke).
 
 ## Wo finde ich was
 
@@ -31,6 +31,7 @@
 | `ToolMode`-Typ (Komponente selbst ungenutzt) | `components/toolbar-left/toolbar-left.ts` |
 | Tests | `models/gate.model.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
 | Build/Test-Konfiguration | `gatter-plus/angular.json`, `package.json`, `vitest.config.ts`, `tsconfig*.json` |
+| CI/Deployment (GitHub Pages) | `.github/workflows/main.yml` (Repo-Root) |
 
 ## Projektstruktur
 
@@ -172,7 +173,8 @@ Alle Befehle in `gatter-plus/`:
 | Build | `npm run build` (production, Ausgabe `dist/gatter-plus/browser`) |
 | Tests | `npm test` (`ng test`, Builder `@angular/build:unit-test`, Vitest) |
 | Tests ohne Angular (vermutlich) | `npx vitest run` (nutzt `vitest.config.ts`: env node, schließt `app.spec.ts` aus) |
-| Deploy | `npm run deploy` (GitHub Pages) |
+| Deploy (Standard) | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
+| Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
 
 - Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out-Limit, Routing, Pin-Richtung; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
 - **Unverifiziert:** Zum Analysezeitpunkt war `node_modules` nicht installiert, keine Befehle ausgeführt.
@@ -205,3 +207,4 @@ Alle Befehle in `gatter-plus/`:
 - Multi-Delete (Entf bei Mehrfachauswahl) ist inline in `onDeleteKey` dupliziert statt `deleteGate` zu nutzen.
 - `ANLEITUNG-UND-TECHNOLOGIEN.md` ist veraltet (nennt HTML5-DnD, TS ~5.8).
 - Keine Persistenz der Schaltung (Speichern/Laden fehlt).
+- **Zwei Deploy-Wege mit unterschiedlichem base-href:** Workflow `/GatterPLUS/` vs. `npm run deploy` `/ProjektInformatikLK/` (altes Repo; auch `SETUP.md` nennt noch die alte Live-URL). Workflow führt **keine Tests** aus – jeder Push auf `main` deployt.
