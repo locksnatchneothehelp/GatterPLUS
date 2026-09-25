@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `0f1ca4d`
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -19,6 +19,7 @@
 |---|---|
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
+| Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
 | Undo/Redo-Stacks | `services/history.service.ts` |
 | Hell/Dunkel | `services/theme.service.ts`, `gatter-plus/src/styles.scss` |
@@ -29,7 +30,7 @@
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |
 | `ToolMode`-Typ (Komponente selbst ungenutzt) | `components/toolbar-left/toolbar-left.ts` |
-| Tests | `models/gate.model.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
+| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
 | Build/Test-Konfiguration | `gatter-plus/angular.json`, `package.json`, `vitest.config.ts`, `tsconfig*.json` |
 | CI/Deployment (GitHub Pages) | `.github/workflows/main.yml` (Repo-Root) |
 
@@ -176,8 +177,8 @@ Alle Befehle in `gatter-plus/`:
 | Deploy (Standard) | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 | Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
 
-- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out-Limit, Routing, Pin-Richtung; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
-- **Unverifiziert:** Zum Analysezeitpunkt war `node_modules` nicht installiert, keine Befehle ausgeführt.
+- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out-Limit, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
+- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (4 Spec-Dateien). `ng test` noch nicht ausgeführt.
 - Formatierung: Prettier (`printWidth 100`, `singleQuote`), `.editorconfig` 2 Leerzeichen.
 
 ## Code-Stil und Konventionen
@@ -206,5 +207,5 @@ Alle Befehle in `gatter-plus/`:
 - Pin-Offsets hängen am Bauteil-CSS (siehe Datenmodell).
 - Multi-Delete (Entf bei Mehrfachauswahl) ist inline in `onDeleteKey` dupliziert statt `deleteGate` zu nutzen.
 - `ANLEITUNG-UND-TECHNOLOGIEN.md` ist veraltet (nennt HTML5-DnD, TS ~5.8).
-- Keine Persistenz der Schaltung (Speichern/Laden fehlt).
+- Persistenz: Dateiformat vorhanden (`models/project-file.ts`), UI-Anbindung (Öffnen/Speichern) folgt in Phase 5.2.
 - **Zwei Deploy-Wege mit unterschiedlichem base-href:** Workflow `/GatterPLUS/` vs. `npm run deploy` `/ProjektInformatikLK/` (altes Repo; auch `SETUP.md` nennt noch die alte Live-URL). Workflow führt **keine Tests** aus – jeder Push auf `main` deployt.
