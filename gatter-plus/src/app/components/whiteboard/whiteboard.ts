@@ -351,7 +351,7 @@ export class Whiteboard implements OnDestroy {
     // html-to-image übernimmt CSS-Klassen-Styles von SVG-Kindern nicht (Leitungen
     // würden schwarz gefüllt) → für die Aufnahme kurz inline setzen, danach zurück.
     const node = this.viewportRef.nativeElement;
-    const svgEls = [...node.querySelectorAll<SVGElement>('.wires-layer *')];
+    const svgEls = [...node.querySelectorAll<SVGElement>('.wires-layer *')]; // inkl. Stummel-Ebene
     const oldStyles = svgEls.map(el => el.getAttribute('style'));
     for (const el of svgEls) {
       const cs = getComputedStyle(el);
@@ -1244,6 +1244,30 @@ export class Whiteboard implements OnDestroy {
   getWirePointsString(wire: WireConnection): string | null {
     const pts = this.getWireDisplayPoints(wire);
     return pts ? pts.map(p => `${p.x},${p.y}`).join(' ') : null;
+  }
+
+  /**
+   * Punktstrings der Anschluss-Stummel einer Leitung (Pin → Bauteil-Körper).
+   *
+   * Die Stummel gehören zur Bauteil-Grafik (CSS `.wire` in der Komponente) und
+   * liegen über der Leitungs-Ebene; ohne Überzeichnung bliebe dort ein dunkles
+   * Stück, obwohl die Leitung z. B. HIGH (grün) ist. Die eigene Stummel-Ebene
+   * über den Bauteilen zeichnet deshalb nur diese Stücke in Leitungsfarbe.
+   * Abzweige (branchPoint) haben am Start keinen eigenen Stummel.
+   */
+  getWireStubPointStrings(wire: WireConnection): string[] {
+    const from = this.gates.find(g => g.id === wire.fromGateId);
+    const to   = this.gates.find(g => g.id === wire.toGateId);
+    if (!from || !to) return [];
+    // Stummel-Länge laut Komponenten-CSS: NOT 8 px (Ausgang hinter dem Invertierkreis), sonst 12 px
+    const len = (g: GateInstance) => (g.type === 'not' ? 8 : 12);
+    const stub = (g: GateInstance, kind: 'input' | 'output', pin: number) => {
+      const p = getPinWorldPos(g, kind, pin), d = getPinDirection(g, kind);
+      return `${p.x},${p.y} ${p.x - d.dx * len(g)},${p.y - d.dy * len(g)}`;
+    };
+    const stubs = [stub(to, 'input', wire.toPinIndex)];
+    if (!wire.branchPoint) stubs.push(stub(from, 'output', wire.fromPinIndex));
+    return stubs;
   }
 
   /**

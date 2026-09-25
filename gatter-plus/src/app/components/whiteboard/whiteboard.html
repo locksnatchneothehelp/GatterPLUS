@@ -225,6 +225,23 @@
 
   </svg>
 
+  <!-- ── Anschluss-Stummel in Leitungsfarbe (ÜBER den Bauteilen) ───────────
+       Die Stummel sind Teil der Bauteil-Grafik und würden die Leitungsfarbe
+       sonst kurz vor dem Gehäuse unterbrechen (siehe getWireStubPointStrings). -->
+  <svg class="wires-layer wire-stubs-layer" [style.transform]="getGatesLayerTransform()">
+    @for (wire of wires; track wire.id) {
+      @for (pts of getWireStubPointStrings(wire); track $index) {
+        <polyline
+          [attr.points]="pts"
+          class="wire-line"
+          [class.wire-high]="simulationMode && isWireHigh(wire)"
+          [class.wire-low]="simulationMode && !isWireHigh(wire)"
+          [class.wire-selected]="wire.id === selectedWireId"
+        />
+      }
+    }
+  </svg>
+
   <!-- ── Pin-Highlight-Layer (nur im Wire-Modus) ────────────────────────── -->
   @if (toolMode === 'wire') {
     <div class="pins-layer" [style.transform]="getGatesLayerTransform()">

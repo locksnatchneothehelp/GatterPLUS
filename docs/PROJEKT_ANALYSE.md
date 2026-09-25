@@ -123,6 +123,7 @@ Ebenen (unten → oben) im `#viewport`-Div (empfängt `mousedown`/`dblclick`; `m
 1. `grid-svg`: SVG-`<pattern>` Punktraster (24 px · zoom).
 2. `gates-layer`: HTML-Divs `.placed-gate` (absolute left/top, `transform: rotate()`, Farbe per CSS-`filter`) mit `@if (gate.type === …)` → Bauteil-Komponente. Transform `translate(pan) scale(zoom)`.
 3. `wires-layer`: SVG-`<polyline>` pro Leitung (`getWirePointsString`), Vorschau `wire-tentative`, Junction-Dots, Negations-Punkte (r=6).
+3b. `wire-stubs-layer` (z-index 2, über den Bauteilen): nur die Anschluss-Stummel jeder Leitung (`getWireStubPointStrings`, 12 px bzw. NOT 8 px) in Leitungsfarbe – sonst bliebe vor dem Gehäuse ein dunkles Stück.
 4. `pins-layer` (nur `toolMode==='wire'`): Pin-Dots.
 5. Zoom-Anzeige + Minimap (SVG).
 

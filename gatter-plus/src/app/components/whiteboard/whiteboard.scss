@@ -100,6 +100,13 @@
   cursor: pointer;
 }
 
+/* Stummel-Ebene: über den Bauteilen (gleicher z-index wie gates-layer, liegt im
+   DOM dahinter), unter den Pin-Punkten; Klicks gehen durch zum Viewport. */
+.wires-layer.wire-stubs-layer {
+  z-index: 2;
+  .wire-line { pointer-events: none; }
+}
+
 /* Ausgewählte Leitung: blau hervorgehoben */
 .wire-line.wire-selected {
   stroke: #3b82f6;
