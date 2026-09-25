@@ -492,6 +492,7 @@ export class Whiteboard implements OnDestroy {
         g.id === gate.id ? { ...g, inputValue: !g.inputValue } : g
       );
       this.recomputeSimulation();
+      this.cdr.markForCheck(); // Zoneless: Timer lösen kein Rendering aus
     }, period);
     this.clockIntervals.set(gate.id, handle);
   }
