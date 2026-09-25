@@ -1,6 +1,6 @@
 # Phase 5 – Export/Import, Speichern, PNG, Logic-Sim-Umwandlung
 
-- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.5a erledigt – Phase 5 fertig bis auf offene Fragen; Branch noch nicht gemergt** · Branch `feature/phase5-dateien`
+- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **Phase 5 abgeschlossen, in `main` gemergt (nicht gepusht)** · Branch `feature/phase5-dateien`
 - Arbeitsweise nach CLAUDE.md: jeder Schritt einzeln planen → OK abwarten → umsetzen → verifizieren → eigener Commit.
 - Pfade relativ zu `gatter-plus/src/app/`.
 
@@ -45,7 +45,7 @@
 
 ### 5.5 Umwandlung GatterPLUS ↔ LogikSim (`.sim`)
 - **Nur Import** `.sim` → GatterPLUS. **Export nach `.sim` entfällt** (Entscheidung Nutzer 2026-09-25: Format nur teilweise bekannt, Ergebnis nicht prüfbar).
-- **5.5a Import `.sim` → GatterPLUS (umgesetzt):** `parseLogikSim(bytes)` in `models/logiksim-file.ts`, Menü „Importieren (LogikSim)“ → `App.onImportLogikSim`. Menüpunkt `Konvertieren (LWS)` ist weiter Platzhalter (mit Nutzer klären: entfernen oder = Import).
+- **5.5a Import `.sim` → GatterPLUS (umgesetzt):** `parseLogikSim(bytes)` in `models/logiksim-file.ts`, Menü „Importieren (LogikSim)“ → `App.onImportLogikSim`. Menüpunkt `Konvertieren (LWS)` wurde entfernt (Entscheidung Nutzer).
 - Abbildung: `TSwitchModule`→`input`, `TLedModule`→`output`, `TTextModule`→`text-label` (`Caption`), `TAnd/TOr/TXorModule`→`and/or/xor` (Eingänge = Anzahl Connectoren), `THalf/TFullAdderModule`→`half/full-adder`. Pin-Index = Reihenfolge in `Input/OutputConnectorList`. 1 Rastereinheit = 80 px, Ansicht 50 %.
 - **Negierte Eingänge** (`Negatived` am Eingang; GatterPLUS kennt nur negierte Ausgänge) → eingefügtes NOT-Gatter, je Eingangsindex eine Spalte weiter links. Negierte Ausgänge → `negatedOutputs`.
 - **Annahmen:** Schalter an einem Bauteil-Ausgang → Anzeige (`output`, mit Hinweis). Netze: Segment-Endpunkte verbunden; Punkt auf einem Segment = T-Abzweig; reine Kreuzung im Inneren = nicht verbunden.
@@ -79,7 +79,6 @@ Stand nach 5.5a (Nutzer kann 1–2 nicht klären, Import arbeitet mit gekennzeic
 
 1. Rolle von `TSwitchModule` am Ende der Summen-Leitungen (4-Bit-Datei) – Annahme: Anzeige.
 2. Unbekannte LogikSim-Module (z. B. NOT, NAND/NOR, JK-FF, Taktgeber) und `LineCouplingDiodeList` – keine Beispiele vorhanden; werden gemeldet.
-3. Menüpunkt `Konvertieren (LWS)`: entfernen oder mit Import gleichsetzen?
 
 ## Fortschritt
 

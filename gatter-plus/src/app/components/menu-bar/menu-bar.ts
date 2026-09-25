@@ -133,7 +133,6 @@ export class MenuBar {
   onSaveAs():     void { this.saveAsClicked.emit();                this.closeMenu(); }
   onExportPng():  void { this.exportPngClicked.emit();             this.closeMenu(); }
   onImportLws():  void { this.importLogikSimClicked.emit();        this.closeMenu(); }
-  onConvertLws(): void { console.log('[Menü] Konvertieren (LWS)'); this.closeMenu(); }
   onExit():       void { console.log('[Menü] Beenden');            this.closeMenu(); }
 
   // ─── Hilfe-Aktionen (Platzhalter) ──────────────────────────────────────────
