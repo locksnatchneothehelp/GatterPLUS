@@ -409,6 +409,8 @@ export class Whiteboard implements OnDestroy {
     this.selectedWireId     = null;
     this.editingLabelGateId = null;
     this.wireDrawing        = null;
+    // Zoneless-App: Aufruf kommt nach einem await (Datei-Dialog) → Rendering anstoßen
+    this.cdr.markForCheck();
   }
 
   // ─── Inline Label-Bearbeitung ─────────────────────────────────────────────
