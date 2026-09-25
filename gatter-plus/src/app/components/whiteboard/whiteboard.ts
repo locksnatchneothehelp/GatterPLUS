@@ -71,6 +71,9 @@ interface GateDragState {
    * Beim Multi-Drag werden alle um dasselbe Delta verschoben.
    */
   otherOrigins: Map<string, { ox: number; oy: number }>;
+  /** Bereits angewandte logische Verschiebung (für schrittweise Updates, z. B. Abzweigpunkte) */
+  appliedDx: number;
+  appliedDy: number;
 }
 
 /** Zustand eines aufgezogenen Auswahlrechtecks (Ctrl+Drag auf leerer Fläche) */
@@ -291,6 +294,8 @@ export class Whiteboard implements OnDestroy {
         fromGateId: idMap.get(w.fromGateId)!,
         toGateId:   idMap.get(w.toGateId)!,
         points:     w.points.map(p => ({ ...p })),
+        // Abzweigpunkt mit den Bauteilen versetzen (sonst startet der Abzweig an der alten Stelle)
+        branchPoint: w.branchPoint && { x: w.branchPoint.x + OFFSET, y: w.branchPoint.y + OFFSET },
       }));
 
     this.pushHistory();
@@ -722,6 +727,8 @@ export class Whiteboard implements OnDestroy {
         startMouseX: event.clientX,
         startMouseY: event.clientY,
         otherOrigins,
+        appliedDx: 0,
+        appliedDy: 0,
       };
       this.gateDragStarted = false;
       return;
@@ -786,15 +793,24 @@ export class Whiteboard implements OnDestroy {
 
     // Gatter verschieben (Einzel oder Mehrfach)
     if (this.gateDragState) {
-      const dx = event.clientX - this.gateDragState.startMouseX;
-      const dy = event.clientY - this.gateDragState.startMouseY;
-      if (!this.gateDragStarted && Math.hypot(dx, dy) > 4) {
+      const screenDx = event.clientX - this.gateDragState.startMouseX;
+      const screenDy = event.clientY - this.gateDragState.startMouseY;
+      // Bildschirm-Pixel → logische Koordinaten (sonst läuft das Bauteil bei Zoom ≠ 100 % davon)
+      const dx = screenDx / this.zoom;
+      const dy = screenDy / this.zoom;
+      // Nur der Zuwachs seit dem letzten mousemove — für Werte, die am aktuellen
+      // (schon verschobenen) Zustand hängen, z. B. Abzweigpunkte
+      const stepX = dx - this.gateDragState.appliedDx;
+      const stepY = dy - this.gateDragState.appliedDy;
+      if (!this.gateDragStarted && Math.hypot(screenDx, screenDy) > 4) {
         // Zustand EINMALIG vor dem ersten tatsächlichen Verschiebevorgang sichern,
         // damit Undo das Bauteil an die ursprüngliche Position zurückbewegt.
         this.pushHistory();
         this.gateDragStarted = true;
       }
       if (this.gateDragStarted) {
+        this.gateDragState.appliedDx = dx;
+        this.gateDragState.appliedDy = dy;
         const movedId = this.gateDragState.gateId;
         const newX    = this.gateDragState.originX + dx;
         const newY    = this.gateDragState.originY + dy;
@@ -826,7 +842,7 @@ export class Whiteboard implements OnDestroy {
           // Abzweigpunkt mitverschieben, wenn die Quell-Gatter bewegt wurde
           let newBranchPoint = wire.branchPoint;
           if (wire.branchPoint && fromMoved) {
-            newBranchPoint = { x: wire.branchPoint.x + dx, y: wire.branchPoint.y + dy };
+            newBranchPoint = { x: wire.branchPoint.x + stepX, y: wire.branchPoint.y + stepY };
           }
           return {
             ...wire,
