@@ -4,6 +4,7 @@
 
 - Kompakte Code-Landkarte (Struktur, Datenmodell, State, Rendering, Simulation, Tests, Fallstricke): [docs/PROJEKT_ANALYSE.md](docs/PROJEKT_ANALYSE.md) – zuerst lesen, statt das Projekt neu zu durchsuchen.
 - Die Angular-App liegt in `gatter-plus/`; alle npm-Befehle dort ausführen.
+- Aktueller Arbeitsplan (Phase 5: Export/Import, Speichern, PNG, Logic-Sim): [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md) – Schritte, offene Fragen und Fortschritt; nach jedem Schritt die Fortschrittstabelle aktualisieren.
 
 ## Pflege
 
