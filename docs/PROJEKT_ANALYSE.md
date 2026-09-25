@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -21,6 +21,7 @@
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
 | LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
+| Automatische Leitungsführung (A*) | `models/wire-router.ts` (+spec), Cache in `Whiteboard.autoRoutes` |
 | PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
 | Undo/Redo-Stacks | `services/history.service.ts` |
@@ -32,7 +33,7 @@
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |
 | `ToolMode`-Typ (Komponente selbst ungenutzt) | `components/toolbar-left/toolbar-left.ts` |
-| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `services/simulation.service.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
+| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `models/wire-router.spec.ts`, `services/simulation.service.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
 | Build/Test-Konfiguration | `gatter-plus/angular.json`, `package.json`, `vitest.config.ts`, `tsconfig*.json` |
 | CI/Deployment (GitHub Pages) | `.github/workflows/main.yml` (Repo-Root) |
 
@@ -153,7 +154,7 @@ Beispiel Menüeintrag (analog Undo):
 **Verbindungen** (`Whiteboard.handleWireClick`, nur im Werkzeug `wire`; Klick-Klick, kein Ziehen):
 - Start (Phase 6A): Ausgangs-Pin – auch belegt (**Fan-out**, `getOutputPinMaxConnections` = `Infinity`, Verbindungspunkt am Pin) – **oder** Klick auf beliebige Stelle einer Leitung → Abzweig (`branchPoint`, elektrisch gleiche Quelle); Klick auf den Ausgangs-Stummel (20 px) startet am Ausgang selbst. **Oder umgekehrt:** Start an freiem Eingang (`WireDrawingState.reverse`), Ende an Ausgang oder auf einer Leitung (Abzweig, Richtung zum Ziel). Anlegen zentral in `addWire()`. **Knickpunkte (6B):** Klick auf freie Fläche beim Zeichnen setzt Knick (`wireDrawing.bends`, normal gezogen auch auf Leitungen); Escape bricht ab. Knicke wandern beim Verschieben nur mit, wenn beide Enden bewegt werden; „Verlauf automatisch“ im Eigenschaften-Panel (`resetWireRoute`). Hover-Hervorhebung `hoverWireId` im Leitungs-Modus.
 - Ende (normal gezogen): nur Eingangs-Pin eines **anderen** Bauteils, Eingang darf **nicht belegt** sein (max. 1 Leitung pro Eingang). Sonst Abbruch ohne Leitung. Escape bricht ab.
-- Routing orthogonal: `computeOrthogonalWaypoints` (Z-Form, U-Kurve, gemischte Rotationen).
+- Routing (Phase 6C): `models/wire-router.ts` `routeWire` = A* über Sichtbarkeitsgitter (Bauteile + 12 px Abstand als Hindernisse, Knick- und Fremd-Überlappungs-Kosten, gleiches Signal darf teilen). `Whiteboard.autoRoutes()` cacht alle Verläufe (gleiche Array-Referenzen oder Layout-Signatur), Reihenfolge: eigene Knicke → direkte → Abzweige (auf aktuellen Signal-Verlauf projiziert, `branchStart`). Während Bauteil-Drag `fastRouting` = Alt-Router `computeOrthogonalWaypoints` (Z-/U-Form), ebenso als Rückfall ohne Weg.
 - Negation: Im Pan-Modus (nicht Simulation) Klick auf Ausgangs- bzw. Eingangs-Stub (20 px außerhalb des Pins, `findStubAt`) → `toggleNegation(id, pin, kind)` (`negatedOutputs`/`negatedInputs`); Kreise via `getNegationDots` (Farbe = Signal auf der Leitung am Kreis).
 - Löschen eines Bauteils entfernt alle anhängenden Leitungen.
 
@@ -183,7 +184,7 @@ Alle Befehle in `gatter-plus/`:
 | Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
 
 - Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). `simulation.service.spec.ts`: negierte Eingänge. Keine Komponenten-Tests.
-- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (6 Spec-Dateien). `ng test` noch nicht ausgeführt.
+- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (7 Spec-Dateien). `ng test` noch nicht ausgeführt.
 - Formatierung: Prettier (`printWidth 100`, `singleQuote`), `.editorconfig` 2 Leerzeichen.
 
 ## Code-Stil und Konventionen
@@ -201,7 +202,7 @@ Alle Befehle in `gatter-plus/`:
 - **Whiteboard ist God-Component** (1312 Zeilen): State, Eingabe, Routing-Updates, Takte, Clipboard in einer Klasse.
 - **`wire.points` wird beim Rendern ignoriert:** `getWireDisplayPoints` berechnet den Verlauf neu (automatisch) bzw. über `manualPoints` (`manualWirePath`, rechtwinklig; Knicke rasten auf 24 px, erster/letzter Knick wird an die Pin-Achse angeglichen); `points` ist nur gespeichert/redundant.
 - **`inputCount` verringern** entfernt Leitungen an weggefallenen Pins nicht (Simulation überspringt sie, Rendering fällt auf `gate.x/y` zurück).
-- **Leitungen überlagern sich:** Routing je Leitung isoliert (`computeOrthogonalWaypoints`), gleiche Verläufe liegen übereinander → Phase 6 B (Knickpunkte) / C (Routing).
+- Routing-Grenze: Liegen Bauteile enger als ihre Sicherheitszonen, ignoriert der Router die betroffene Zone für diese Leitung (Leitung kann dann nah am/über den Nachbarn laufen).
 - **Mutation in `computeSignals`** (`ffState`, `ffPrevClock`) widerspricht dem Immutable-Pattern; Objekte werden nicht ersetzt.
 - **`app.spec.ts`** ist das CLI-Template (erwartet `<h1>Hello, gatter-plus`) → schlägt bei `ng test` vermutlich fehl, falls `ng test` `vitest.config.ts` nicht nutzt (**unsicher, nicht verifiziert**).
 - Tooltip „Simulation starten (F5)“ – **kein F5-Handler** implementiert.

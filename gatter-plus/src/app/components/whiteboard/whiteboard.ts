@@ -32,6 +32,7 @@ import { SimulationService, ComponentSignalState } from '../../services/simulati
 import { HistoryService }      from '../../services/history.service';
 import { ToolMode }            from '../toolbar-left/toolbar-left';
 import { ProjectData }         from '../../models/project-file';
+import { ROUTE_CLEARANCE, Rect, Seg, routeWire } from '../../models/wire-router';
 import { toBlob }              from 'html-to-image';
 
 /** Zustand während des Leitungs-Zeichnens */
@@ -831,6 +832,7 @@ export class Whiteboard implements OnDestroy {
         // damit Undo das Bauteil an die ursprüngliche Position zurückbewegt.
         this.pushHistory();
         this.gateDragStarted = true;
+        this.fastRouting     = true; // A* erst beim Loslassen (s. onMouseUp)
       }
       if (this.gateDragStarted) {
         this.gateDragState.appliedDx = dx;
@@ -958,6 +960,7 @@ export class Whiteboard implements OnDestroy {
     if (this.gateDragState) {
       this.gateDragState   = null;
       this.gateDragStarted = false;
+      this.fastRouting     = false; // jetzt einmal sauber mit A* führen
       return;
     }
 
@@ -1389,6 +1392,19 @@ export class Whiteboard implements OnDestroy {
     const to   = this.gates.find(g => g.id === wire.toGateId);
     if (!from || !to) return null;
 
+    // Automatische Führung (A*, Phase 6C) aus dem Cache — nur für Leitungen des
+    // aktuellen Zustands und nicht während eines Bauteil-Drags (dort schnell).
+    if (!this.fastRouting && this.wires.includes(wire)) {
+      const cached = this.autoRoutes().paths.get(wire.id);
+      if (cached) return cached;
+    }
+    return this.legacyWirePoints(wire, from, to);
+  }
+
+  /** Bisherige (schnelle) Führung: Z-/U-Form je Leitung bzw. über eigene Knicke. */
+  private legacyWirePoints(
+    wire: WireConnection, from: GateInstance, to: GateInstance,
+  ): { x: number; y: number }[] {
     const start = wire.branchPoint ?? getPinWorldPos(from, 'output', wire.fromPinIndex);
     const end   = getPinWorldPos(to, 'input', wire.toPinIndex);
 
@@ -1407,6 +1423,104 @@ export class Whiteboard implements OnDestroy {
       start.x, start.y, end.x, end.y, fromBottom, toBottom, fromTop, to.y, fromDir, toDir
     );
     return [start, ...waypoints, end];
+  }
+
+  // ─── Automatische Leitungsführung (A*, Phase 6C) ───────────────────────────
+
+  /** Während eines Bauteil-Drags: schneller Alt-Router statt A* (flüssiges Ziehen). */
+  private fastRouting = false;
+
+  /** Berechnete Verläufe + projizierte Abzweig-Startpunkte, gültig für einen Layout-Stand. */
+  private routeCache: {
+    gates: GateInstance[]; wires: WireConnection[]; signature: string;
+    paths: Map<string, { x: number; y: number }[]>;
+    branchStarts: Map<string, { x: number; y: number }>;
+  } | null = null;
+
+  /**
+   * Liefert die A*-Verläufe aller Leitungen (gecacht).
+   *
+   * Gültig, solange sich das Layout nicht ändert: gleiche Array-Referenzen
+   * (Immutable-Pattern) oder gleiche Layout-Signatur (z. B. nach einem Takt,
+   * der nur inputValue ändert). Reihenfolge: Leitungen mit eigenen Knicken
+   * (fest), dann direkte Leitungen, dann Abzweige — Abzweige starten am
+   * nächstgelegenen Punkt des aktuellen Verlaufs ihres Signals.
+   */
+  private autoRoutes(): NonNullable<Whiteboard['routeCache']> {
+    const c = this.routeCache;
+    if (c && c.gates === this.gates && c.wires === this.wires) return c;
+    const signature = JSON.stringify([
+      this.gates.map(g => [g.id, g.type, g.x, g.y, g.rotation, g.inputCount]),
+      this.wires.map(w => [w.id, w.fromGateId, w.fromPinIndex, w.toGateId, w.toPinIndex, w.branchPoint, w.manualPoints]),
+    ]);
+    if (c && c.signature === signature) {
+      c.gates = this.gates; c.wires = this.wires;
+      return c;
+    }
+
+    const obstacles: Rect[] = this.gates.filter(g => g.type !== 'text-label').map(g => {
+      const dim  = getGateDimensions(g);
+      const side = g.rotation === 90 || g.rotation === 270;
+      const hw = (side ? dim.h : dim.w) / 2 + ROUTE_CLEARANCE, hh = (side ? dim.w : dim.h) / 2 + ROUTE_CLEARANCE;
+      const cx = g.x + dim.w / 2, cy = g.y + dim.h / 2;
+      return { x1: cx - hw, y1: cy - hh, x2: cx + hw, y2: cy + hh };
+    });
+    const occupied: Seg[] = [];
+    const paths = new Map<string, { x: number; y: number }[]>();
+    const branchStarts = new Map<string, { x: number; y: number }>();
+    const netOf = (w: WireConnection) => `${w.fromGateId}:${w.fromPinIndex}`;
+    const order = [
+      ...this.wires.filter(w => w.manualPoints?.length && !w.branchPoint),
+      ...this.wires.filter(w => !w.manualPoints?.length && !w.branchPoint),
+      ...this.wires.filter(w => w.branchPoint),
+    ];
+
+    for (const w of order) {
+      const from = this.gates.find(g => g.id === w.fromGateId);
+      const to   = this.gates.find(g => g.id === w.toGateId);
+      if (!from || !to) continue;
+      const net   = netOf(w);
+      const end   = getPinWorldPos(to, 'input', w.toPinIndex);
+      const toDir = getPinDirection(to, 'input');
+      let start   = getPinWorldPos(from, 'output', w.fromPinIndex);
+      let fromDir = getPinDirection(from, 'output');
+
+      if (w.branchPoint) {
+        // Abzweig auf den aktuellen Verlauf seines Signals setzen (Umleitungen
+        // würden ihn sonst frei in der Luft hängen lassen); Richtung senkrecht
+        // zum getroffenen Stück, zum Ziel hin.
+        let best: { point: { x: number; y: number }; horizontal: boolean } | null = null, bestDist = Infinity;
+        for (const s of occupied) {
+          if (s.net !== net) continue;
+          const { dist, point } = this.closestPointOnSegment(w.branchPoint.x, w.branchPoint.y, s.a.x, s.a.y, s.b.x, s.b.y);
+          if (dist < bestDist) { bestDist = dist; best = { point, horizontal: s.a.y === s.b.y }; }
+        }
+        start = best?.point ?? w.branchPoint;
+        fromDir = best
+          ? (best.horizontal ? { dx: 0, dy: Math.sign(end.y - start.y) || 1 } : { dx: Math.sign(end.x - start.x) || 1, dy: 0 })
+          : (w.fromDir ?? { dx: 1, dy: 0 });
+        branchStarts.set(w.id, start);
+      }
+
+      const pts = w.manualPoints?.length
+        ? manualWirePath(start, fromDir, w.manualPoints, end, toDir)
+        : routeWire(start, fromDir, end, toDir, obstacles, occupied, net)
+          ?? this.legacyWirePoints({ ...w, branchPoint: w.branchPoint && start, fromDir }, from, to);
+      paths.set(w.id, pts);
+      for (let i = 1; i < pts.length; i++) occupied.push({ a: pts[i - 1], b: pts[i], net });
+    }
+
+    this.routeCache = { gates: this.gates, wires: this.wires, signature, paths, branchStarts };
+    return this.routeCache;
+  }
+
+  /** Aktueller Startpunkt einer Abzweig-Leitung (auf den Verlauf projiziert). */
+  private branchStart(wire: WireConnection): { x: number; y: number } | undefined {
+    if (!wire.branchPoint) return undefined;
+    if (!this.fastRouting && this.wires.includes(wire)) {
+      return this.autoRoutes().branchStarts.get(wire.id) ?? wire.branchPoint;
+    }
+    return wire.branchPoint;
   }
 
   /** Gibt den SVG-Punktstring für eine Leitung zurück (nutzt getWireDisplayPoints). */
@@ -1581,7 +1695,7 @@ export class Whiteboard implements OnDestroy {
     // Abzweigpunkte: ein Punkt pro Abzweig-Leitung
     for (const wire of this.wires) {
       if (wire.branchPoint) {
-        result.push({ ...wire.branchPoint, gateId: wire.fromGateId, pinIndex: wire.fromPinIndex });
+        result.push({ ...this.branchStart(wire)!, gateId: wire.fromGateId, pinIndex: wire.fromPinIndex });
       }
     }
 
