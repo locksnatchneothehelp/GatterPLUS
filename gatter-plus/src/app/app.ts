@@ -168,8 +168,40 @@ export class App implements OnInit {
       return;
     }
 
-    // Fallback: Download
-    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    this.downloadBlob(new Blob([text], { type: 'application/json' }), name);
+  }
+
+  /** Gesamte Schaltung als PNG-Bild speichern (ohne Punktraster). */
+  async onExportPng(): Promise<void> {
+    const blob = await this.whiteboardRef.exportPng();
+    if (!blob) {
+      alert('Die Schaltung ist leer – es gibt nichts zu exportieren.');
+      return;
+    }
+    const name = 'schaltung.png';
+    const w = window as any;
+
+    if (w.showSaveFilePicker) {
+      try {
+        const handle = await w.showSaveFilePicker({
+          suggestedName: name,
+          types: [{ description: 'PNG-Bild', accept: { 'image/png': ['.png'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (e) {
+        if ((e as DOMException)?.name !== 'AbortError') throw e;
+      }
+      return;
+    }
+
+    this.downloadBlob(blob, name);
+  }
+
+  /** Fallback ohne File System Access API: Datei per Download-Link speichern. */
+  private downloadBlob(blob: Blob, name: string): void {
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = name;

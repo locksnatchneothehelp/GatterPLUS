@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   HostListener,
@@ -31,6 +32,7 @@ import { SimulationService, ComponentSignalState } from '../../services/simulati
 import { HistoryService }      from '../../services/history.service';
 import { ToolMode }            from '../toolbar-left/toolbar-left';
 import { ProjectData }         from '../../models/project-file';
+import { toBlob }              from 'html-to-image';
 
 /** Zustand während des Leitungs-Zeichnens */
 interface WireDrawingState {
@@ -102,6 +104,7 @@ export class Whiteboard implements OnDestroy {
   private readonly dragState         = inject(DragStateService);
   private readonly simulationService = inject(SimulationService);
   private readonly historyService    = inject(HistoryService);
+  private readonly cdr               = inject(ChangeDetectorRef);
 
   // ─── DOM-Referenz ───────────────────────────────────────────────────────────
   @ViewChild('viewport') viewportRef!: ElementRef<HTMLDivElement>;
@@ -301,6 +304,83 @@ export class Whiteboard implements OnDestroy {
       wires: this.wires,
       view:  { panX: this.panX, panY: this.panY, zoom: this.zoom },
     };
+  }
+
+  /**
+   * Rendert die gesamte Schaltung als PNG (null = Whiteboard leer).
+   *
+   * Ausschnitt = Bounding-Box aller Bauteile und Leitungen + Rand, unabhängig
+   * von der aktuellen Ansicht. Dazu werden Pan/Zoom und Auswahl kurz auf den
+   * Ausschnitt bei 100 % gesetzt, aufgenommen und danach wiederhergestellt.
+   * Raster, Pin-Punkte und Zoom-Leiste/Minimap werden ausgefiltert.
+   */
+  async exportPng(): Promise<Blob | null> {
+    if (this.gates.length === 0) return null;
+    const MARGIN = 40; // Platz für Label-Overlays unter/über Bauteilen
+
+    // Bounding-Box: gedrehte Bauteile (Drehung um den Mittelpunkt) + Leitungen
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const add = (x: number, y: number) => {
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+    };
+    for (const g of this.gates) {
+      const dim  = getGateDimensions(g);
+      const side = g.rotation === 90 || g.rotation === 270;
+      const hw = (side ? dim.h : dim.w) / 2, hh = (side ? dim.w : dim.h) / 2;
+      const cx = g.x + dim.w / 2, cy = g.y + dim.h / 2;
+      add(cx - hw, cy - hh);
+      add(cx + hw, cy + hh);
+    }
+    for (const w of this.wires) {
+      for (const p of this.getWireDisplayPoints(w) ?? []) add(p.x, p.y);
+    }
+
+    const saved = {
+      panX: this.panX, panY: this.panY, zoom: this.zoom,
+      ids: new Set(this.selectedGateIds), gateId: this.selectedGateId, wireId: this.selectedWireId,
+    };
+    this.panX = MARGIN - minX;
+    this.panY = MARGIN - minY;
+    this.zoom = 1;
+    this.selectedGateIds = new Set();
+    this.selectedGateId  = null;
+    this.selectedWireId  = null;
+    this.cdr.detectChanges();
+
+    // html-to-image übernimmt CSS-Klassen-Styles von SVG-Kindern nicht (Leitungen
+    // würden schwarz gefüllt) → für die Aufnahme kurz inline setzen, danach zurück.
+    const node = this.viewportRef.nativeElement;
+    const svgEls = [...node.querySelectorAll<SVGElement>('.wires-layer *')];
+    const oldStyles = svgEls.map(el => el.getAttribute('style'));
+    for (const el of svgEls) {
+      const cs = getComputedStyle(el);
+      el.style.fill        = cs.fill;
+      el.style.stroke      = cs.stroke;
+      el.style.strokeWidth = cs.strokeWidth;
+    }
+
+    try {
+      const hidden = ['grid-svg', 'pins-layer', 'zoom-bar'];
+      return await toBlob(node, {
+        width:           Math.ceil(maxX - minX + 2 * MARGIN),
+        height:          Math.ceil(maxY - minY + 2 * MARGIN),
+        backgroundColor: getComputedStyle(node).backgroundColor, // Theme-Hintergrund
+        filter: n => !(n instanceof Element && hidden.some(c => n.classList.contains(c))),
+      });
+    } finally {
+      svgEls.forEach((el, i) => {
+        const s = oldStyles[i];
+        if (s === null) el.removeAttribute('style'); else el.setAttribute('style', s);
+      });
+      this.panX = saved.panX;
+      this.panY = saved.panY;
+      this.zoom = saved.zoom;
+      this.selectedGateIds = saved.ids;
+      this.selectedGateId  = saved.gateId;
+      this.selectedWireId  = saved.wireId;
+      this.cdr.detectChanges();
+    }
   }
 
   /**

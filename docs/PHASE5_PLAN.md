@@ -1,6 +1,6 @@
 # Phase 5 – Export/Import, Speichern, PNG, Logic-Sim-Umwandlung
 
-- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.3 erledigt, 5.4 als nächstes** · Branch `feature/phase5-dateien`
+- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.4 erledigt, 5.5a als nächstes (vorher offene Fragen klären)** · Branch `feature/phase5-dateien`
 - Arbeitsweise nach CLAUDE.md: jeder Schritt einzeln planen → OK abwarten → umsetzen → verifizieren → eigener Commit.
 - Pfade relativ zu `gatter-plus/src/app/`.
 
@@ -40,7 +40,7 @@
 
 ### 5.4 PNG-Export
 - Neuer Menüeintrag „Als PNG exportieren“. Ausschnitt = Bounding-Box aller Bauteile + Rand, unabhängig vom aktuellen Pan/Zoom.
-- Umsetzung mit Bibliothek `html-to-image` (freigegeben).
+- Umsetzung mit Bibliothek `html-to-image` (freigegeben), **ohne Punktraster** (Entscheidung Nutzer).
 - **Verifikation:** Build + Export einer Beispielschaltung in Hell und Dunkel, PNG ansehen.
 
 ### 5.5 Umwandlung GatterPLUS ↔ LogikSim (`.sim`)
@@ -85,6 +85,6 @@ Nutzer kann diese derzeit **nicht beantworten** (2026-09-25). Folge für 5.5a: n
 | 5.1 Format + Serialisierung | erledigt (`models/project-file.ts`, 13 Tests) | siehe `git log` |
 | 5.2 Export/Import | erledigt (E2E headless Edge, 10/10) | siehe `git log` |
 | 5.3 Speichern in dieselbe Datei | erledigt (E2E headless Edge, 5/5 + Regression 10/10) | siehe `git log` |
-| 5.4 PNG-Export | offen | – |
+| 5.4 PNG-Export | erledigt (E2E headless Edge 6/6, PNG hell+dunkel gesichtet) | siehe `git log` |
 | 5.5a LogikSim-Import | offen (Format analysiert) | – |
 | ~~5.5b LogikSim-Export~~ | entfällt | – |

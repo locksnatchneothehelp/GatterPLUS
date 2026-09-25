@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1–5.3)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1–5.4)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -20,6 +20,7 @@
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
+| PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
 | Undo/Redo-Stacks | `services/history.service.ts` |
 | Hell/Dunkel | `services/theme.service.ts`, `gatter-plus/src/styles.scss` |
@@ -50,7 +51,7 @@ gatter-plus/src/
 ```
 
 - Jede Komponente: Ordner mit `name.ts` / `name.html` / `name.scss` (Angular-21-Namensschema ohne `.component`), Klasse ohne Suffix (`AndGate`, `Whiteboard`).
-- Abhängigkeiten: Angular core/common/forms/cdk (cdk installiert, **nicht genutzt**), rxjs (nicht direkt genutzt).
+- Abhängigkeiten: Angular core/common/forms/cdk (cdk installiert, **nicht genutzt**), rxjs (nicht direkt genutzt), `html-to-image` 1.11.13 (PNG-Export, exakt gepinnt).
 
 ## Datenmodell (`models/gate.model.ts`)
 
