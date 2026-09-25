@@ -108,23 +108,44 @@ export class App implements OnInit {
     { description: 'GatterPLUS-Projekt', accept: { 'application/json': ['.json'] } },
   ];
 
+  /**
+   * Zuletzt exportierte oder geöffnete Datei (FileSystemFileHandle, nur
+   * Chrome/Edge). „Speichern" schreibt direkt hierhin; null = unbekannt.
+   */
+  private fileHandle: any = null;
+
+  /** Aktuelles Projekt in die zuletzt benutzte Datei speichern (sonst wie „Speichern unter"). */
+  async onSave(): Promise<void> {
+    if (!this.fileHandle) return this.onSaveAs();
+    await this.writeProject(this.fileHandle);
+  }
+
+  /** Schreibt das aktuelle Projekt in die Datei hinter dem Handle. */
+  private async writeProject(handle: any): Promise<void> {
+    const writable = await handle.createWritable();
+    await writable.write(serializeProject(this.whiteboardRef.getProjectData()));
+    await writable.close();
+  }
+
   /** Projektdatei auswählen, prüfen und ins Whiteboard laden. */
   async onOpen(): Promise<void> {
-    let text: string | null;
+    let picked: { text: string; handle: any } | null;
     try {
-      text = await this.pickTextFile();
+      picked = await this.pickTextFile();
     } catch (e) {
       if ((e as DOMException)?.name === 'AbortError') return; // Dialog abgebrochen
       throw e;
     }
-    if (text === null) return;
+    if (picked === null) return;
 
     try {
-      this.whiteboardRef.loadProject(parseProject(text));
+      this.whiteboardRef.loadProject(parseProject(picked.text));
     } catch (e) {
       alert(`Die Datei konnte nicht geöffnet werden.\n\n${(e as Error).message}`);
       return;
     }
+    // Erst nach erfolgreichem Laden: „Speichern" schreibt ab jetzt in diese Datei
+    this.fileHandle = picked.handle;
     // loadProject() beendet ggf. die Simulation → Toolbar-Anzeige nachziehen
     this.simulationMode = this.whiteboardRef.simulationMode;
     this.activeTool     = this.whiteboardRef.toolMode;
@@ -139,9 +160,8 @@ export class App implements OnInit {
     if (w.showSaveFilePicker) {
       try {
         const handle = await w.showSaveFilePicker({ suggestedName: name, types: this.pickerTypes });
-        const writable = await handle.createWritable();
-        await writable.write(text);
-        await writable.close();
+        await this.writeProject(handle);
+        this.fileHandle = handle;
       } catch (e) {
         if ((e as DOMException)?.name !== 'AbortError') throw e;
       }
@@ -157,12 +177,15 @@ export class App implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  /** Öffnet einen Datei-Dialog und liefert den Textinhalt (null = abgebrochen). */
-  private async pickTextFile(): Promise<string | null> {
+  /**
+   * Öffnet einen Datei-Dialog und liefert Textinhalt + Handle (null = abgebrochen).
+   * Im Fallback gibt es keinen Handle (null) → „Speichern" lädt dann neu herunter.
+   */
+  private async pickTextFile(): Promise<{ text: string; handle: any } | null> {
     const w = window as any;
     if (w.showOpenFilePicker) {
       const [handle] = await w.showOpenFilePicker({ types: this.pickerTypes });
-      return (await handle.getFile()).text();
+      return { text: await (await handle.getFile()).text(), handle };
     }
 
     // Fallback: verstecktes <input type="file">
@@ -170,9 +193,9 @@ export class App implements OnInit {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
-      input.onchange = () => {
+      input.onchange = async () => {
         const file = input.files?.[0];
-        resolve(file ? file.text() : null);
+        resolve(file ? { text: await file.text(), handle: null } : null);
       };
       input.click();
     });

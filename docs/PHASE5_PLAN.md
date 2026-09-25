@@ -1,6 +1,6 @@
 # Phase 5 – Export/Import, Speichern, PNG, Logic-Sim-Umwandlung
 
-- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.2 erledigt, 5.3 als nächstes** · Branch `feature/phase5-dateien`
+- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.3 erledigt, 5.4 als nächstes** · Branch `feature/phase5-dateien`
 - Arbeitsweise nach CLAUDE.md: jeder Schritt einzeln planen → OK abwarten → umsetzen → verifizieren → eigener Commit.
 - Pfade relativ zu `gatter-plus/src/app/`.
 
@@ -84,7 +84,7 @@ Nutzer kann diese derzeit **nicht beantworten** (2026-09-25). Folge für 5.5a: n
 |---|---|---|
 | 5.1 Format + Serialisierung | erledigt (`models/project-file.ts`, 13 Tests) | siehe `git log` |
 | 5.2 Export/Import | erledigt (E2E headless Edge, 10/10) | siehe `git log` |
-| 5.3 Speichern in dieselbe Datei | offen | – |
+| 5.3 Speichern in dieselbe Datei | erledigt (E2E headless Edge, 5/5 + Regression 10/10) | siehe `git log` |
 | 5.4 PNG-Export | offen | – |
 | 5.5a LogikSim-Import | offen (Format analysiert) | – |
 | ~~5.5b LogikSim-Export~~ | entfällt | – |
