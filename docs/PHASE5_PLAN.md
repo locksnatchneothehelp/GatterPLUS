@@ -1,6 +1,6 @@
 # Phase 5 – Export/Import, Speichern, PNG, Logic-Sim-Umwandlung
 
-- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.4 erledigt, 5.5a als nächstes (vorher offene Fragen klären)** · Branch `feature/phase5-dateien`
+- **Stand:** 2026-09-25 · Basis-Commit `fe5e6b7` · Status: **5.1–5.5a erledigt – Phase 5 fertig bis auf offene Fragen; Branch noch nicht gemergt** · Branch `feature/phase5-dateien`
 - Arbeitsweise nach CLAUDE.md: jeder Schritt einzeln planen → OK abwarten → umsetzen → verifizieren → eigener Commit.
 - Pfade relativ zu `gatter-plus/src/app/`.
 
@@ -45,9 +45,12 @@
 
 ### 5.5 Umwandlung GatterPLUS ↔ LogikSim (`.sim`)
 - **Nur Import** `.sim` → GatterPLUS. **Export nach `.sim` entfällt** (Entscheidung Nutzer 2026-09-25: Format nur teilweise bekannt, Ergebnis nicht prüfbar).
-- **5.5a Import `.sim` → GatterPLUS:** reine Funktion `parseLogikSim(bytes)` in `models/logiksim-file.ts` + Tests mit der Beispieldatei; Menüpunkt `Importieren (LWS)` anbinden (ggf. in „Importieren (LogikSim)“ umbenennen). Menüpunkt `Konvertieren (LWS)` vor 5.5a mit dem Nutzer klären (entfernen oder = Import).
-- Nicht abbildbare Bauteile/Eigenschaften werden gemeldet statt still verworfen.
-- **Verifikation:** Unit-Tests mit Beispieldateien; Import der Probe muss 8 Schalter/Anzeigen, 1 Halb- und 3 Volladdierer mit korrekt verbundenen Leitungen ergeben (Screenshot-Vergleich mit LogikSim).
+- **5.5a Import `.sim` → GatterPLUS (umgesetzt):** `parseLogikSim(bytes)` in `models/logiksim-file.ts`, Menü „Importieren (LogikSim)“ → `App.onImportLogikSim`. Menüpunkt `Konvertieren (LWS)` ist weiter Platzhalter (mit Nutzer klären: entfernen oder = Import).
+- Abbildung: `TSwitchModule`→`input`, `TLedModule`→`output`, `TTextModule`→`text-label` (`Caption`), `TAnd/TOr/TXorModule`→`and/or/xor` (Eingänge = Anzahl Connectoren), `THalf/TFullAdderModule`→`half/full-adder`. Pin-Index = Reihenfolge in `Input/OutputConnectorList`. 1 Rastereinheit = 80 px, Ansicht 50 %.
+- **Negierte Eingänge** (`Negatived` am Eingang; GatterPLUS kennt nur negierte Ausgänge) → eingefügtes NOT-Gatter, je Eingangsindex eine Spalte weiter links. Negierte Ausgänge → `negatedOutputs`.
+- **Annahmen:** Schalter an einem Bauteil-Ausgang → Anzeige (`output`, mit Hinweis). Netze: Segment-Endpunkte verbunden; Punkt auf einem Segment = T-Abzweig; reine Kreuzung im Inneren = nicht verbunden.
+- Nicht Abbildbares (unbekannte Module, gedrehte Module, Netze mit mehreren Quellen) wird per Hinweis gemeldet. Nach dem Import wird die .sim nie als Speicherziel gemerkt.
+- **Verifikation:** 12 Unit-Tests mit 4 echten Dateien (`models/fixtures/*.sim`), u. a. importierter 4-Bit-Addierer rechnet alle 256 Fälle korrekt (SimulationService); E2E headless Edge 7/7 + Screenshots.
 
 #### Analyse der Beispieldatei `4.4.1 6.sim` (LogikSim Christian 0.6.4, vollständig dekodiert)
 - Datei ist **zlib-komprimiert** (Header `78 DA`) → im Browser natives `DecompressionStream('deflate')`, keine Abhängigkeit nötig.
@@ -58,12 +61,12 @@
 - Module: `Element{PositionX, PositionY, Height, Width, [Orientation], Name}`, Name = Typ (`TSwitchModule`, `THalfAdderModule`, `TFullAdderModule`). Addierer haben `InputConnectorList`/`OutputConnectorList` mit `TConnector{Negatived, DenyNegativationChange, DenyConnection, IsInput, Orientation, PositionX, PositionY, [Caption "s"/"ü"]}`.
 - Koordinaten in **Rastereinheiten** (ganzzahlig); Addierer 3×2 Einheiten, Schalter 0×0 (Punkt). Umrechnungsfaktor auf GatterPLUS-px noch festzulegen.
 - **Leitungen sind nur geometrische Segmente** (`TLine{StartPointX/Y, EndPointX/Y}`), keine Verbindungsliste. Verbindungen müssen über gemeinsame Punkte (inkl. T-Abzweig auf Segmentmitte) zu Netzen zusammengefasst und Pins/Schaltern zugeordnet werden.
-- Unklar: Nur 3 Modultypen in der Probe. `TSwitchModule` sitzt sowohl an Addierer-Eingängen (y=5, y=16) als auch am Ende der Summen-Leitungen (y=24) → Rolle (Schalter vs. Anzeige) unklar. `LineCouplingDiodeList` (hier leer) unbekannt.
+- Weitere Beispieldateien zeigen: `TAndModule/TOrModule/TXorModule{FSize=Eingänge}`, `TLedModule{Color}`, `TTextModule{Caption, Color, Size}`; `Negatived` v. a. an Eingängen. Alle Module hatten `Orientation 0`. `LineCouplingDiodeList` in allen Proben leer (Bedeutung unbekannt).
 - Analyse-Parser war ein Wegwerf-Skript im Scratchpad, nicht im Repo.
 
 ## Entscheidungen (2026-09-25)
 
-1. LogikSim-Beispieldatei: `4.4.1 6.sim` im Repo-Root (noch nicht eingecheckt).
+1. LogikSim-Beispieldateien liegen als Test-Fixtures in `gatter-plus/src/app/models/fixtures/` (mehr Beispiele hat der Nutzer nicht).
 2. Dateiendung: **`.gatterplus.json`**.
 3. Laufzeit-Zustand (`inputValue`, `ffState`, `ffPrevClock`) wird **nicht** gespeichert.
 4. PNG: Bibliothek **`html-to-image`** erlaubt.
@@ -72,11 +75,11 @@
 
 ## Offene Fragen
 
-Nutzer kann diese derzeit **nicht beantworten** (2026-09-25). Folge für 5.5a: nur die bekannten Modultypen importieren, unbekannte melden; Rolle von `TSwitchModule` heuristisch bestimmen (nur mit Eingängen verbunden → `input`, sonst `output`) und das im Code/Plan als Annahme kennzeichnen. Vor 5.5a erneut nachfragen.
+Stand nach 5.5a (Nutzer kann 1–2 nicht klären, Import arbeitet mit gekennzeichneten Annahmen, s. o.):
 
-1. LogikSim: Was sind die 4 Elemente unten (y=24), an denen die Summen enden – Schalter oder Anzeige/Lampe?
-2. Weitere `.sim`-Beispiele: eine Datei mit **jedem** LogikSim-Bauteil (AND, OR, NOT, XOR, ggf. NAND/NOR, JK-FF, Lampe, Taktgeber, Text) sowie eine mit sich kreuzenden Leitungen **ohne** und **mit** Verbindungspunkt.
-3. Beispieldatei als Test-Fixture verschieben (Vorschlag: `gatter-plus/src/app/models/fixtures/`)?
+1. Rolle von `TSwitchModule` am Ende der Summen-Leitungen (4-Bit-Datei) – Annahme: Anzeige.
+2. Unbekannte LogikSim-Module (z. B. NOT, NAND/NOR, JK-FF, Taktgeber) und `LineCouplingDiodeList` – keine Beispiele vorhanden; werden gemeldet.
+3. Menüpunkt `Konvertieren (LWS)`: entfernen oder mit Import gleichsetzen?
 
 ## Fortschritt
 
@@ -86,5 +89,5 @@ Nutzer kann diese derzeit **nicht beantworten** (2026-09-25). Folge für 5.5a: n
 | 5.2 Export/Import | erledigt (E2E headless Edge, 10/10) | siehe `git log` |
 | 5.3 Speichern in dieselbe Datei | erledigt (E2E headless Edge, 5/5 + Regression 10/10) | siehe `git log` |
 | 5.4 PNG-Export | erledigt (E2E headless Edge 6/6, PNG hell+dunkel gesichtet) | siehe `git log` |
-| 5.5a LogikSim-Import | offen (Format analysiert) | – |
+| 5.5a LogikSim-Import | erledigt (12 Unit-Tests, E2E 7/7) | siehe `git log` |
 | ~~5.5b LogikSim-Export~~ | entfällt | – |

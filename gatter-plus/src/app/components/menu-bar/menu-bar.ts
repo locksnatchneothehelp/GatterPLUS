@@ -54,6 +54,8 @@ export class MenuBar {
   @Output() saveAsClicked = new EventEmitter<void>();
   /** Datei-Aktion „Als PNG exportieren". */
   @Output() exportPngClicked = new EventEmitter<void>();
+  /** Datei-Aktion „Importieren (LogikSim)" (.sim-Datei). */
+  @Output() importLogikSimClicked = new EventEmitter<void>();
 
   /** True, wenn gerade Dark Mode aktiv ist (für das Umschalt-Icon). */
   get isDark(): boolean {
@@ -130,7 +132,7 @@ export class MenuBar {
   onSave():       void { this.saveClicked.emit();                  this.closeMenu(); }
   onSaveAs():     void { this.saveAsClicked.emit();                this.closeMenu(); }
   onExportPng():  void { this.exportPngClicked.emit();             this.closeMenu(); }
-  onImportLws():  void { console.log('[Menü] Importieren (LWS)');  this.closeMenu(); }
+  onImportLws():  void { this.importLogikSimClicked.emit();        this.closeMenu(); }
   onConvertLws(): void { console.log('[Menü] Konvertieren (LWS)'); this.closeMenu(); }
   onExit():       void { console.log('[Menü] Beenden');            this.closeMenu(); }
 

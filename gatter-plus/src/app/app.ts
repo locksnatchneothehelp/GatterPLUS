@@ -8,6 +8,7 @@ import { GateInstance }  from './models/gate.model';
 import { ThemeService }  from './services/theme.service';
 import { ComponentSignalState } from './services/simulation.service';
 import { PROJECT_FILE_EXTENSION, parseProject, serializeProject } from './models/project-file';
+import { parseLogikSim } from './models/logiksim-file';
 
 /**
  * Root-Komponente von GatterPLUS.
@@ -129,17 +130,11 @@ export class App implements OnInit {
 
   /** Projektdatei auswählen, prüfen und ins Whiteboard laden. */
   async onOpen(): Promise<void> {
-    let picked: { text: string; handle: any } | null;
-    try {
-      picked = await this.pickTextFile();
-    } catch (e) {
-      if ((e as DOMException)?.name === 'AbortError') return; // Dialog abgebrochen
-      throw e;
-    }
+    const picked = await this.pickFile(this.pickerTypes, '.json');
     if (picked === null) return;
 
     try {
-      this.whiteboardRef.loadProject(parseProject(picked.text));
+      this.whiteboardRef.loadProject(parseProject(await picked.file.text()));
     } catch (e) {
       alert(`Die Datei konnte nicht geöffnet werden.\n\n${(e as Error).message}`);
       return;
@@ -210,24 +205,55 @@ export class App implements OnInit {
   }
 
   /**
-   * Öffnet einen Datei-Dialog und liefert Textinhalt + Handle (null = abgebrochen).
+   * LogikSim-Datei (.sim) importieren. Nicht exakt Übernommenes wird gemeldet.
+   * Die .sim-Datei wird NICHT als Speicherziel gemerkt — „Speichern" fragt
+   * danach nach einer neuen GatterPLUS-Datei (die .sim bleibt unverändert).
+   */
+  async onImportLogikSim(): Promise<void> {
+    const types = [{ description: 'LogikSim-Schaltung', accept: { 'application/octet-stream': ['.sim'] } }];
+    const picked = await this.pickFile(types, '.sim');
+    if (picked === null) return;
+
+    let result;
+    try {
+      result = await parseLogikSim(new Uint8Array(await picked.file.arrayBuffer()));
+      this.whiteboardRef.loadProject(result.project);
+    } catch (e) {
+      alert(`Die Datei konnte nicht importiert werden.\n\n${(e as Error).message}`);
+      return;
+    }
+    this.fileHandle     = null;
+    this.simulationMode = this.whiteboardRef.simulationMode;
+    this.activeTool     = this.whiteboardRef.toolMode;
+    if (result.warnings.length > 0) {
+      alert(`Import abgeschlossen, mit Hinweisen:\n\n• ${result.warnings.join('\n• ')}`);
+    }
+  }
+
+  /**
+   * Öffnet einen Datei-Dialog und liefert Datei + Handle (null = abgebrochen).
    * Im Fallback gibt es keinen Handle (null) → „Speichern" lädt dann neu herunter.
    */
-  private async pickTextFile(): Promise<{ text: string; handle: any } | null> {
+  private async pickFile(types: object[], accept: string): Promise<{ file: File; handle: any } | null> {
     const w = window as any;
     if (w.showOpenFilePicker) {
-      const [handle] = await w.showOpenFilePicker({ types: this.pickerTypes });
-      return { text: await (await handle.getFile()).text(), handle };
+      try {
+        const [handle] = await w.showOpenFilePicker({ types });
+        return { file: await handle.getFile(), handle };
+      } catch (e) {
+        if ((e as DOMException)?.name === 'AbortError') return null; // Dialog abgebrochen
+        throw e;
+      }
     }
 
     // Fallback: verstecktes <input type="file">
     return new Promise(resolve => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json';
-      input.onchange = async () => {
+      input.accept = accept;
+      input.onchange = () => {
         const file = input.files?.[0];
-        resolve(file ? { text: await file.text(), handle: null } : null);
+        resolve(file ? { file, handle: null } : null);
       };
       input.click();
     });

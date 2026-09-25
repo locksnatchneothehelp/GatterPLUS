@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1–5.4)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1–5.5a)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -20,6 +20,7 @@
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
+| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, NOT für negierte Eingänge) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
 | PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
 | Undo/Redo-Stacks | `services/history.service.ts` |
@@ -31,7 +32,7 @@
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |
 | `ToolMode`-Typ (Komponente selbst ungenutzt) | `components/toolbar-left/toolbar-left.ts` |
-| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
+| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
 | Build/Test-Konfiguration | `gatter-plus/angular.json`, `package.json`, `vitest.config.ts`, `tsconfig*.json` |
 | CI/Deployment (GitHub Pages) | `.github/workflows/main.yml` (Repo-Root) |
 
@@ -110,7 +111,7 @@ interface WireConnection {
 ## Zentraler Zustand und Update-Pattern
 
 - **Ort:** `Whiteboard` (`gates: GateInstance[]`, `wires: WireConnection[]`), dazu Auswahl (`selectedGateId`, `selectedGateIds: Set`, `selectedWireId`), Pan/Zoom (`panX`, `panY`, `zoom` 0.1–5), `toolMode`, `simulationMode`, `signalStates: Map`, `clockIntervals: Map`, `clipboard`.
-- **Pattern:** Arrays werden immer ersetzt (`this.gates = this.gates.map(g => g.id !== id ? g : {...g, ...changes})`, `[...this.wires, w]`, `filter`). Kein Signals/RxJS-Store; Change Detection über Zone/Default-CD.
+- **Pattern:** Arrays werden immer ersetzt (`this.gates = this.gates.map(g => g.id !== id ? g : {...g, ...changes})`, `[...this.wires, w]`, `filter`). Kein Signals/RxJS-Store. **Zoneless** (kein zone.js, Angular-21-Standard): CD läuft nur nach Template-Events/`markForCheck()` – Zustandsänderungen nach `await`/Timern brauchen `cdr.markForCheck()` (s. `loadProject`).
 - **Undo:** Vor jeder verändernden Aktion `this.pushHistory()` → `HistoryService.push(gates, wires)` (flache Kopien der Gates, tiefe Kopie der Wire-Punkte; leert Redo; max. 50). `undo()`/`redo()` tauschen Snapshots, heben die Auswahl auf, starten Takte neu.
 - Zentrale Mutationsmethoden: `updateGate(changes)`, `deleteGate`, `deleteWire`, `placeGate`, `toggleNegation`, `pasteClipboard`, `handleWireClick`, Drag in `onMouseMove` (pushHistory einmalig nach > 4 px Bewegung).
 - Nach Mutation im Simulationsmodus: `if (this.simulationMode) this.recomputeSimulation();`.
@@ -141,7 +142,7 @@ Beispiel Menüeintrag (analog Undo):
 
 - Palette: `toolbar-top.html` `.palette-item` mit `(mousedown)="onGateMouseDown($event, 'typ')"` → `DragStateService.startDrag` → `Whiteboard.onMouseUp` → `placeGate`. Deaktiviert bei `simulationMode`.
 - Properties: `GatePropertyChange` (`properties-panel.ts`) → `gateChange` → `App.onGateChange` → `Whiteboard.updateGate`.
-- Datei-Menü: `Öffnen`/`Speichern`/`Speichern unter` → `openClicked`/`saveClicked`/`saveAsClicked` → `App.onOpen`/`onSave`/`onSaveAs` (`App.fileHandle` = zuletzt geöffnete/exportierte Datei, „Speichern“ schreibt ohne Dialog dorthin; Datei-Dialoge per File System Access API, Fallback Download bzw. `<input type="file">`; Fehler per `alert`) → `Whiteboard.loadProject`/`getProjectData`. Übrige Datei-Einträge und Hilfe (`onAbout`) sind **Platzhalter** (`console.log`).
+- Datei-Menü: `Öffnen`/`Speichern`/`Speichern unter` → `openClicked`/`saveClicked`/`saveAsClicked` → `App.onOpen`/`onSave`/`onSaveAs` (`App.fileHandle` = zuletzt geöffnete/exportierte Datei, „Speichern“ schreibt ohne Dialog dorthin; Datei-Dialoge per File System Access API, Fallback Download bzw. `<input type="file">`; Fehler per `alert`) → `Whiteboard.loadProject`/`getProjectData`. `Importieren (LogikSim)` → `importLogikSimClicked` → `App.onImportLogikSim`. Übrige Datei-Einträge (`Neu`, `Konvertieren (LWS)`, `Beenden`) und Hilfe (`onAbout`) sind **Platzhalter** (`console.log`).
 - **Neuer Bauteiltyp** berührt: `GateType`, `GATE_BASE_SIZE`, `getGatePinOffsets`, ggf. `createGateInstance` (model); `computeGateOutput` (+ ggf. `isSource`) (simulation); neue Komponente unter `components/gates|io/`; `imports` + `@if`-Block in `whiteboard.ts/html`; Palette in `toolbar-top.ts/html`; `getTypeName`/`getGateDescription`/`getCurrentStateDescription` (properties-panel).
 
 ## Verbindungsregeln und Simulation
@@ -178,8 +179,8 @@ Alle Befehle in `gatter-plus/`:
 | Deploy (Standard) | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 | Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
 
-- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out-Limit, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
-- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (4 Spec-Dateien). `ng test` noch nicht ausgeführt.
+- Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out-Limit, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). Keine Tests für `SimulationService` und Komponenten.
+- **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (5 Spec-Dateien). `ng test` noch nicht ausgeführt.
 - Formatierung: Prettier (`printWidth 100`, `singleQuote`), `.editorconfig` 2 Leerzeichen.
 
 ## Code-Stil und Konventionen
