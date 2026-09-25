@@ -30,6 +30,7 @@ import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
 import { HistoryService }      from '../../services/history.service';
 import { ToolMode }            from '../toolbar-left/toolbar-left';
+import { ProjectData }         from '../../models/project-file';
 
 /** Zustand während des Leitungs-Zeichnens */
 interface WireDrawingState {
@@ -289,6 +290,45 @@ export class Whiteboard implements OnDestroy {
     this.selectedGateId  = newGates.length === 1 ? newGates[0].id : null;
 
     if (this.simulationMode) this.recomputeSimulation();
+  }
+
+  // ─── Projekt exportieren / importieren ─────────────────────────────────────
+
+  /** Aktueller Aufbau + Ansicht für den Export (siehe models/project-file.ts). */
+  getProjectData(): ProjectData {
+    return {
+      gates: this.gates,
+      wires: this.wires,
+      view:  { panX: this.panX, panY: this.panY, zoom: this.zoom },
+    };
+  }
+
+  /**
+   * Ersetzt die Schaltung durch ein geladenes Projekt.
+   * Eine laufende Simulation wird vorher beendet (Takte stoppen, Zustände
+   * zurücksetzen). Das Laden ist per Undo rückgängig machbar.
+   */
+  loadProject(data: ProjectData): void {
+    if (this.simulationMode) this.toggleSimulation();
+    this.pushHistory();
+    this.gates = data.gates;
+    this.wires = data.wires;
+    this.panX  = data.view.panX;
+    this.panY  = data.view.panY;
+    this.zoom  = data.view.zoom;
+
+    // Zähler nie zurücksetzen: nach Undo können alte IDs wieder auftauchen.
+    // Daher Maximum aus bisherigem Zähler und höchster Nummer in der Datei.
+    const maxNum = (ids: string[], prefix: string) =>
+      Math.max(0, ...ids.map(id => id.startsWith(prefix) ? Number(id.slice(prefix.length)) || 0 : 0));
+    this.gateIdCounter = Math.max(this.gateIdCounter, maxNum(data.gates.map(g => g.id), 'gate-'));
+    this.wireIdCounter = Math.max(this.wireIdCounter, maxNum(data.wires.map(w => w.id), 'wire-'));
+
+    this.selectedGateId     = null;
+    this.selectedGateIds.clear();
+    this.selectedWireId     = null;
+    this.editingLabelGateId = null;
+    this.wireDrawing        = null;
   }
 
   // ─── Inline Label-Bearbeitung ─────────────────────────────────────────────

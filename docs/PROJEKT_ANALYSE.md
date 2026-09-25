@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5.1–5.2)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -140,7 +140,7 @@ Beispiel Menüeintrag (analog Undo):
 
 - Palette: `toolbar-top.html` `.palette-item` mit `(mousedown)="onGateMouseDown($event, 'typ')"` → `DragStateService.startDrag` → `Whiteboard.onMouseUp` → `placeGate`. Deaktiviert bei `simulationMode`.
 - Properties: `GatePropertyChange` (`properties-panel.ts`) → `gateChange` → `App.onGateChange` → `Whiteboard.updateGate`.
-- Datei-Menü (`onNew`, `onOpen`, `onSave`, …) und Hilfe (`onAbout`) sind **Platzhalter** (`console.log`).
+- Datei-Menü: `Öffnen`/`Speichern unter` → `openClicked`/`saveAsClicked` → `App.onOpen`/`onSaveAs` (Datei-Dialoge per File System Access API, Fallback Download bzw. `<input type="file">`; Fehler per `alert`) → `Whiteboard.loadProject`/`getProjectData`. Übrige Datei-Einträge und Hilfe (`onAbout`) sind **Platzhalter** (`console.log`).
 - **Neuer Bauteiltyp** berührt: `GateType`, `GATE_BASE_SIZE`, `getGatePinOffsets`, ggf. `createGateInstance` (model); `computeGateOutput` (+ ggf. `isSource`) (simulation); neue Komponente unter `components/gates|io/`; `imports` + `@if`-Block in `whiteboard.ts/html`; Palette in `toolbar-top.ts/html`; `getTypeName`/`getGateDescription`/`getCurrentStateDescription` (properties-panel).
 
 ## Verbindungsregeln und Simulation
@@ -207,5 +207,5 @@ Alle Befehle in `gatter-plus/`:
 - Pin-Offsets hängen am Bauteil-CSS (siehe Datenmodell).
 - Multi-Delete (Entf bei Mehrfachauswahl) ist inline in `onDeleteKey` dupliziert statt `deleteGate` zu nutzen.
 - `ANLEITUNG-UND-TECHNOLOGIEN.md` ist veraltet (nennt HTML5-DnD, TS ~5.8).
-- Persistenz: Dateiformat vorhanden (`models/project-file.ts`), UI-Anbindung (Öffnen/Speichern) folgt in Phase 5.2.
+- Persistenz: Öffnen/Speichern unter vorhanden (`.gatterplus.json`); `loadProject` beendet Simulation, ist per Undo rückgängig, setzt ID-Zähler auf max(alt, Datei). „Speichern“ in dieselbe Datei folgt (Phase 5.3).
 - **Zwei Deploy-Wege mit unterschiedlichem base-href:** Workflow `/GatterPLUS/` vs. `npm run deploy` `/ProjektInformatikLK/` (altes Repo; auch `SETUP.md` nennt noch die alte Live-URL). Workflow führt **keine Tests** aus – jeder Push auf `main` deployt.

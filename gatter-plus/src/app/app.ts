@@ -7,6 +7,7 @@ import { ToolMode }      from './components/toolbar-left/toolbar-left';
 import { GateInstance }  from './models/gate.model';
 import { ThemeService }  from './services/theme.service';
 import { ComponentSignalState } from './services/simulation.service';
+import { PROJECT_FILE_EXTENSION, parseProject, serializeProject } from './models/project-file';
 
 /**
  * Root-Komponente von GatterPLUS.
@@ -96,4 +97,84 @@ export class App implements OnInit {
   get canUndo():  boolean { return this.whiteboardRef?.canUndo  ?? false; }
   get canRedo():  boolean { return this.whiteboardRef?.canRedo  ?? false; }
   get canPaste(): boolean { return this.whiteboardRef?.canPaste ?? false; }
+
+  // ─── Datei: Öffnen / Speichern unter ───────────────────────────────────────
+  // Chrome/Edge: echte Datei-Dialoge (File System Access API, nicht in lib.dom
+  // typisiert → Zugriff über `window as any`). Andere Browser: Fallback über
+  // <input type="file"> bzw. Download-Link.
+
+  /** Dateityp-Filter für die Dialoge ('.json', da Chrome Mehrfach-Endungen ablehnt). */
+  private readonly pickerTypes = [
+    { description: 'GatterPLUS-Projekt', accept: { 'application/json': ['.json'] } },
+  ];
+
+  /** Projektdatei auswählen, prüfen und ins Whiteboard laden. */
+  async onOpen(): Promise<void> {
+    let text: string | null;
+    try {
+      text = await this.pickTextFile();
+    } catch (e) {
+      if ((e as DOMException)?.name === 'AbortError') return; // Dialog abgebrochen
+      throw e;
+    }
+    if (text === null) return;
+
+    try {
+      this.whiteboardRef.loadProject(parseProject(text));
+    } catch (e) {
+      alert(`Die Datei konnte nicht geöffnet werden.\n\n${(e as Error).message}`);
+      return;
+    }
+    // loadProject() beendet ggf. die Simulation → Toolbar-Anzeige nachziehen
+    this.simulationMode = this.whiteboardRef.simulationMode;
+    this.activeTool     = this.whiteboardRef.toolMode;
+  }
+
+  /** Aktuelles Projekt als Datei speichern (Export). */
+  async onSaveAs(): Promise<void> {
+    const text = serializeProject(this.whiteboardRef.getProjectData());
+    const name = `schaltung${PROJECT_FILE_EXTENSION}`;
+    const w = window as any;
+
+    if (w.showSaveFilePicker) {
+      try {
+        const handle = await w.showSaveFilePicker({ suggestedName: name, types: this.pickerTypes });
+        const writable = await handle.createWritable();
+        await writable.write(text);
+        await writable.close();
+      } catch (e) {
+        if ((e as DOMException)?.name !== 'AbortError') throw e;
+      }
+      return;
+    }
+
+    // Fallback: Download
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** Öffnet einen Datei-Dialog und liefert den Textinhalt (null = abgebrochen). */
+  private async pickTextFile(): Promise<string | null> {
+    const w = window as any;
+    if (w.showOpenFilePicker) {
+      const [handle] = await w.showOpenFilePicker({ types: this.pickerTypes });
+      return (await handle.getFile()).text();
+    }
+
+    // Fallback: verstecktes <input type="file">
+    return new Promise(resolve => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = () => {
+        const file = input.files?.[0];
+        resolve(file ? file.text() : null);
+      };
+      input.click();
+    });
+  }
 }

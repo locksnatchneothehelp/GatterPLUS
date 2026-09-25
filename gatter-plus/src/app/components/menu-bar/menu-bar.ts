@@ -16,8 +16,8 @@ export type MenuName = 'datei' | 'bearbeiten' | 'hilfe';
  * - Es ist immer nur ein Dropdown gleichzeitig geöffnet.
  * - Ein Klick irgendwo außerhalb der Menüleiste schließt das offene Dropdown.
  *
- * Die Datei-Aktionen sind aktuell Platzhalter (console.log) und können später
- * mit echter Logik (Speichern/Laden usw.) gefüllt werden.
+ * „Öffnen" und „Speichern unter" werden als Outputs nach außen gemeldet
+ * (Logik in app.ts). Die übrigen Datei-Aktionen sind noch Platzhalter (console.log).
  * Die Bearbeiten-Aktionen (Undo/Redo/Copy/Paste) nutzen die bereits im
  * Whiteboard vorhandene echte Logik — sie kommen als Outputs von außen
  * (siehe app.ts: onUndo/onRedo/onCopy/onPaste).
@@ -47,6 +47,10 @@ export class MenuBar {
   @Output() redoClicked  = new EventEmitter<void>();
   @Output() copyClicked  = new EventEmitter<void>();
   @Output() pasteClicked = new EventEmitter<void>();
+
+  /** Datei-Aktionen „Öffnen" (Import) und „Speichern unter" (Export). */
+  @Output() openClicked   = new EventEmitter<void>();
+  @Output() saveAsClicked = new EventEmitter<void>();
 
   /** True, wenn gerade Dark Mode aktiv ist (für das Umschalt-Icon). */
   get isDark(): boolean {
@@ -115,13 +119,13 @@ export class MenuBar {
     this.closeMenu();
   }
 
-  // ─── Datei-Aktionen (Platzhalter) ──────────────────────────────────────────
-  // Werden nach Auswahl eines Menüeintrags aufgerufen. Noch ohne echte Logik.
+  // ─── Datei-Aktionen ────────────────────────────────────────────────────────
+  // Öffnen/Speichern unter → Outputs; die übrigen sind noch Platzhalter.
 
   onNew():        void { console.log('[Menü] Neu');                this.closeMenu(); }
-  onOpen():       void { console.log('[Menü] Öffnen');             this.closeMenu(); }
+  onOpen():       void { this.openClicked.emit();                  this.closeMenu(); }
   onSave():       void { console.log('[Menü] Speichern');          this.closeMenu(); }
-  onSaveAs():     void { console.log('[Menü] Speichern unter');    this.closeMenu(); }
+  onSaveAs():     void { this.saveAsClicked.emit();                this.closeMenu(); }
   onImportLws():  void { console.log('[Menü] Importieren (LWS)');  this.closeMenu(); }
   onConvertLws(): void { console.log('[Menü] Konvertieren (LWS)'); this.closeMenu(); }
   onExit():       void { console.log('[Menü] Beenden');            this.closeMenu(); }
