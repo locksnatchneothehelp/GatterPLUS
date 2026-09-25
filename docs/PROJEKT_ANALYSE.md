@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A)
+- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -83,6 +83,7 @@ interface WireConnection {
   toGateId: string;   toPinIndex: number;    // immer Eingangs-Pin
   points: {x,y}[];       // Wegpunkte (werden beim Rendern NEU berechnet, s. Fallstricke)
   branchPoint?: {x,y};   // nur Darstellung: Abzweig-Start auf bestehender Leitung
+  manualPoints?: {x,y}[];// eigene Knickpunkte (Phase 6B); gesetzt → Verlauf via manualWirePath statt automatisch
   fromDir?: PinDirection;// Austrittsrichtung am branchPoint
 }
 ```
@@ -149,7 +150,7 @@ Beispiel Menüeintrag (analog Undo):
 ## Verbindungsregeln und Simulation
 
 **Verbindungen** (`Whiteboard.handleWireClick`, nur im Werkzeug `wire`; Klick-Klick, kein Ziehen):
-- Start (Phase 6A): Ausgangs-Pin – auch belegt (**Fan-out**, `getOutputPinMaxConnections` = `Infinity`, Verbindungspunkt am Pin) – **oder** Klick auf beliebige Stelle einer Leitung → Abzweig (`branchPoint`, elektrisch gleiche Quelle); Klick auf den Ausgangs-Stummel (20 px) startet am Ausgang selbst. **Oder umgekehrt:** Start an freiem Eingang (`WireDrawingState.reverse`), Ende an Ausgang oder auf einer Leitung (Abzweig, Richtung zum Ziel). Anlegen zentral in `addWire()`. Hover-Hervorhebung `hoverWireId` im Leitungs-Modus.
+- Start (Phase 6A): Ausgangs-Pin – auch belegt (**Fan-out**, `getOutputPinMaxConnections` = `Infinity`, Verbindungspunkt am Pin) – **oder** Klick auf beliebige Stelle einer Leitung → Abzweig (`branchPoint`, elektrisch gleiche Quelle); Klick auf den Ausgangs-Stummel (20 px) startet am Ausgang selbst. **Oder umgekehrt:** Start an freiem Eingang (`WireDrawingState.reverse`), Ende an Ausgang oder auf einer Leitung (Abzweig, Richtung zum Ziel). Anlegen zentral in `addWire()`. **Knickpunkte (6B):** Klick auf freie Fläche beim Zeichnen setzt Knick (`wireDrawing.bends`, normal gezogen auch auf Leitungen); Escape bricht ab. Knicke wandern beim Verschieben nur mit, wenn beide Enden bewegt werden; „Verlauf automatisch“ im Eigenschaften-Panel (`resetWireRoute`). Hover-Hervorhebung `hoverWireId` im Leitungs-Modus.
 - Ende (normal gezogen): nur Eingangs-Pin eines **anderen** Bauteils, Eingang darf **nicht belegt** sein (max. 1 Leitung pro Eingang). Sonst Abbruch ohne Leitung. Escape bricht ab.
 - Routing orthogonal: `computeOrthogonalWaypoints` (Z-Form, U-Kurve, gemischte Rotationen).
 - Negation: Im Pan-Modus (nicht Simulation) Klick auf Ausgangs-Stub → `toggleNegation` (`negatedOutputs`).
@@ -197,7 +198,7 @@ Alle Befehle in `gatter-plus/`:
 ## Fallstricke und offene Punkte
 
 - **Whiteboard ist God-Component** (1312 Zeilen): State, Eingabe, Routing-Updates, Takte, Clipboard in einer Klasse.
-- **`wire.points` wird beim Rendern ignoriert:** `getWireDisplayPoints` berechnet den Verlauf immer neu; `points` ist nur gespeichert/redundant.
+- **`wire.points` wird beim Rendern ignoriert:** `getWireDisplayPoints` berechnet den Verlauf neu (automatisch) bzw. über `manualPoints` (`manualWirePath`, rechtwinklig; Knicke rasten auf 24 px, erster/letzter Knick wird an die Pin-Achse angeglichen); `points` ist nur gespeichert/redundant.
 - **`inputCount` verringern** entfernt Leitungen an weggefallenen Pins nicht (Simulation überspringt sie, Rendering fällt auf `gate.x/y` zurück).
 - **Leitungen überlagern sich:** Routing je Leitung isoliert (`computeOrthogonalWaypoints`), gleiche Verläufe liegen übereinander → Phase 6 B (Knickpunkte) / C (Routing).
 - **Mutation in `computeSignals`** (`ffState`, `ffPrevClock`) widerspricht dem Immutable-Pattern; Objekte werden nicht ersetzt.

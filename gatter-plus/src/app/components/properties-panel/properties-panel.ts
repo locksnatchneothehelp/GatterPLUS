@@ -46,6 +46,12 @@ export class PropertiesPanel {
   /** Wird ausgelöst, wenn die ausgewählte Leitung gelöscht werden soll */
   @Output() wireDelete = new EventEmitter<string>();
 
+  /** Ob die ausgewählte Leitung eigene Knickpunkte hat (zeigt „Verlauf automatisch") */
+  @Input() wireHasManualRoute = false;
+
+  /** Wird ausgelöst, wenn die eigenen Knickpunkte der Leitung entfernt werden sollen */
+  @Output() wireResetRoute = new EventEmitter<string>();
+
   /** Simulationsmodus aktiv? (für Zustands-Anzeige im Info-Block) */
   @Input() simulationMode = false;
 
@@ -55,6 +61,11 @@ export class PropertiesPanel {
   deleteWire(): void {
     if (!this.selectedWireId) return;
     this.wireDelete.emit(this.selectedWireId);
+  }
+
+  resetWireRoute(): void {
+    if (!this.selectedWireId) return;
+    this.wireResetRoute.emit(this.selectedWireId);
   }
 
   get hasVariableInputs(): boolean {

@@ -2,6 +2,7 @@ import {
   getOutputPinMaxConnections,
   computeOrthogonalWaypoints,
   getPinDirection,
+  manualWirePath,
   GateType,
   GateInstance,
 } from './gate.model';
@@ -243,5 +244,42 @@ describe('getPinDirection', () => {
         expect(Number.isInteger(dir.dy)).toBe(true);
       }
     }
+  });
+});
+
+// ─── Tests: manualWirePath (eigene Knickpunkte, Phase 6B) ─────────────────────
+
+describe('manualWirePath', () => {
+  const RIGHT = { dx: 1, dy: 0 }, LEFT = { dx: -1, dy: 0 }, DOWN = { dx: 0, dy: 1 }, UP = { dx: 0, dy: -1 };
+  const isOrthogonal = (p: { x: number; y: number }[]) =>
+    p.every((q, i) => i === 0 || q.x === p[i - 1].x || q.y === p[i - 1].y);
+
+  it('senkrechte Signalleitung: Ausgang rechts → Knick → Eingang links', () => {
+    // Ausgang (100,50) nach rechts, Knick auf (148,50)…(148,200), Eingang (300,200) von links
+    const p = manualWirePath({ x: 100, y: 50 }, RIGHT, [{ x: 148, y: 200 }], { x: 300, y: 200 }, LEFT);
+    expect(p).toEqual([{ x: 100, y: 50 }, { x: 148, y: 50 }, { x: 148, y: 200 }, { x: 300, y: 200 }]);
+  });
+
+  it('bereits achsparallele Punkte bekommen keine zusätzliche Ecke', () => {
+    const p = manualWirePath({ x: 0, y: 0 }, RIGHT, [{ x: 50, y: 0 }, { x: 50, y: 80 }], { x: 120, y: 80 }, LEFT);
+    expect(p).toEqual([{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 50, y: 80 }, { x: 120, y: 80 }]);
+  });
+
+  it('Start nach unten (gedrehter Schalter) verlässt den Pin senkrecht', () => {
+    const p = manualWirePath({ x: 100, y: 50 }, DOWN, [{ x: 200, y: 120 }], { x: 300, y: 200 }, LEFT);
+    expect(p[1]).toEqual({ x: 100, y: 120 }); // erst senkrecht
+    expect(isOrthogonal(p)).toBe(true);
+  });
+
+  it('Ziel-Eingang von oben wird senkrecht erreicht', () => {
+    const p = manualWirePath({ x: 0, y: 0 }, RIGHT, [{ x: 60, y: 0 }], { x: 200, y: 100 }, UP);
+    expect(p.slice(-2)).toEqual([{ x: 200, y: 0 }, { x: 200, y: 100 }]); // letztes Stück senkrecht
+  });
+
+  it('doppelte Punkte entfallen, Ergebnis ist immer rechtwinklig', () => {
+    const p = manualWirePath({ x: 0, y: 0 }, RIGHT,
+      [{ x: 30, y: 40 }, { x: 30, y: 40 }, { x: 90, y: 10 }], { x: 150, y: 70 }, LEFT);
+    expect(isOrthogonal(p)).toBe(true);
+    expect(p.some((q, i) => i > 0 && q.x === p[i - 1].x && q.y === p[i - 1].y)).toBe(false);
   });
 });

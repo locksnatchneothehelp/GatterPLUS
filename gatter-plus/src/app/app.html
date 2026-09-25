@@ -47,6 +47,8 @@
       (gateChange)="onGateChange($event)"
       (gateDelete)="onGateDelete($event)"
       (wireDelete)="onWireDelete($event)"
+      [wireHasManualRoute]="selectedWireHasManualRoute"
+      (wireResetRoute)="onWireResetRoute($event)"
     ></app-properties-panel>
 
   </div>

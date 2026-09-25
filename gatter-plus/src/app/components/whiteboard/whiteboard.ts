@@ -25,7 +25,7 @@ import {
   getGatePinOffsets, getGateDimensions,
   getPinWorldPos, isPointInGate,
   PIN_HIT_RADIUS, createGateInstance, computeOrthogonalWaypoints,
-  getOutputPinMaxConnections, getPinDirection,
+  getOutputPinMaxConnections, getPinDirection, manualWirePath,
 } from '../../models/gate.model';
 import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
@@ -55,6 +55,8 @@ interface WireDrawingState {
    * fromGateId/fromPinIndex sind bis zum Abschluss leer ('' / -1).
    */
   reverse?: { gateId: string; pinIndex: number };
+  /** Bisher gesetzte Knickpunkte (Klick auf freie Fläche), in Zeichenreihenfolge. */
+  bends: { x: number; y: number }[];
 }
 
 /** Zustand während des Verschiebens eines oder mehrerer Bauteile */
@@ -296,6 +298,7 @@ export class Whiteboard implements OnDestroy {
         points:     w.points.map(p => ({ ...p })),
         // Abzweigpunkt mit den Bauteilen versetzen (sonst startet der Abzweig an der alten Stelle)
         branchPoint: w.branchPoint && { x: w.branchPoint.x + OFFSET, y: w.branchPoint.y + OFFSET },
+        manualPoints: w.manualPoints?.map(p => ({ x: p.x + OFFSET, y: p.y + OFFSET })),
       }));
 
     this.pushHistory();
@@ -562,6 +565,21 @@ export class Whiteboard implements OnDestroy {
     if (this.selectedGateId === gateId) this.selectedGateId = null;
     this.selectedGateIds.delete(gateId);
     if (this.simulationMode) this.recomputeSimulation();
+  }
+
+  /** Ob eine Leitung eigene Knickpunkte hat (Eigenschaften-Panel: „Verlauf automatisch"). */
+  hasManualRoute(wireId: string): boolean {
+    return !!this.wires.find(w => w.id === wireId)?.manualPoints?.length;
+  }
+
+  /** Entfernt die eigenen Knickpunkte einer Leitung → wieder automatische Führung. */
+  resetWireRoute(wireId: string): void {
+    this.pushHistory();
+    this.wires = this.wires.map(w => {
+      if (w.id !== wireId) return w;
+      const { manualPoints, ...rest } = w;
+      return rest;
+    });
   }
 
   /** Löscht eine einzelne Leitung. */
@@ -844,9 +862,15 @@ export class Whiteboard implements OnDestroy {
           if (wire.branchPoint && fromMoved) {
             newBranchPoint = { x: wire.branchPoint.x + stepX, y: wire.branchPoint.y + stepY };
           }
+          // Eigene Knicke wandern nur mit, wenn beide Enden bewegt werden; sonst
+          // bleiben sie liegen und nur die Endstücke passen sich an.
+          const manualPoints = wire.manualPoints && fromMoved && toMoved
+            ? wire.manualPoints.map(p => ({ x: p.x + stepX, y: p.y + stepY }))
+            : wire.manualPoints;
           return {
             ...wire,
             branchPoint: newBranchPoint,
+            manualPoints,
             points: computeOrthogonalWaypoints(
               start.x, start.y, end.x, end.y, fromBottom, toBottom, from.y, to.y, fromDir, toDir
             ),
@@ -864,18 +888,9 @@ export class Whiteboard implements OnDestroy {
               && movedIds.has(w.toGateId)
           );
           if (!mainWire) return wire;
-          const from = updatedGates.find(g => g.id === mainWire.fromGateId);
-          const to   = updatedGates.find(g => g.id === mainWire.toGateId);
-          if (!from || !to) return wire;
-          const start = getPinWorldPos(from, 'output', mainWire.fromPinIndex);
-          const end   = getPinWorldPos(to,   'input',  mainWire.toPinIndex);
-          const wps   = computeOrthogonalWaypoints(
-            start.x, start.y, end.x, end.y,
-            from.y + getGateDimensions(from).h, to.y + getGateDimensions(to).h,
-            from.y, to.y,
-            getPinDirection(from, 'output'), getPinDirection(to, 'input')
-          );
-          const path = [start, ...wps, end];
+          // Tatsächlicher Verlauf der Haupt-Leitung (auch mit eigenen Knicken)
+          const path = this.getWireDisplayPoints(mainWire);
+          if (!path) return wire;
           let bestDist = Infinity;
           let bestPt   = wire.branchPoint!;
           for (let i = 0; i < path.length - 1; i++) {
@@ -993,6 +1008,7 @@ export class Whiteboard implements OnDestroy {
           x1: pos.x, y1: pos.y,
           fromDir: getPinDirection(near.gate, 'input'),
           reverse: { gateId: near.gate.id, pinIndex: near.pinIndex },
+          bends: [],
         };
         this.tentativeX = pos.x;
         this.tentativeY = pos.y;
@@ -1017,6 +1033,7 @@ export class Whiteboard implements OnDestroy {
           x1: hit.point.x, y1: hit.point.y,
           fromDir: hit.dir,
           branchPoint: hit.point,
+          bends: [],
         };
         this.tentativeX = hit.point.x;
         this.tentativeY = hit.point.y;
@@ -1025,6 +1042,15 @@ export class Whiteboard implements OnDestroy {
     }
 
     const drawing = this.wireDrawing;
+
+    // Knickpunkt setzen: Klick neben jeden Pin — normal gezogen auch auf eine
+    // Leitung (dort kann eine normal gezogene Leitung nicht enden), umgekehrt
+    // gezogen nur auf freie Fläche (Leitung = Abzweig-Ziel). Raster 24 px.
+    if (!near && (!drawing.reverse || !this.findWireHitAt(lx, ly))) {
+      const GRID = 24;
+      drawing.bends = [...drawing.bends, { x: Math.round(lx / GRID) * GRID, y: Math.round(ly / GRID) * GRID }];
+      return;
+    }
     this.wireDrawing = null;
 
     // ── Umgekehrt gezogen: Ziel-Eingang steht fest, Quelle wird jetzt gewählt
@@ -1032,10 +1058,11 @@ export class Whiteboard implements OnDestroy {
       const target = this.gates.find(g => g.id === drawing.reverse!.gateId);
       if (!target || this.isInputPinConnected(target.id, drawing.reverse.pinIndex)) return;
       const toPin = drawing.reverse.pinIndex;
+      const bends = [...drawing.bends].reverse(); // vom Eingang aus gesetzt → Richtung Quelle→Ziel
 
       if (near?.pinType === 'output' && near.gate.id !== target.id) {
         this.addWire(near.gate.id, near.pinIndex, getPinWorldPos(near.gate, 'output', near.pinIndex),
-          getPinDirection(near.gate, 'output'), undefined, target, toPin);
+          getPinDirection(near.gate, 'output'), undefined, target, toPin, bends);
         return;
       }
       const hit = near ? null : this.findWireHitAt(lx, ly);
@@ -1043,7 +1070,7 @@ export class Whiteboard implements OnDestroy {
       const stub = this.findOutputStubAt(hit.point.x, hit.point.y);
       if (stub) {
         this.addWire(stub.gate.id, stub.pinIndex, getPinWorldPos(stub.gate, 'output', stub.pinIndex),
-          getPinDirection(stub.gate, 'output'), undefined, target, toPin);
+          getPinDirection(stub.gate, 'output'), undefined, target, toPin, bends);
         return;
       }
       // Abzweig-Richtung: senkrecht zum getroffenen Segment, zum Ziel hin
@@ -1051,7 +1078,7 @@ export class Whiteboard implements OnDestroy {
       const dir: PinDirection = hit.dir.dx !== 0
         ? { dx: Math.sign(inPos.x - hit.point.x) || 1, dy: 0 }
         : { dx: 0, dy: Math.sign(inPos.y - hit.point.y) || 1 };
-      this.addWire(hit.wire.fromGateId, hit.wire.fromPinIndex, hit.point, dir, hit.point, target, toPin);
+      this.addWire(hit.wire.fromGateId, hit.wire.fromPinIndex, hit.point, dir, hit.point, target, toPin, bends);
       return;
     }
 
@@ -1059,7 +1086,7 @@ export class Whiteboard implements OnDestroy {
     if (near?.pinType === 'input' && near.gate.id !== drawing.fromGateId
         && !this.isInputPinConnected(near.gate.id, near.pinIndex)) {
       this.addWire(drawing.fromGateId, drawing.fromPinIndex, { x: drawing.x1, y: drawing.y1 },
-        drawing.fromDir, drawing.branchPoint, near.gate, near.pinIndex);
+        drawing.fromDir, drawing.branchPoint, near.gate, near.pinIndex, drawing.bends);
     }
   }
 
@@ -1071,6 +1098,7 @@ export class Whiteboard implements OnDestroy {
       fromPinIndex: pinIndex,
       x1: pos.x, y1: pos.y,
       fromDir: getPinDirection(gate, 'output'),
+      bends: [],
     };
     this.tentativeX = pos.x;
     this.tentativeY = pos.y;
@@ -1085,6 +1113,7 @@ export class Whiteboard implements OnDestroy {
     start: { x: number; y: number }, fromDir: PinDirection,
     branchPoint: { x: number; y: number } | undefined,
     to: GateInstance, toPinIndex: number,
+    bends: { x: number; y: number }[] = [],
   ): void {
     const endPos   = getPinWorldPos(to, 'input', toPinIndex);
     const fromGate = this.gates.find(g => g.id === fromGateId);
@@ -1097,6 +1126,20 @@ export class Whiteboard implements OnDestroy {
     const fromTop    = !isBranch ? fromGate?.y : undefined;
     const toBottom   = to.y + getGateDimensions(to).h;
     const toDir      = getPinDirection(to, 'input');
+
+    // Rasterversatz ausgleichen: Liegt der erste/letzte Knick weniger als eine
+    // Rasterweite neben der Pin-Achse, auf die Achse ziehen — sonst entsteht
+    // durch das Einrasten ein kleiner Haken bzw. Überstand am Pin.
+    if (bends.length > 0) {
+      const GRID = 24;
+      bends = bends.map(p => ({ ...p }));
+      const first = bends[0], last = bends[bends.length - 1];
+      if (fromDir.dx === 0 && Math.abs(first.x - start.x) < GRID) first.x = start.x;
+      if (fromDir.dy === 0 && Math.abs(first.y - start.y) < GRID) first.y = start.y;
+      if (toDir.dx === 0 && Math.abs(last.x - endPos.x) < GRID) last.x = endPos.x;
+      if (toDir.dy === 0 && Math.abs(last.y - endPos.y) < GRID) last.y = endPos.y;
+    }
+
     const newWire: WireConnection = {
       id:           `wire-${++this.wireIdCounter}`,
       fromGateId,
@@ -1110,6 +1153,7 @@ export class Whiteboard implements OnDestroy {
       ),
       branchPoint,
       fromDir: branchPoint ? fromDir : undefined,
+      manualPoints: bends.length > 0 ? bends : undefined,
     };
     this.pushHistory(); // Zustand vor dem Hinzufügen der Leitung sichern
     this.wires = [...this.wires, newWire];
@@ -1333,6 +1377,11 @@ export class Whiteboard implements OnDestroy {
     const fromDir     = wire.branchPoint ? (wire.fromDir ?? { dx: 1, dy: 0 }) : getPinDirection(from, 'output');
     const toDir       = getPinDirection(to, 'input');
 
+    // Eigene Knickpunkte (Phase 6B): Verlauf über die Knicke statt automatisch
+    if (wire.manualPoints?.length) {
+      return manualWirePath(start, fromDir, wire.manualPoints, end, toDir);
+    }
+
     const waypoints = computeOrthogonalWaypoints(
       start.x, start.y, end.x, end.y, fromBottom, toBottom, fromTop, to.y, fromDir, toDir
     );
@@ -1432,6 +1481,13 @@ export class Whiteboard implements OnDestroy {
     // Umgekehrt gezogen: Vorschau startet am Eingangs-Pin in dessen Richtung
     const dir = this.wireDrawing.reverse ? this.wireDrawing.fromDir
       : fromGate ? getPinDirection(fromGate, 'output') : { dx: 1, dy: 0 };
+
+    // Mit Knickpunkten: Verlauf über die Knicke bis zur Maus (letztes Stück erst waagerecht)
+    if (this.wireDrawing.bends.length > 0) {
+      return manualWirePath({ x: x1, y: y1 }, dir, this.wireDrawing.bends,
+        { x: this.tentativeX, y: this.tentativeY }, { dx: 0, dy: 1 })
+        .map(p => `${p.x},${p.y}`).join(' ');
+    }
 
     if (dir.dy === 0) {
       const midX = Math.round((x1 + this.tentativeX) / 2);

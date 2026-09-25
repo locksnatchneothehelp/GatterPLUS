@@ -116,6 +116,13 @@ export interface WireConnection {
    * einmalig beim Erstellen gespeichert statt bei jedem Rendern neu berechnet.
    */
   fromDir?: PinDirection;
+  /**
+   * Vom Nutzer gesetzte Knickpunkte (Phase 6B, Klick auf freie Fläche beim
+   * Zeichnen). Gesetzt → der Verlauf führt über diese Punkte (siehe
+   * manualWirePath), statt automatisch berechnet zu werden. Nicht gesetzt →
+   * automatische Führung wie bisher (points wird dann ignoriert).
+   */
+  manualPoints?: { x: number; y: number }[];
 }
 
 /**
@@ -559,6 +566,34 @@ export function computeOrthogonalWaypoints(
     { x: stubX, y: stubY },
     { x: stubX, y: y2 },
   ];
+}
+
+/**
+ * Rechtwinkliger Verlauf über vom Nutzer gesetzte Knickpunkte.
+ *
+ * Liegen zwei aufeinanderfolgende Punkte nicht auf einer Achse, wird eine Ecke
+ * eingefügt: Das erste Stück verlässt den Start entlang fromDir, das letzte
+ * erreicht das Ziel entlang toDir (sonst liefe die Leitung schräg bzw. quer
+ * in den Pin), dazwischen zuerst waagerecht. Doppelte Punkte entfallen.
+ */
+export function manualWirePath(
+  start: { x: number; y: number }, fromDir: PinDirection,
+  bends: { x: number; y: number }[],
+  end: { x: number; y: number }, toDir: PinDirection,
+): { x: number; y: number }[] {
+  const anchors = [start, ...bends, end];
+  const path = [start];
+  for (let i = 1; i < anchors.length; i++) {
+    const a = path[path.length - 1], b = anchors[i];
+    if (a.x !== b.x && a.y !== b.y) {
+      const isFirst = i === 1, isLast = i === anchors.length - 1;
+      // Achse des Stücks: am Start entlang fromDir, am Ziel entlang toDir (als letztes Stück)
+      const horizontalFirst = isFirst ? fromDir.dx !== 0 : isLast ? toDir.dx === 0 : true;
+      path.push(horizontalFirst ? { x: b.x, y: a.y } : { x: a.x, y: b.y });
+    }
+    if (b.x !== path[path.length - 1].x || b.y !== path[path.length - 1].y) path.push(b);
+  }
+  return path;
 }
 
 // ─── Legacy-Kompatibilität ────────────────────────────────────────────────────

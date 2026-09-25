@@ -90,6 +90,17 @@ export class App implements OnInit {
     this.whiteboardRef.deleteWire(wireId);
   }
 
+  /** Ob die ausgewählte Leitung eigene Knickpunkte hat (Button „Verlauf automatisch") */
+  get selectedWireHasManualRoute(): boolean {
+    const id = this.selectedWireId;
+    return !!id && this.whiteboardRef.hasManualRoute(id);
+  }
+
+  /** Eigene Knickpunkte der Leitung entfernen → wieder automatische Führung */
+  onWireResetRoute(wireId: string): void {
+    this.whiteboardRef.resetWireRoute(wireId);
+  }
+
   onUndo():  void { this.whiteboardRef.undo(); }
   onRedo():  void { this.whiteboardRef.redo(); }
   onCopy():  void { this.whiteboardRef.copySelected(); }

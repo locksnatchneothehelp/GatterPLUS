@@ -13,6 +13,12 @@
     <div class="section-title">Hinweis</div>
     <p class="wire-hint">Verbindet zwei Bauteile. Löschen entfernt nur diese Leitung — die Bauteile bleiben erhalten.</p>
   </div>
+  @if (wireHasManualRoute) {
+    <div class="section">
+      <div class="section-title">Verlauf</div>
+      <button class="rot-btn" (click)="resetWireRoute()" title="Eigene Knickpunkte entfernen">Verlauf automatisch</button>
+    </div>
+  }
 </div>
 }
 @if (selectedGate) {
