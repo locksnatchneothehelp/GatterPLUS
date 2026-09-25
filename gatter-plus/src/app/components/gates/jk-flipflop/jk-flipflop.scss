@@ -15,7 +15,7 @@
   height: 44px;
   .gate-body { width: 44px; font-size: 9px; background: var(--btn-bg, #f5b342); }
   .wire { width: 8px; }
-  .symbol { font-size: 9px; }
+  .symbol { font-size: 9px; padding-left: 0; }
   .pin-label, .pin-label-out { display: none; }
 }
 
@@ -83,6 +83,9 @@
   font-family: monospace;
   line-height: 1;
   text-align: center;
+  /* Platz für das Pin-Label „C ▷", das in den Körper hineinragt —
+     sonst überlappt es mit „JK-FF" (Palette: ohne Labels, dort 0). */
+  padding-left: 12px;
 }
 
 /* Eingangs-Pin-Zeile (Draht + Label) */
