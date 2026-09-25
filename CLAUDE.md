@@ -4,7 +4,7 @@
 
 - Kompakte Code-Landkarte (Struktur, Datenmodell, State, Rendering, Simulation, Tests, Fallstricke): [docs/PROJEKT_ANALYSE.md](docs/PROJEKT_ANALYSE.md) – zuerst lesen, statt das Projekt neu zu durchsuchen.
 - Die Angular-App liegt in `gatter-plus/`; alle npm-Befehle dort ausführen.
-- Aktueller Arbeitsplan (Phase 6: Leitungen – Abzweigen, Knickpunkte, negierte Eingänge, Routing): [docs/PHASE6_PLAN.md](docs/PHASE6_PLAN.md) – Schritte, Entscheidungen und Fortschritt; nach jedem Schritt die Fortschrittstabelle aktualisieren.
+- Abgeschlossen: Phase 6 (Leitungen – Abzweigen/Fan-out, Knickpunkte, negierte Eingänge, A*-Routing, LogikSim-Import-Layout) – [docs/PHASE6_PLAN.md](docs/PHASE6_PLAN.md). Neue Arbeitspläne als `docs/PHASEn_PLAN.md` anlegen und hier verlinken.
 - Abgeschlossen: Phase 5 (Export/Import, Speichern, PNG, LogikSim-Import) – [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md), enthält u. a. das rekonstruierte `.sim`-Format.
 
 ## Pflege
