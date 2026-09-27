@@ -32,7 +32,7 @@ import { SimulationService, ComponentSignalState } from '../../services/simulati
 import { HistoryService }      from '../../services/history.service';
 import { ToolMode }            from '../toolbar-left/toolbar-left';
 import { ProjectData }         from '../../models/project-file';
-import { ROUTE_CLEARANCE, Rect, Seg, routeWire } from '../../models/wire-router';
+import { ROUTE_CLEARANCE, ROUTE_EXIT, Rect, Seg, routeWire } from '../../models/wire-router';
 import { toBlob }              from 'html-to-image';
 
 /** Ein-/Ausgabe-Bauteile (eigene Optik, im Strommodus nicht grau) */
@@ -1497,6 +1497,25 @@ export class Whiteboard implements OnDestroy {
       ...this.wires.filter(w => w.branchPoint),
     ];
 
+    // Feste Ein-/Austrittsstücke an den Pins vorab als belegt markieren: sonst
+    // legt sich eine früher verlegte Leitung darauf, und die spätere kann ihrem
+    // Stück am Pin nicht mehr ausweichen (Überlappung direkt vor dem Bauteil).
+    // Eigene Liste: nur der Router sieht sie, nicht die Abzweig-Projektion unten.
+    const pinStubs: Seg[] = [];
+    const stub = (p: { x: number; y: number }, d: { dx: number; dy: number }) =>
+      ({ x: p.x + d.dx * ROUTE_EXIT, y: p.y + d.dy * ROUTE_EXIT });
+    for (const w of this.wires) {
+      const from = this.gates.find(g => g.id === w.fromGateId);
+      const to   = this.gates.find(g => g.id === w.toGateId);
+      if (!from || !to) continue;
+      const end = getPinWorldPos(to, 'input', w.toPinIndex);
+      pinStubs.push({ a: end, b: stub(end, getPinDirection(to, 'input')), net: netOf(w) });
+      if (!w.branchPoint) {
+        const start = getPinWorldPos(from, 'output', w.fromPinIndex);
+        pinStubs.push({ a: start, b: stub(start, getPinDirection(from, 'output')), net: netOf(w) });
+      }
+    }
+
     for (const w of order) {
       const from = this.gates.find(g => g.id === w.fromGateId);
       const to   = this.gates.find(g => g.id === w.toGateId);
@@ -1526,7 +1545,7 @@ export class Whiteboard implements OnDestroy {
 
       const pts = w.manualPoints?.length
         ? manualWirePath(start, fromDir, w.manualPoints, end, toDir)
-        : routeWire(start, fromDir, end, toDir, obstacles, occupied, net)
+        : routeWire(start, fromDir, end, toDir, obstacles, [...pinStubs, ...occupied], net)
           ?? this.legacyWirePoints({ ...w, branchPoint: w.branchPoint && start, fromDir }, from, to);
       paths.set(w.id, pts);
       for (let i = 1; i < pts.length; i++) occupied.push({ a: pts[i - 1], b: pts[i], net });

@@ -33,7 +33,8 @@ export interface Seg { a: Pt; b: Pt; net: string }
 /** Mindestabstand zwischen Leitung und Bauteil-Gehäuse. */
 export const ROUTE_CLEARANCE = 12;
 /** Gerades Stück, mit dem eine Leitung den Pin verlässt/erreicht. */
-const EXIT = 20;
+export const ROUTE_EXIT = 20;
+const EXIT = ROUTE_EXIT;
 const BEND_COST    = 40;
 const OVERLAP_COST = 6;
 /** Abstand einer Ausweichspur zu einer fremden Leitung. */
