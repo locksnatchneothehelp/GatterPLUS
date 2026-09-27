@@ -200,12 +200,14 @@
       />
     }
 
-    <!-- Verbindungs-Dots: ein Ausgang versorgt mehrere Eingänge (T-Junction) -->
+    <!-- Verbindungspunkte (Quadrat): hier teilt sich eine Leitung auf. Quadrat
+         statt Kreis, damit sie nicht mit Negations-Kreisen verwechselt werden. -->
     @for (pt of getWireJunctions(); track $index) {
-      <circle
-        [attr.cx]="pt.x"
-        [attr.cy]="pt.y"
-        r="4"
+      <rect
+        [attr.x]="pt.x - 3.5"
+        [attr.y]="pt.y - 3.5"
+        width="7"
+        height="7"
         class="wire-junction"
         [class.junction-high]="simulationMode && getSignalOutput(pt.gateId, pt.pinIndex) === true"
         [class.junction-low]="simulationMode && getSignalOutput(pt.gateId, pt.pinIndex) === false"

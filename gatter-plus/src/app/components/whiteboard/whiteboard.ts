@@ -1707,9 +1707,10 @@ export class Whiteboard implements OnDestroy {
    * - Abzweigungen (wire.branchPoint gesetzt) IMMER an ihrem Abzweigpunkt —
    *   dort trifft die neue Leitung tatsächlich auf die Original-Leitung,
    *   nicht am weit entfernten Ausgangs-Pin.
-   * - Mehrere Leitungen, die DIREKT vom selben Ausgangs-Pin starten (ohne
-   *   Abzweigung, z.B. bei einem Bauteil mit erlaubtem Fan-out), zusätzlich
-   *   am Pin selbst.
+   * - Mehrere Leitungen, die DIREKT vom selben Ausgangs-Pin starten (Fan-out):
+   *   dort, wo sich ihre gezeichneten Verläufe trennen. Der Router lässt
+   *   gleiche Signale ein Stück gemeinsam laufen, die Aufteilung liegt daher
+   *   oft nicht am Pin – so sind Aufteilungen von Kreuzungen unterscheidbar.
    */
   getWireJunctions(): { x: number; y: number; gateId: string; pinIndex: number }[] {
     const result: { x: number; y: number; gateId: string; pinIndex: number }[] = [];
@@ -1721,23 +1722,57 @@ export class Whiteboard implements OnDestroy {
       }
     }
 
-    // Direkte Mehrfachstarts vom selben Pin (ohne Abzweigung)
-    const directSourceCount = new Map<string, number>();
+    // Direkte Mehrfachstarts vom selben Pin (ohne Abzweigung): Trennstellen
+    const groups = new Map<string, WireConnection[]>();
     for (const wire of this.wires) {
       if (wire.branchPoint) continue;
       const key = `${wire.fromGateId}:${wire.fromPinIndex}`;
-      directSourceCount.set(key, (directSourceCount.get(key) ?? 0) + 1);
+      groups.set(key, [...(groups.get(key) ?? []), wire]);
     }
-    for (const [key, count] of directSourceCount.entries()) {
-      if (count < 2) continue;
-      const [gateId, idxStr] = key.split(':');
-      const gate = this.gates.find(g => g.id === gateId);
-      if (gate) {
-        const pos = getPinWorldPos(gate, 'output', +idxStr);
-        result.push({ ...pos, gateId, pinIndex: +idxStr });
+    for (const group of groups.values()) {
+      if (group.length < 2) continue;
+      const paths = group
+        .map(w => this.getWireDisplayPoints(w))
+        .filter((p): p is { x: number; y: number }[] => !!p && p.length > 1);
+      const seen = new Set<string>();
+      for (let i = 0; i < paths.length; i++) {
+        for (let j = i + 1; j < paths.length; j++) {
+          const p   = this.pathDivergence(paths[i], paths[j]);
+          const key = `${Math.round(p.x)}:${Math.round(p.y)}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          result.push({ ...p, gateId: group[0].fromGateId, pinIndex: group[0].fromPinIndex });
+        }
       }
     }
     return result;
+  }
+
+  /**
+   * Punkt, an dem sich zwei Leitungsverläufe mit gleichem Startpunkt trennen:
+   * beide gleichzeitig ablaufen, bis ihre Richtungen verschieden sind.
+   */
+  private pathDivergence(
+    a: { x: number; y: number }[],
+    b: { x: number; y: number }[],
+  ): { x: number; y: number } {
+    const EPS = 0.5;
+    const dir = (p: { x: number; y: number }, q: { x: number; y: number }) =>
+      ({ dx: Math.sign(Math.round(q.x - p.x)), dy: Math.sign(Math.round(q.y - p.y)) });
+    let i = 0, j = 0;
+    let pa = { ...a[0] }, pb = { ...b[0] };
+    while (i < a.length - 1 && j < b.length - 1) {
+      const la = Math.hypot(a[i + 1].x - pa.x, a[i + 1].y - pa.y);
+      const lb = Math.hypot(b[j + 1].x - pb.x, b[j + 1].y - pb.y);
+      if (la < EPS) { i++; pa = { ...a[i] }; continue; }
+      if (lb < EPS) { j++; pb = { ...b[j] }; continue; }
+      const da = dir(pa, a[i + 1]), db = dir(pb, b[j + 1]);
+      if (da.dx !== db.dx || da.dy !== db.dy) break;
+      const step = Math.min(la, lb);
+      pa = { x: pa.x + (a[i + 1].x - pa.x) * step / la, y: pa.y + (a[i + 1].y - pa.y) * step / la };
+      pb = { x: pb.x + (b[j + 1].x - pb.x) * step / lb, y: pb.y + (b[j + 1].y - pb.y) * step / lb };
+    }
+    return pa;
   }
 
   get isDraggingGate(): boolean { return this.dragState.isDragging(); }
