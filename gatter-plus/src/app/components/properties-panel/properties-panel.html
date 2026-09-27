@@ -42,7 +42,7 @@
   <div class="section">
     <div class="section-title">Farbe</div>
     <div class="color-swatches">
-      @for (c of ['default','yellow','green','red','orange']; track c) {
+      @for (c of ['default','yellow','orange','red','blue','violet']; track c) {
         <button class="color-swatch color-{{ c }}" [class.active]="selectedGate.color === c" (click)="setColor(c)" [title]="c"></button>
       }
     </div>

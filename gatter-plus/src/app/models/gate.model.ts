@@ -20,9 +20,11 @@ export type Rotation = 0 | 90 | 180 | 270;
 
 /**
  * Gehäuse-Farbe einer Komponente.
- * 'default' = weißer Körper (Standard).
+ * 'default' = Standard-Körper des Bauteils.
+ * 'green' wird nicht mehr angeboten (verwechselbar mit HIGH), bleibt aber für
+ * ältere Projektdateien gültig.
  */
-export type GateColor = 'default' | 'yellow' | 'green' | 'red' | 'orange';
+export type GateColor = 'default' | 'yellow' | 'orange' | 'red' | 'blue' | 'violet' | 'green';
 
 /**
  * Eine auf dem Whiteboard platzierte Komponenten-Instanz.

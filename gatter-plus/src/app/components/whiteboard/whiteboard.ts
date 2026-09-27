@@ -1363,21 +1363,23 @@ export class Whiteboard implements OnDestroy {
     return gate.rotation !== 0 ? `rotate(${gate.rotation}deg)` : '';
   }
 
-  getGateColorFilter(gate: GateInstance): string {
-    if (this.simulationMode) {
-      const isHigh = gate.type === 'output'
-        ? this.getSignalInput(gate.id) === true
-        : this.getSignalOutput(gate.id, 0) === true;
-      if (isHigh) return '';
-    }
-    const map: Record<GateColor, string> = {
-      default: '',
-      yellow:  'sepia(1) saturate(8) hue-rotate(15deg)',
-      green:   'sepia(1) saturate(8) hue-rotate(100deg) brightness(0.9)',
-      red:     'sepia(1) saturate(8) hue-rotate(300deg) brightness(0.9)',
-      orange:  'sepia(1) saturate(10) hue-rotate(25deg) brightness(1.1)',
+  /**
+   * Körperfarbe als CSS-Variable `--gate-fill` (die Bauteil-SCSS nutzen sie als
+   * Hintergrund des Körpers). Werte = Farbfelder im Eigenschaften-Panel.
+   * Im Simulationsmodus keine eigene Farbe: Bauteile zeigen grau/grün (LOW/HIGH).
+   */
+  getGateFill(gate: GateInstance): string | null {
+    if (this.simulationMode) return null;
+    const map: Record<GateColor, string | null> = {
+      default: null,
+      yellow:  '#fde047',
+      orange:  '#fdba74',
+      red:     '#fca5a5',
+      blue:    '#93c5fd',
+      violet:  '#c4b5fd',
+      green:   '#86efac',
     };
-    return map[gate.color] ?? '';
+    return map[gate.color] ?? null;
   }
 
   /**

@@ -28,7 +28,7 @@
   justify-content: center;
   width: 64px;   /* 64 + 12px Stub = 76px gesamt → passt zum Modell */
   height: 42px;
-  background: #eff6ff;
+  background: var(--gate-fill, #eff6ff);
   border: 2px solid #3b82f6;
   border-radius: 4px;
   gap: 2px;

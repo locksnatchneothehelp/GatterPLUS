@@ -28,7 +28,7 @@
   min-width: 60px;
   height: 26px;
   padding: 0 10px;
-  background: #f8fafc;
+  background: var(--gate-fill, #f8fafc);
   border: 1px solid #cbd5e1;
   border-radius: 4px;
 }

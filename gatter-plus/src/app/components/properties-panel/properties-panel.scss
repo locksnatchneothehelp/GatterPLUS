@@ -112,10 +112,12 @@
 }
 
 .color-default { background: #ffffff; border: 2px solid #cbd5e1; }
+/* Gleiche Werte wie Whiteboard.getGateFill – Farbfeld = Bauteilfarbe */
 .color-yellow  { background: #fde047; }
-.color-green   { background: #4ade80; }
-.color-red     { background: #f87171; }
-.color-orange  { background: #fb923c; }
+.color-orange  { background: #fdba74; }
+.color-red     { background: #fca5a5; }
+.color-blue    { background: #93c5fd; }
+.color-violet  { background: #c4b5fd; }
 
 .input-count-row {
   display: flex;

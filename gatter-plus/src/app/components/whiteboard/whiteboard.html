@@ -43,7 +43,7 @@
         [style.left.px]="gate.x"
         [style.top.px]="gate.y"
         [style.transform]="getGateTransform(gate)"
-        [style.filter]="getGateColorFilter(gate)"
+        [style.--gate-fill]="getGateFill(gate)"
         [class.selected]="selectedGateIds.has(gate.id)"
       >
 

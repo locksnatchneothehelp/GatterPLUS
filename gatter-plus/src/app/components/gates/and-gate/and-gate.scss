@@ -70,7 +70,7 @@
   justify-content: center;
   width: 52px;
   align-self: stretch;
-  background: #f5b342;
+  background: var(--gate-fill, #f5b342);
   border: 2px solid #1e293b;
   border-radius: 0;
   transition: background 0.15s, border-color 0.15s;
