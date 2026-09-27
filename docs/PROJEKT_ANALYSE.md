@@ -125,7 +125,7 @@ interface WireConnection {
 Ebenen (unten → oben) im `#viewport`-Div (empfängt `mousedown`/`dblclick`; `mousemove`/`mouseup`/Tasten via `@HostListener('document:…')`):
 1. `grid-svg`: SVG-`<pattern>` Punktraster (24 px · zoom).
 2. `gates-layer`: HTML-Divs `.placed-gate` (absolute left/top, `transform: rotate()`, Farbe per CSS-Variable `--gate-fill` aus `getGateFill`: Bauteil-SCSS nutzen `background: var(--gate-fill, <Standard>)` am Körper; Standard Gatter goldgelb `#f5b342`, I/O eigene Optik; im Strommodus Gatter grau `#f1f5f9`, HIGH-Regeln der Bauteile färben grün; Farbwerte = Farbfelder in `properties-panel.scss`) mit `@if (gate.type === …)` → Bauteil-Komponente. Transform `translate(pan) scale(zoom)`.
-3. `wires-layer`: SVG-`<polyline>` pro Leitung (`getWirePointsString`), Vorschau `wire-tentative`, Junction-Dots, Negations-Punkte (r=6).
+3. `wires-layer`: SVG-`<polyline>` pro Leitung (`getWirePointsString`), Vorschau `wire-tentative`, Verbindungsquadrate (7×7, `getWireJunctions`: an Abzweigen und dort, wo sich Fan-out-Leitungen trennen – `pathDivergence`), Negations-Kreise (r=6).
 3b. `wire-stubs-layer` (z-index 2, über den Bauteilen): nur die Anschluss-Stummel jeder Leitung (`getWireStubPointStrings`, 12 px bzw. NOT 8 px) in Leitungsfarbe – sonst bliebe vor dem Gehäuse ein dunkles Stück.
 4. `pins-layer` (nur `toolMode==='wire'`): Pin-Dots.
 5. Zoom-Anzeige + Minimap (SVG) + Button „Alles anzeigen“ (`zoomToFit`, Bounding-Box aus `getContentBounds`, die auch `exportPng` nutzt).
