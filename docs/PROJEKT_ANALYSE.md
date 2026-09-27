@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-25 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C, Import-Layout)
+- **Stand:** 2026-09-27 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C, Import-Layout, UI-Feinschliff `972aa5b`)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -61,7 +61,7 @@ gatter-plus/src/
 type GateType = 'and'|'or'|'not'|'xor'|'jk-ff'|'half-adder'|'full-adder'
               |'input'|'output'|'clock-gen'|'text-label';
 type Rotation  = 0|90|180|270;                      // im Uhrzeigersinn
-type GateColor = 'default'|'yellow'|'green'|'red'|'orange';
+type GateColor = 'default'|'yellow'|'orange'|'red'|'blue'|'violet'|'green'; // green: nur Altdateien, nicht im Panel
 
 interface GateInstance {
   id: string;            // 'gate-N'
@@ -124,11 +124,11 @@ interface WireConnection {
 
 Ebenen (unten → oben) im `#viewport`-Div (empfängt `mousedown`/`dblclick`; `mousemove`/`mouseup`/Tasten via `@HostListener('document:…')`):
 1. `grid-svg`: SVG-`<pattern>` Punktraster (24 px · zoom).
-2. `gates-layer`: HTML-Divs `.placed-gate` (absolute left/top, `transform: rotate()`, Farbe per CSS-`filter`) mit `@if (gate.type === …)` → Bauteil-Komponente. Transform `translate(pan) scale(zoom)`.
+2. `gates-layer`: HTML-Divs `.placed-gate` (absolute left/top, `transform: rotate()`, Farbe per CSS-Variable `--gate-fill` aus `getGateFill`: Bauteil-SCSS nutzen `background: var(--gate-fill, <Standard>)` am Körper; Standard Gatter goldgelb `#f5b342`, I/O eigene Optik; im Strommodus Gatter grau `#f1f5f9`, HIGH-Regeln der Bauteile färben grün; Farbwerte = Farbfelder in `properties-panel.scss`) mit `@if (gate.type === …)` → Bauteil-Komponente. Transform `translate(pan) scale(zoom)`.
 3. `wires-layer`: SVG-`<polyline>` pro Leitung (`getWirePointsString`), Vorschau `wire-tentative`, Junction-Dots, Negations-Punkte (r=6).
 3b. `wire-stubs-layer` (z-index 2, über den Bauteilen): nur die Anschluss-Stummel jeder Leitung (`getWireStubPointStrings`, 12 px bzw. NOT 8 px) in Leitungsfarbe – sonst bliebe vor dem Gehäuse ein dunkles Stück.
 4. `pins-layer` (nur `toolMode==='wire'`): Pin-Dots.
-5. Zoom-Anzeige + Minimap (SVG).
+5. Zoom-Anzeige + Minimap (SVG) + Button „Alles anzeigen“ (`zoomToFit`, Bounding-Box aus `getContentBounds`, die auch `exportPng` nutzt).
 
 - Bauteil-Komponenten sind rein darstellend: Inputs `toolbarMode` (Palettenansicht), `signalOutput*`/`signalInput`, `inputCount`, `value`, `label`. Symbole nach DIN 40900 (`&`, `≥1`, `=1` …).
 - **Theme:** `ThemeService` setzt nur `data-theme="light|dark"` an `<html>`, persistiert in `localStorage['gatterplus-theme']`, geladen in `App.ngOnInit`. Farben als CSS-Variablen in `styles.scss` (`:root` / `:root[data-theme="dark"]`). Neues Theme = neuer Block + `ThemeName` erweitern.
@@ -167,6 +167,7 @@ Beispiel Menüeintrag (analog Undo):
 - Negation wird auf Ausgänge angewandt (auch bei Quellen und JK-FF); negierte Eingänge invertiert `propagate` beim Übertragen (`inputSignals` = Rechenwert, offener Eingang bleibt `null`).
 - Auslöser: `Whiteboard.recomputeSimulation()` bei jeder Mutation, Schalter-Klick (`tryToggleSwitch`) und jedem Takt-Tick.
 - Taktgeber: `setInterval` pro `clock-gen` im Whiteboard, toggelt `inputValue` alle `max(100, clockPeriodMs)` ms (= Halbperiode). Panel begrenzt 100–10000.
+- **Strommodus sperrt die Schaltung:** kein Bauteil-Drag (Auswahl bleibt für Zustandsanzeige), Entf/Undo/Redo/Einfügen ohne Wirkung (`canUndo`/`canRedo`/`canPaste` = false → Menü deaktiviert), Werkzeug-Buttons `[disabled]`, Panel-Bearbeitung per `<fieldset [disabled]>`. Zoom, Pan und Schalter bleiben.
 - Simulation aus: Intervalle stoppen, `inputValue`, `ffState`, `ffPrevClock` → false, `signalStates` + `prevOutputs` leeren. Simulation an: Werkzeug → Pan, Palette deaktiviert.
 
 ## Test-Setup und Befehle
@@ -211,6 +212,7 @@ Alle Befehle in `gatter-plus/`:
 - `PropertiesPanel.selectedGate` ist `any`; `App.onGateChange` castet `as any`.
 - Rotations-Vorzeichen: `getPinWorldPos`/`getPinDirection` (−) und `isPointInGate` (+) müssen zusammenpassen.
 - Pin-Offsets hängen am Bauteil-CSS (siehe Datenmodell).
+- `Whiteboard.onMouseDown` ruft `preventDefault` (verhindert Fokuswechsel) → vorher wird `document.activeElement.blur()` aufgerufen, sonst verlieren Panel-Eingabefelder nie den Fokus und `(change)` (z. B. Beschriftung) käme nicht an.
 - Multi-Delete (Entf bei Mehrfachauswahl) ist inline in `onDeleteKey` dupliziert statt `deleteGate` zu nutzen.
 - `ANLEITUNG-UND-TECHNOLOGIEN.md` ist veraltet (nennt HTML5-DnD, TS ~5.8).
 - Persistenz: Öffnen/Speichern unter vorhanden (`.gatterplus.json`); `loadProject` beendet Simulation, ist per Undo rückgängig, setzt ID-Zähler auf max(alt, Datei). „Speichern“ schreibt in die zuletzt geöffnete/exportierte Datei (nur Chrome/Edge, sonst Download).
