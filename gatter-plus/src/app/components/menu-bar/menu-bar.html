@@ -34,21 +34,21 @@
     @if (openMenu === 'bearbeiten') {
       <div class="dropdown" (click)="$event.stopPropagation()">
         <!-- Jeder Eintrag zeigt rechts das zugehörige Tastenkürzel an.
-             Deaktivierte Einträge (z.B. Undo ohne Historie) sind grau. -->
+             Deaktivierte Einträge (z.B. Rückgängig ohne Historie) sind grau. -->
         <button class="dropdown-item" [disabled]="!canUndo" (click)="onUndo()">
-          <span>Undo</span>
+          <span>Rückgängig</span>
           <span class="shortcut">Strg+Z</span>
         </button>
         <button class="dropdown-item" [disabled]="!canRedo" (click)="onRedo()">
-          <span>Redo</span>
+          <span>Wiederherstellen</span>
           <span class="shortcut">Strg+Y</span>
         </button>
         <button class="dropdown-item" (click)="onCopy()">
-          <span>Copy</span>
+          <span>Kopieren</span>
           <span class="shortcut">Strg+C</span>
         </button>
         <button class="dropdown-item" [disabled]="!canPaste" (click)="onPaste()">
-          <span>Paste</span>
+          <span>Einfügen</span>
           <span class="shortcut">Strg+V</span>
         </button>
       </div>
@@ -61,7 +61,7 @@
 
     @if (openMenu === 'hilfe') {
       <div class="dropdown" (click)="$event.stopPropagation()">
-        <button class="dropdown-item" (click)="onAbout()">About</button>
+        <button class="dropdown-item" (click)="onAbout()">Über</button>
       </div>
     }
   </div>
