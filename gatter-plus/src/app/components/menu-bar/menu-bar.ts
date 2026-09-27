@@ -48,6 +48,8 @@ export class MenuBar {
   @Output() copyClicked  = new EventEmitter<void>();
   @Output() pasteClicked = new EventEmitter<void>();
 
+  /** Datei-Aktion „Neu" (leeres Whiteboard, Rückfrage in App). */
+  @Output() newClicked    = new EventEmitter<void>();
   /** Datei-Aktionen „Öffnen" (Import), „Speichern" und „Speichern unter" (Export). */
   @Output() openClicked   = new EventEmitter<void>();
   @Output() saveClicked   = new EventEmitter<void>();
@@ -125,15 +127,14 @@ export class MenuBar {
   }
 
   // ─── Datei-Aktionen ────────────────────────────────────────────────────────
-  // Öffnen/Speichern/Speichern unter → Outputs; die übrigen sind noch Platzhalter.
+  // Alle Datei-Aktionen werden über Outputs an die App weitergereicht.
 
-  onNew():        void { console.log('[Menü] Neu');                this.closeMenu(); }
+  onNew():        void { this.newClicked.emit();                   this.closeMenu(); }
   onOpen():       void { this.openClicked.emit();                  this.closeMenu(); }
   onSave():       void { this.saveClicked.emit();                  this.closeMenu(); }
   onSaveAs():     void { this.saveAsClicked.emit();                this.closeMenu(); }
   onExportPng():  void { this.exportPngClicked.emit();             this.closeMenu(); }
   onImportLws():  void { this.importLogikSimClicked.emit();        this.closeMenu(); }
-  onExit():       void { console.log('[Menü] Beenden');            this.closeMenu(); }
 
   // ─── Hilfe-Aktionen (Platzhalter) ──────────────────────────────────────────
 

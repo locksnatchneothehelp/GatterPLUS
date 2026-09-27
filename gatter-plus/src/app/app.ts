@@ -139,6 +139,20 @@ export class App implements OnInit {
     await writable.close();
   }
 
+  /**
+   * „Neu": nach Rückfrage leeres Whiteboard (per Undo rückgängig machbar).
+   * Die gemerkte Datei wird vergessen, damit „Speichern" sie nicht mit dem
+   * leeren Board überschreibt.
+   */
+  onNew(): void {
+    if (!confirm('Neues Whiteboard anlegen?\n\nAlle Bauteile und Leitungen werden entfernt.')) return;
+    this.whiteboardRef.loadProject({ gates: [], wires: [], view: { panX: 0, panY: 0, zoom: 1 } });
+    this.fileHandle     = null;
+    // loadProject() beendet ggf. die Simulation → Toolbar-Anzeige nachziehen
+    this.simulationMode = this.whiteboardRef.simulationMode;
+    this.activeTool     = this.whiteboardRef.toolMode;
+  }
+
   /** Projektdatei auswählen, prüfen und ins Whiteboard laden. */
   async onOpen(): Promise<void> {
     const picked = await this.pickFile(this.pickerTypes, '.json');
