@@ -31,5 +31,5 @@
 }
 
 .wire { width: 8px; height: 2px; background: var(--wire-stroke, #1e293b); flex-shrink: 0; }
-.gate-body { display: flex; align-items: center; justify-content: center; width: 52px; height: 42px; background: var(--gate-fill, #ffffff); border: 2px solid #1e293b; border-radius: 0; transition: background 0.15s, border-color 0.15s; }
+.gate-body { display: flex; align-items: center; justify-content: center; width: 52px; height: 42px; background: var(--gate-fill, #f5b342); border: 2px solid #1e293b; border-radius: 0; transition: background 0.15s, border-color 0.15s; }
 .symbol { font-size: 18px; font-weight: 700; color: #1e293b; font-family: monospace; }

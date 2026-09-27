@@ -35,6 +35,9 @@ import { ProjectData }         from '../../models/project-file';
 import { ROUTE_CLEARANCE, Rect, Seg, routeWire } from '../../models/wire-router';
 import { toBlob }              from 'html-to-image';
 
+/** Ein-/Ausgabe-Bauteile (eigene Optik, im Strommodus nicht grau) */
+const IO_TYPES = new Set<GateType>(['input', 'output', 'clock-gen', 'text-label']);
+
 /** Zustand während des Leitungs-Zeichnens */
 interface WireDrawingState {
   fromGateId:   string;
@@ -1380,7 +1383,9 @@ export class Whiteboard implements OnDestroy {
    * Im Simulationsmodus keine eigene Farbe: Bauteile zeigen grau/grün (LOW/HIGH).
    */
   getGateFill(gate: GateInstance): string | null {
-    if (this.simulationMode) return null;
+    // Strommodus: Gatter grau (LOW-Farbe; HIGH-Regel der Bauteile färbt grün),
+    // Ein-/Ausgabe-Bauteile behalten ihre Standardoptik.
+    if (this.simulationMode) return IO_TYPES.has(gate.type) ? null : '#f1f5f9';
     const map: Record<GateColor, string | null> = {
       default: null,
       yellow:  '#fde047',
