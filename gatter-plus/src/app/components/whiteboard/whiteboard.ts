@@ -207,6 +207,7 @@ export class Whiteboard implements OnDestroy {
    * Aufruf über Ctrl+Z oder den Toolbar-Button.
    */
   undo(): void {
+    if (this.simulationMode) return; // Strommodus: Schaltung gesperrt
     const snap = this.historyService.pop();
     if (!snap) return;
     // Aktuellen Zustand auf Redo-Stack sichern, damit Redo wieder zurückspringen kann
@@ -229,6 +230,7 @@ export class Whiteboard implements OnDestroy {
    * Aufruf über Ctrl+Y / Ctrl+Shift+Z oder den Toolbar-Button.
    */
   redo(): void {
+    if (this.simulationMode) return;
     const snap = this.historyService.popRedo();
     if (!snap) return;
     // Aktuellen Zustand auf Undo-Stack legen (kein push(), um Redo-Stack nicht zu leeren)
@@ -246,9 +248,10 @@ export class Whiteboard implements OnDestroy {
     }
   }
 
-  get canUndo():  boolean { return this.historyService.canUndo(); }
-  get canRedo():  boolean { return this.historyService.canRedo(); }
-  get canPaste(): boolean { return this.clipboard !== null; }
+  // Im Strommodus gesperrt → Menüeinträge erscheinen deaktiviert
+  get canUndo():  boolean { return !this.simulationMode && this.historyService.canUndo(); }
+  get canRedo():  boolean { return !this.simulationMode && this.historyService.canRedo(); }
+  get canPaste(): boolean { return !this.simulationMode && this.clipboard !== null; }
 
   // ─── Kopieren / Einfügen ───────────────────────────────────────────────────
 
@@ -278,7 +281,7 @@ export class Whiteboard implements OnDestroy {
    * Kopierte Leitungen werden auf die neuen IDs umgeschrieben.
    */
   pasteClipboard(): void {
-    if (!this.clipboard) return;
+    if (!this.clipboard || this.simulationMode) return;
     const OFFSET = 20;
     const idMap  = new Map<string, string>();
 
@@ -622,6 +625,7 @@ export class Whiteboard implements OnDestroy {
   @HostListener('document:keydown.delete', ['$event'])
   @HostListener('document:keydown.backspace', ['$event'])
   onDeleteKey(event: Event): void {
+    if (this.simulationMode) return; // Strommodus: nichts löschen
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
 
@@ -739,6 +743,9 @@ export class Whiteboard implements OnDestroy {
         this.selectedGateId = hitGate.id;
       }
       this.selectedWireId = null;
+
+      // Strommodus: nur auswählen (Panel zeigt den Zustand), nicht verschieben
+      if (this.simulationMode) return;
 
       // Drag-Vorbereitung: Ursprungspositionen aller selektierten Bauteile merken
       const otherOrigins = new Map<string, { ox: number; oy: number }>();

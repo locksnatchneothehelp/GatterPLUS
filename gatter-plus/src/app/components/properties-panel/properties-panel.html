@@ -7,7 +7,7 @@
 <div class="panel">
   <div class="panel-header">
     <span class="gate-type">Leitung</span>
-    <button class="delete-btn" (click)="deleteWire()" title="Leitung löschen (Del)">🗑</button>
+    <button class="delete-btn" [disabled]="simulationMode" (click)="deleteWire()" title="Leitung löschen (Del)">🗑</button>
   </div>
   <div class="section">
     <div class="section-title">Hinweis</div>
@@ -16,7 +16,7 @@
   @if (wireHasManualRoute) {
     <div class="section">
       <div class="section-title">Verlauf</div>
-      <button class="rot-btn" (click)="resetWireRoute()" title="Eigene Knickpunkte entfernen">Verlauf automatisch</button>
+      <button class="rot-btn" [disabled]="simulationMode" (click)="resetWireRoute()" title="Eigene Knickpunkte entfernen">Verlauf automatisch</button>
     </div>
   }
 </div>
@@ -25,9 +25,11 @@
 <div class="panel">
   <div class="panel-header">
     <span class="gate-type">{{ getTypeName() }}</span>
-    <button class="delete-btn" (click)="deleteGate()" title="Löschen (Del)">🗑</button>
+    <button class="delete-btn" [disabled]="simulationMode" (click)="deleteGate()" title="Löschen (Del)">🗑</button>
   </div>
 
+  <!-- Strommodus: Schaltung gesperrt → alle Bearbeiten-Felder deaktiviert -->
+  <fieldset class="edit-fields" [disabled]="simulationMode">
   @if (selectedGate.type !== 'text-label') {
   <div class="section">
     <div class="section-title">Ausrichtung</div>
@@ -81,6 +83,7 @@
       [placeholder]="isTextLabel ? 'Label-Text' : 'Bauteil-Name…'"
     />
   </div>
+  </fieldset>
 
   @if (getGateDescription()) {
   <div class="section info-section">
