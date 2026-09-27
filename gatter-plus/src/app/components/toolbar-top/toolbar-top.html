@@ -95,6 +95,7 @@
     <div class="palette-items">
       <button
         class="tool-toggle"
+        [disabled]="simulationMode"
         [class.selected]="activeTool === 'pan'"
         title="Verschieben (Pan)"
         (click)="selectTool('pan')"
@@ -112,6 +113,7 @@
       </button>
       <button
         class="tool-toggle"
+        [disabled]="simulationMode"
         [class.selected]="activeTool === 'wire'"
         title="Leitung ziehen (Wire)"
         (click)="selectTool('wire')"
