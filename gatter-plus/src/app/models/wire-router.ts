@@ -14,6 +14,12 @@ import { PinDirection } from './gate.model';
  * Kosten: Länge + BEND_COST je Knick + OVERLAP_COST je px, die auf einer
  * Leitung eines ANDEREN Signals liegen (sonst wären Leitungen nicht mehr
  * unterscheidbar). Leitungen desselben Signals dürfen sich Wege teilen.
+ *
+ * Ausweichspuren: Neben jeder Leitung eines anderen Signals kommen zusätzliche
+ * Gitterlinien im Abstand LANE hinzu. Ohne sie gäbe es um ein Bauteil herum
+ * nur eine Linie (Kante + Mindestabstand), und Leitungen müssten sich dort
+ * überlappen. Berücksichtigt werden nur Leitungen in der Nähe der Verbindung,
+ * damit das Gitter bei großen Schaltungen klein bleibt.
  */
 
 export interface Pt { x: number; y: number }
@@ -30,6 +36,10 @@ export const ROUTE_CLEARANCE = 12;
 const EXIT = 20;
 const BEND_COST    = 40;
 const OVERLAP_COST = 6;
+/** Abstand einer Ausweichspur zu einer fremden Leitung. */
+const LANE = 10;
+/** Umkreis um Start/Ziel, in dem fremde Leitungen Ausweichspuren erzeugen. */
+const LANE_MARGIN = 200;
 
 const DIRS: PinDirection[] = [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }];
 const dirIndex = (d: PinDirection) => DIRS.findIndex(x => x.dx === d.dx && x.dy === d.dy);
@@ -54,8 +64,19 @@ export function routeWire(
   const inside = (p: Pt) => obstacles.some(r => within(p, r));
 
   // ── Gitterlinien ──────────────────────────────────────────────────────────
-  const xs = uniqSorted([s1.x, e1.x, ...obstacles.flatMap(r => [r.x1, r.x2])]);
-  const ys = uniqSorted([s1.y, e1.y, ...obstacles.flatMap(r => [r.y1, r.y2])]);
+  // Ausweichspuren neben fremden Leitungen im Bereich der Verbindung
+  const bx1 = Math.min(s1.x, e1.x) - LANE_MARGIN, bx2 = Math.max(s1.x, e1.x) + LANE_MARGIN;
+  const by1 = Math.min(s1.y, e1.y) - LANE_MARGIN, by2 = Math.max(s1.y, e1.y) + LANE_MARGIN;
+  const laneX: number[] = [], laneY: number[] = [];
+  for (const s of occupied) {
+    if (s.net === net) continue;
+    if (Math.max(s.a.x, s.b.x) < bx1 || Math.min(s.a.x, s.b.x) > bx2 ||
+        Math.max(s.a.y, s.b.y) < by1 || Math.min(s.a.y, s.b.y) > by2) continue;
+    if (s.a.y === s.b.y) laneY.push(s.a.y - LANE, s.a.y + LANE);
+    else if (s.a.x === s.b.x) laneX.push(s.a.x - LANE, s.a.x + LANE);
+  }
+  const xs = uniqSorted([s1.x, e1.x, ...obstacles.flatMap(r => [r.x1, r.x2]), ...laneX]);
+  const ys = uniqSorted([s1.y, e1.y, ...obstacles.flatMap(r => [r.y1, r.y2]), ...laneY]);
   const W = xs.length, H = ys.length;
   const node = (i: number, j: number) => j * W + i;
   const blocked = new Uint8Array(W * H);

@@ -63,6 +63,23 @@ describe('routeWire', () => {
     expect(overlapLength(p, other)).toBeLessThan(overlapLength([{ x: 0, y: 0 }, { x: 300, y: 0 }], other));
   });
 
+  it('fremde Leitung auf dem direkten Weg → weicht auf Parallelspur aus', () => {
+    const other: Seg[] = [{ a: { x: -50, y: 0 }, b: { x: 400, y: 0 }, net: 'fremd' }];
+    const p = routeWire({ x: 0, y: 0 }, RIGHT, { x: 300, y: 0 }, LEFT, [], other, 'n1')!;
+    expect(isOrthogonal(p)).toBe(true);
+    // Nur die Austrittsstücke direkt an den Pins (je 20 px) liegen noch auf der fremden Linie
+    expect(overlapLength(p, other)).toBeLessThanOrEqual(40);
+  });
+
+  it('zwei Signale um dasselbe Bauteil → getrennte Spuren', () => {
+    const block: Rect = { x1: 100, y1: -60, x2: 200, y2: 60 };
+    const first = routeWire({ x: 0, y: 0 }, RIGHT, { x: 300, y: 0 }, LEFT, [block], [], 'a')!;
+    const occ: Seg[] = first.slice(1).map((b, i) => ({ a: first[i], b, net: 'a' }));
+    const second = routeWire({ x: 0, y: 10 }, RIGHT, { x: 300, y: 10 }, LEFT, [block], occ, 'b')!;
+    expect(crosses(second, block)).toBe(false);
+    expect(overlapLength(second, occ)).toBe(0);
+  });
+
   it('gleiches Signal darf denselben Weg nutzen (kein Umweg)', () => {
     const same: Seg[] = [{ a: { x: -50, y: 0 }, b: { x: 400, y: 0 }, net: 'n1' }];
     const p = routeWire({ x: 0, y: 0 }, RIGHT, { x: 300, y: 0 }, LEFT, [], same, 'n1');
