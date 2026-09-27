@@ -332,11 +332,8 @@ export class Whiteboard implements OnDestroy {
    * Ausschnitt bei 100 % gesetzt, aufgenommen und danach wiederhergestellt.
    * Raster, Pin-Punkte und Zoom-Leiste/Minimap werden ausgefiltert.
    */
-  async exportPng(): Promise<Blob | null> {
-    if (this.gates.length === 0) return null;
-    const MARGIN = 40; // Platz für Label-Overlays unter/über Bauteilen
-
-    // Bounding-Box: gedrehte Bauteile (Drehung um den Mittelpunkt) + Leitungen
+  /** Bounding-Box (logische px): gedrehte Bauteile (Drehung um den Mittelpunkt) + Leitungen. */
+  private getContentBounds(): { minX: number; minY: number; maxX: number; maxY: number } {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     const add = (x: number, y: number) => {
       minX = Math.min(minX, x); minY = Math.min(minY, y);
@@ -353,6 +350,13 @@ export class Whiteboard implements OnDestroy {
     for (const w of this.wires) {
       for (const p of this.getWireDisplayPoints(w) ?? []) add(p.x, p.y);
     }
+    return { minX, minY, maxX, maxY };
+  }
+
+  async exportPng(): Promise<Blob | null> {
+    if (this.gates.length === 0) return null;
+    const MARGIN = 40; // Platz für Label-Overlays unter/über Bauteilen
+    const { minX, minY, maxX, maxY } = this.getContentBounds();
 
     const saved = {
       panX: this.panX, panY: this.panY, zoom: this.zoom,
@@ -1743,6 +1747,24 @@ export class Whiteboard implements OnDestroy {
     this.panX = mx + (this.panX - mx) * (newZoom / this.zoom);
     this.panY = my + (this.panY - my) * (newZoom / this.zoom);
     this.zoom  = newZoom;
+  }
+
+  /**
+   * „Alles anzeigen“: Zoom und Pan so setzen, dass alle Bauteile und Leitungen
+   * mit etwas Rand ins Whiteboard passen und dort zentriert sind.
+   * Zoom-Grenzen wie beim Mausrad (0.1–5).
+   */
+  zoomToFit(): void {
+    if (this.gates.length === 0 || !this.viewportRef) return;
+    const MARGIN = 40; // Bildschirm-px Rand, Platz für Label-Overlays
+    const { minX, minY, maxX, maxY } = this.getContentBounds();
+    const vp = this.viewportRef.nativeElement;
+    const w  = Math.max(1, maxX - minX), h = Math.max(1, maxY - minY);
+    const zoom = Math.max(0.1, Math.min(5,
+      Math.min((vp.clientWidth - 2 * MARGIN) / w, (vp.clientHeight - 2 * MARGIN) / h)));
+    this.zoom = zoom;
+    this.panX = vp.clientWidth  / 2 - (minX + w / 2) * zoom;
+    this.panY = vp.clientHeight / 2 - (minY + h / 2) * zoom;
   }
 
   private dist(x1: number, y1: number, x2: number, y2: number): number {

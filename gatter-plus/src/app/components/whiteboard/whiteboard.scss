@@ -313,6 +313,13 @@
   &.active { color: var(--accent, #3b82f6); }
 }
 
+/* „Alles anzeigen“: gleicher Stil wie der Minimap-Button, mit Text */
+.fit-btn {
+  gap: 4px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
 /* Minimap: absolut, direkt über der Zoom-Leiste */
 .minimap {
   position: absolute;
