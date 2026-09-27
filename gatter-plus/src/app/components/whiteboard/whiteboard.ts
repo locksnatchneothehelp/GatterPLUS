@@ -694,6 +694,10 @@ export class Whiteboard implements OnDestroy {
    */
   onMouseDown(event: MouseEvent): void {
     if (event.button !== 0) return;
+    // preventDefault verhindert auch den Fokuswechsel: ein offenes Eingabefeld
+    // (z. B. Beschriftung im Eigenschaften-Panel) würde nie verlassen, sein
+    // (change) nie ausgelöst und der Text ginge verloren → explizit verlassen.
+    (document.activeElement as HTMLElement | null)?.blur();
     event.preventDefault();
 
     if (this.dragState.isDragging()) return;
