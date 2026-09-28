@@ -75,7 +75,10 @@
 | 21:39 | `bf77dfd` | Sitzungsprotokoll ergänzt · **sechster Push** |
 | 21:44 | `8bb83ff` | App-Icon (Gatter mit „+“ auf Bernstein): `public/icon.svg` als Favicon, daraus gerendertes `favicon.ico` (16/32/48), in der Toolbar links neben dem Namen; Simulations-Hinweis erst ab 1560 px |
 | 21:48 | `6bd03f7` | Hell/Dunkel endgültig ohne Aufblitzen: Kreis als CSS-Animation direkt an `::view-transition-new(root)` (vorher per JS erst nach `ready` → ein Frame ungeschnitten = weiße „Welle“), Farbübergang auf `<html>` selbst mit abgeschaltet, Aufräumen nur durch den letzten Wechsel; geprüft per Frame-Aufzeichnung beider Richtungen |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **siebter Push** |
+| 21:51 | `fec03d8` | Sitzungsprotokoll ergänzt · **siebter Push** |
+| 21:59 | `7039902` | Hell/Dunkel: Kreis-Übergang etwas langsamer (750 statt 550 ms) |
+| 22:01 | `e5bf266` | Toolbar: gleicher Abstand über und unter Bauteilen/Werkzeugen (Knöpfe 18/18, Kästen 14/14 px), alles auf einer Mittellinie; Leiste 85 statt 71 px hoch |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **achter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
