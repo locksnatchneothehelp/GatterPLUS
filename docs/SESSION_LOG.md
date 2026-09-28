@@ -64,7 +64,11 @@
 | 20:26 | `3453c0d` | Projektanalyse nachgezogen |
 | 20:34 | `cb0009f` | Sitzungsprotokoll ergänzt · **dritter Push** |
 | 20:36 | `08be49a` | Eigenschaften-Panel: Mülltonne bei Bauteilen und Leitungen entfernt (Löschen per Entf), Verneinung mit ausgeschriebenen Beschriftungen „Eingang/Eingänge“, „Ausgang/Ausgänge“ über den Buttons, Beschreibungen und Zustandstexte in schlichtem Deutsch ohne englische Begriffe (1/0 statt HIGH/LOW, „Exklusiv-ODER-Gatter“, „JK-Flipflop“) |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **vierter Push** |
+| 20:38 | `756d0d9` | Sitzungsprotokoll ergänzt · **vierter Push** |
+| 20:58 | `3850754` | Simulations-Hinweis: Pfeillinie mittig in die Spitze |
+| 21:00 | `c23dd86` | Palette: alle Bauteile mittig auf einer Linie (=1/HA/VA klebten oben, &/≥1 durch altes min-height zu hoch) |
+| 21:22 | `3eb0528` | Hell/Dunkel als Schiebeschalter (Sonne/Mond), Übergang als Kreis vom Schalter aus (View Transitions API) |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **fünfter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
