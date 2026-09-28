@@ -68,7 +68,8 @@
 | 20:58 | `3850754` | Simulations-Hinweis: Pfeillinie mittig in die Spitze |
 | 21:00 | `c23dd86` | Palette: alle Bauteile mittig auf einer Linie (=1/HA/VA klebten oben, &/≥1 durch altes min-height zu hoch) |
 | 21:22 | `3eb0528` | Hell/Dunkel als Schiebeschalter (Sonne/Mond), Übergang als Kreis vom Schalter aus (View Transitions API) |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **fünfter Push** |
+| 21:23 | `ec13c5d` | Sitzungsprotokoll ergänzt · **fünfter Push** |
+| 21:33 | `65d0b0b` | Pfeil (Spitze auf Höhe der Power-Knopf-Mitte, Linie endet mittig) und Hell/Dunkel-Schalter (Knopf ringsum 2 px Abstand) exakt ausgerichtet – nachgemessen |
 
 ### Stolpersteine / Wissen für die nächste Session
 
