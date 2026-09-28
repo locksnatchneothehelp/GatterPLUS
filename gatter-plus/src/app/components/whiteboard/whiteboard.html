@@ -260,7 +260,11 @@
           [class.wire-low]="simulationMode && s.wireId !== null && s.high !== true"
           [class.wire-selected]="s.wireId !== null && s.wireId === selectedWireId"
           [class.gate-reveal]="simReveal !== null"
+          [class.stub-reveal-out]="simReveal !== null && s.wireId !== null && s.kind === 'output'"
+          [class.stub-reveal-in]="simReveal !== null && s.wireId !== null && s.kind === 'input'"
           [style.--reveal-delay]="revealGateDelay(gate.id)"
+          [style.--stub-delay]="revealStubDelay(gate.id, s)"
+          [style.--reveal-dur]="simReveal ? simReveal.step + 'ms' : null"
         />
       }
     }

@@ -581,6 +581,18 @@ export class Whiteboard implements OnDestroy {
     this.simReveal = null;
   }
 
+  /**
+   * Zeitpunkt, an dem ein Anschluss-Stummel in der Start-Animation aufleuchtet:
+   * Ausgang, wenn der Strom losläuft (= Gatter-Zeitpunkt); Eingang, wenn der
+   * Strich seiner Leitung ankommt. Offene Stummel leuchten nicht.
+   */
+  revealStubDelay(gateId: string, stub: { wireId: string | null; kind: 'input' | 'output' }): string | null {
+    if (!this.simReveal || !stub.wireId) return null;
+    if (stub.kind === 'output') return `${this.simReveal.gate.get(gateId) ?? 0}ms`;
+    const w = this.simReveal.wire.get(stub.wireId);
+    return `${(w?.delay ?? 0) + this.simReveal.step}ms`;
+  }
+
   /** Verzögerung (CSS-Wert) für ein Gatter während der Start-Animation. */
   revealGateDelay(gateId: string): string | null {
     return this.simReveal ? `${this.simReveal.gate.get(gateId) ?? 0}ms` : null;
@@ -1925,21 +1937,21 @@ export class Whiteboard implements OnDestroy {
    * Farbe: Ausgang nach Signal, Eingang nach seiner Leitung; ausgewählte
    * Leitung blau.
    */
-  getGateStubs(gate: GateInstance): { points: string; high: boolean | null; wireId: string | null }[] {
+  getGateStubs(gate: GateInstance): { points: string; high: boolean | null; wireId: string | null; kind: 'input' | 'output' }[] {
     const len = this.stubLength(gate);
     const offsets = getGatePinOffsets(gate);
     const stub = (kind: 'input' | 'output', pin: number) => {
       const p = getPinWorldPos(gate, kind, pin), d = getPinDirection(gate, kind);
       return `${p.x},${p.y} ${p.x - d.dx * len},${p.y - d.dy * len}`;
     };
-    const res: { points: string; high: boolean | null; wireId: string | null }[] = [];
+    const res: { points: string; high: boolean | null; wireId: string | null; kind: 'input' | 'output' }[] = [];
     offsets.outputs.forEach((_, i) => {
       const wire = this.wires.find(w => w.fromGateId === gate.id && w.fromPinIndex === i && !w.branchPoint);
-      res.push({ points: stub('output', i), high: this.getSignalOutput(gate.id, i), wireId: wire?.id ?? null });
+      res.push({ points: stub('output', i), high: this.getSignalOutput(gate.id, i), wireId: wire?.id ?? null, kind: 'output' });
     });
     offsets.inputs.forEach((_, i) => {
       const wire = this.wires.find(w => w.toGateId === gate.id && w.toPinIndex === i);
-      res.push({ points: stub('input', i), high: wire ? this.isWireHigh(wire) : null, wireId: wire?.id ?? null });
+      res.push({ points: stub('input', i), high: wire ? this.isWireHigh(wire) : null, wireId: wire?.id ?? null, kind: 'input' });
     });
     return res;
   }

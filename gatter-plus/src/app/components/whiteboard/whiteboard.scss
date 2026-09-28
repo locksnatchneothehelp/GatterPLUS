@@ -160,6 +160,27 @@
     filter: drop-shadow(0 0 3px var(--flow-color, #0ea5e9));
   }
 }
+/* Anschluss-Stummel (Pin → Gehäuse) leuchten mit – sonst begann/endete der
+   Strom sichtbar neben dem Bauteil. Ausgang: blau, solange seine Leitung
+   gezeichnet wird, dann Übergang mit ihr. Eingang: Übergang ab Ankunft. */
+.wire-line.stub-reveal-out {
+  animation:
+    gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards,
+    stub-hold var(--reveal-dur, 300ms) linear var(--stub-delay, 0ms),
+    wire-settle 450ms ease-out calc(var(--stub-delay, 0ms) + var(--reveal-dur, 300ms)) forwards;
+}
+.wire-line.stub-reveal-in {
+  animation:
+    gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards,
+    wire-settle 450ms ease-out var(--stub-delay, 0ms) forwards;
+}
+@keyframes stub-hold {
+  from, to {
+    stroke: var(--flow-color, #0ea5e9);
+    stroke-width: 4;
+    filter: drop-shadow(0 0 3px var(--flow-color, #0ea5e9));
+  }
+}
 .gate-reveal {
   animation: gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards;
 }
@@ -168,7 +189,7 @@
   to   { filter: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wire-line.wire-reveal, .gate-reveal { animation: none; stroke-dashoffset: 0; }
+  .wire-line.wire-reveal, .gate-reveal, .wire-line.stub-reveal-out, .wire-line.stub-reveal-in { animation: none; stroke-dashoffset: 0; }
 }
 
 /* Vorschau-Leitung (gestrichelt) */
