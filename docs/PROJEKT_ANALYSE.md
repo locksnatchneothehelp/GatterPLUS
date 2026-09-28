@@ -31,7 +31,7 @@
 | App-Icon (Favicon + Toolbar links neben dem Namen) | `gatter-plus/public/icon.svg`; `public/favicon.ico` (16/32/48 px) daraus gerendert – bei Änderungen am SVG neu erzeugen |
 | Eigene Cursor (Bernstein-Stil, 28 px SVG) | `gatter-plus/src/cursors/*.svg` (in `src/`, damit Angular sie bündelt – funktioniert mit jedem base-href); Variablen `--cursor-*` in `styles.scss`, überall `cursor: var(--cursor-…)` statt System-Namen; Zeichenfläche: `Whiteboard.hoverCursor` → Klassen `over-gate`/`over-stub`/`over-switch` |
 | Menü Datei/Bearbeiten/Hilfe + Theme-Toggle | `components/menu-bar/` |
-| Willkommensbildschirm beim Start (Kacheln, „Beispiel öffnen“ → `App.onWelcomeExample`, „LogikSim importieren“, Häkchen „nicht mehr anzeigen“ → localStorage `gatterplus-welcome-hidden` / `showWelcomeOnStart()`, erneut über Hilfe → Willkommensbildschirm; Esc/„Los geht's“; S gesperrt solange offen; Projekt-Nennung als Fußzeile) | `components/welcome-dialog/`; Beispielschaltung `models/example-circuit.ts` (+spec: rechnet richtig, keine Überdeckungen) |
+| Willkommensbildschirm beim Start (Kacheln, „Beispiel öffnen“ → `App.onWelcomeExample`, „LogikSim importieren“, erscheint bei jedem Start, erneut über Hilfe → Willkommensbildschirm; Esc/„Los geht's“; S gesperrt solange offen; Projekt-Nennung als Fußzeile) | `components/welcome-dialog/`; Beispielschaltung Flip-Flop `models/example-circuit.ts` (+spec: rechnet richtig, keine Überdeckungen) |
 | Eigenschaften (Rotation, Farbe, Eingänge, Takt, Label, Löschen) | `components/properties-panel/` |
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |

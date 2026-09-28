@@ -3,7 +3,7 @@ import { MenuBar }       from './components/menu-bar/menu-bar';
 import { ToolbarTop }    from './components/toolbar-top/toolbar-top';
 import { Whiteboard }    from './components/whiteboard/whiteboard';
 import { PropertiesPanel, GatePropertyChange } from './components/properties-panel/properties-panel';
-import { WelcomeDialog, showWelcomeOnStart } from './components/welcome-dialog/welcome-dialog';
+import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog';
 import { ToolMode }      from './components/toolbar-left/toolbar-left';
 import { GateInstance }  from './models/gate.model';
 import { ThemeService }  from './services/theme.service';
@@ -41,9 +41,9 @@ export class App implements OnInit {
   simulationMode = false;
   /**
    * Willkommensbildschirm beim Start (schließt per Esc oder „Los geht's“);
-   * nicht, wenn „Beim Start nicht mehr anzeigen“ gewählt wurde. Hilfe-Menü öffnet ihn erneut.
+   * Hilfe-Menü öffnet ihn erneut.
    */
-  welcomeOpen = showWelcomeOnStart();
+  welcomeOpen = true;
 
   /** Willkommensbildschirm: Beispielschaltung (Flip-Flop) laden. */
   onWelcomeExample(): void {

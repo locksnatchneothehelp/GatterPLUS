@@ -127,20 +127,12 @@
 
 .welcome-options {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   margin-top: 16px;
   font-size: 12px;
   color: var(--text-secondary);
-}
-.welcome-check {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: var(--cursor-pointer);
-
-  input { margin: 0; cursor: var(--cursor-pointer); accent-color: #e89b1f; }
 }
 .welcome-hint {
   color: var(--text-muted);
