@@ -139,62 +139,6 @@
   stroke-width: 2;
 }
 
-/* ─── Start-Animation der Simulation („Strom fließt“) ────────────────────────
-   Leitung: Strich zeichnet sich von der Quelle zum Ziel (Länge/Verzögerung/
-   Dauer je Leitung per CSS-Variable) – in leuchtender Stromfarbe (--flow-color),
-   danach geht er in seine echte Signalfarbe über (grün 1 / grau 0; beim Start
-   sind alle Schalter 0, ein grauer Strich wäre kaum zu sehen). Gatter und ihre
-   Anschlussstriche bleiben entsättigt, bis ihr Signal ankommt. */
-.wire-line.wire-reveal {
-  pointer-events: none;
-  stroke-dasharray: var(--reveal-len);
-  stroke-dashoffset: var(--reveal-len);
-  animation:
-    wire-draw var(--reveal-dur, 300ms) linear var(--reveal-delay, 0ms) forwards,
-    wire-settle 450ms ease-out calc(var(--reveal-delay, 0ms) + var(--reveal-dur, 300ms)) both;
-}
-@keyframes wire-draw {
-  to { stroke-dashoffset: 0; }
-}
-@keyframes wire-settle {
-  from {
-    stroke: var(--flow-color, #0ea5e9);
-    stroke-width: 4;
-    filter: drop-shadow(0 0 3px var(--flow-color, #0ea5e9));
-  }
-}
-/* Anschluss-Stummel (Pin → Gehäuse) leuchten mit – sonst begann/endete der
-   Strom sichtbar neben dem Bauteil. Ausgang: blau, solange seine Leitung
-   gezeichnet wird, dann Übergang mit ihr. Eingang: Übergang ab Ankunft. */
-.wire-line.stub-reveal-out {
-  animation:
-    gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards,
-    stub-hold var(--reveal-dur, 300ms) linear var(--stub-delay, 0ms),
-    wire-settle 450ms ease-out calc(var(--stub-delay, 0ms) + var(--reveal-dur, 300ms)) forwards;
-}
-.wire-line.stub-reveal-in {
-  animation:
-    gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards,
-    wire-settle 450ms ease-out var(--stub-delay, 0ms) forwards;
-}
-@keyframes stub-hold {
-  from, to {
-    stroke: var(--flow-color, #0ea5e9);
-    stroke-width: 4;
-    filter: drop-shadow(0 0 3px var(--flow-color, #0ea5e9));
-  }
-}
-.gate-reveal {
-  animation: gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards;
-}
-@keyframes gate-reveal {
-  from { filter: saturate(0) brightness(0.9); }
-  to   { filter: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wire-line.wire-reveal, .gate-reveal, .wire-line.stub-reveal-out, .wire-line.stub-reveal-in { animation: none; stroke-dashoffset: 0; }
-}
-
 /* Vorschau-Leitung (gestrichelt) */
 .wire-tentative {
   stroke: #3b82f6;

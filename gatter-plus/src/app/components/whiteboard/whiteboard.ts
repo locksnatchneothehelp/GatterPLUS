@@ -217,12 +217,6 @@ export class Whiteboard implements OnDestroy {
 
   // ─── Simulations-Modus ─────────────────────────────────────────────────────
   simulationMode = false;
-  /**
-   * Start-Animation der Simulation („Strom fließt“): Verzögerung je Gatter und
-   * Leitung (ms) ab dem Start; null, sobald sie abgelaufen ist.
-   */
-  simReveal: { gate: Map<string, number>; wire: Map<string, { delay: number; len: number }>; step: number } | null = null;
-  private simRevealTimer: ReturnType<typeof setTimeout> | null = null;
   private signalStates  = new Map<string, ComponentSignalState>();
   private clockIntervals = new Map<string, ReturnType<typeof setInterval>>();
 
@@ -527,9 +521,7 @@ export class Whiteboard implements OnDestroy {
       this.editingLabelGateId = null;   // Inline-Edit beim Start der Simulation schließen
       this.startClockIntervals();
       this.recomputeSimulation();
-      this.startSimReveal();
     } else {
-      this.stopSimReveal();
       this.stopClockIntervals();
       this.gates = this.gates.map(g => {
         if (g.type === 'input' || g.type === 'clock-gen') return { ...g, inputValue: false };
@@ -539,69 +531,6 @@ export class Whiteboard implements OnDestroy {
       this.signalStates.clear();
       this.simulationService.clearState();
     }
-  }
-
-  // ─── Start-Animation „Strom fließt“ ─────────────────────────────────────────
-
-  /**
-   * Berechnet, wann das Signal jedes Gatter erreicht: Schalter/Taktgeber (und
-   * Bauteile ohne Eingangsleitung) bei 0, jedes weitere Gatter eine Stufe nach
-   * seiner spätesten Quelle. Rückkopplungen (Flipflop) werden bei MAX_DEPTH
-   * gekappt, die Gesamtdauer bei TOTAL_MS. Leitungen zeichnen sich innerhalb
-   * einer Stufe von der Quelle zum Ziel.
-   */
-  private startSimReveal(): void {
-    this.stopSimReveal();
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    const MAX_DEPTH = 12, TOTAL_MS = 2400;
-    const depth = new Map(this.gates.map(g => [g.id, 0]));
-    for (let pass = 0; pass < MAX_DEPTH; pass++) {
-      let changed = false;
-      for (const w of this.wires) {
-        const d = Math.min(MAX_DEPTH, (depth.get(w.fromGateId) ?? 0) + 1);
-        if (d > (depth.get(w.toGateId) ?? 0)) { depth.set(w.toGateId, d); changed = true; }
-      }
-      if (!changed) break;
-    }
-    const maxDepth = Math.max(1, ...depth.values());
-    const step = Math.min(320, TOTAL_MS / maxDepth);
-    const gate = new Map([...depth].map(([id, d]) => [id, d * step]));
-    const wire = new Map<string, { delay: number; len: number }>();
-    for (const w of this.wires) {
-      const pts = this.getWireDisplayPoints(w) ?? [];
-      let len = 0;
-      for (let i = 1; i < pts.length; i++) len += Math.abs(pts[i].x - pts[i - 1].x) + Math.abs(pts[i].y - pts[i - 1].y);
-      wire.set(w.id, { delay: (depth.get(w.fromGateId) ?? 0) * step, len: Math.max(1, Math.ceil(len)) });
-    }
-    this.simReveal = { gate, wire, step };
-    this.simRevealTimer = setTimeout(() => {
-      this.simReveal = null;
-      this.simRevealTimer = null;
-      this.cdr.markForCheck(); // zoneless: Timer löst keine Änderungserkennung aus
-    }, (maxDepth + 1) * step + 300);
-  }
-
-  private stopSimReveal(): void {
-    if (this.simRevealTimer) clearTimeout(this.simRevealTimer);
-    this.simRevealTimer = null;
-    this.simReveal = null;
-  }
-
-  /**
-   * Zeitpunkt, an dem ein Anschluss-Stummel in der Start-Animation aufleuchtet:
-   * Ausgang, wenn der Strom losläuft (= Gatter-Zeitpunkt); Eingang, wenn der
-   * Strich seiner Leitung ankommt. Offene Stummel leuchten nicht.
-   */
-  revealStubDelay(gateId: string, stub: { wireId: string | null; kind: 'input' | 'output' }): string | null {
-    if (!this.simReveal || !stub.wireId) return null;
-    if (stub.kind === 'output') return `${this.simReveal.gate.get(gateId) ?? 0}ms`;
-    const w = this.simReveal.wire.get(stub.wireId);
-    return `${(w?.delay ?? 0) + this.simReveal.step}ms`;
-  }
-
-  /** Verzögerung (CSS-Wert) für ein Gatter während der Start-Animation. */
-  revealGateDelay(gateId: string): string | null {
-    return this.simReveal ? `${this.simReveal.gate.get(gateId) ?? 0}ms` : null;
   }
 
   // ─── Taktgeber-Intervalle ──────────────────────────────────────────────────
@@ -1955,21 +1884,21 @@ export class Whiteboard implements OnDestroy {
    * Farbe: Ausgang nach Signal, Eingang nach seiner Leitung; ausgewählte
    * Leitung blau.
    */
-  getGateStubs(gate: GateInstance): { points: string; high: boolean | null; wireId: string | null; kind: 'input' | 'output' }[] {
+  getGateStubs(gate: GateInstance): { points: string; high: boolean | null; wireId: string | null }[] {
     const len = this.stubLength(gate);
     const offsets = getGatePinOffsets(gate);
     const stub = (kind: 'input' | 'output', pin: number) => {
       const p = getPinWorldPos(gate, kind, pin), d = getPinDirection(gate, kind);
       return `${p.x},${p.y} ${p.x - d.dx * len},${p.y - d.dy * len}`;
     };
-    const res: { points: string; high: boolean | null; wireId: string | null; kind: 'input' | 'output' }[] = [];
+    const res: { points: string; high: boolean | null; wireId: string | null }[] = [];
     offsets.outputs.forEach((_, i) => {
       const wire = this.wires.find(w => w.fromGateId === gate.id && w.fromPinIndex === i && !w.branchPoint);
-      res.push({ points: stub('output', i), high: this.getSignalOutput(gate.id, i), wireId: wire?.id ?? null, kind: 'output' });
+      res.push({ points: stub('output', i), high: this.getSignalOutput(gate.id, i), wireId: wire?.id ?? null });
     });
     offsets.inputs.forEach((_, i) => {
       const wire = this.wires.find(w => w.toGateId === gate.id && w.toPinIndex === i);
-      res.push({ points: stub('input', i), high: wire ? this.isWireHigh(wire) : null, wireId: wire?.id ?? null, kind: 'input' });
+      res.push({ points: stub('input', i), high: wire ? this.isWireHigh(wire) : null, wireId: wire?.id ?? null });
     });
     return res;
   }

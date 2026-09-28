@@ -78,10 +78,7 @@
   --text-secondary:      #475569;
   --text-muted:          #64748b;
 
-  /* Stromfarbe der Start-Animation („Strom fließt“) */
-  --flow-color:          #0ea5e9;
-
-  /* Eigene Cursor (public/cursors/*.svg, Bernstein-Stil) mit Hotspot und
+  /* Eigene Cursor (src/cursors/*.svg, Bernstein-Stil) mit Hotspot und
      System-Cursor als Rückfall – für Hell und Dunkel gleich */
   --cursor-default:  url(cursors/arrow.svg) 5 5, default;
   --cursor-pointer:  url(cursors/point.svg) 9 3, pointer;
@@ -121,7 +118,6 @@
 :root[data-theme="dark"] {
   /* Ruhiges, neutrales Graphit statt gesättigtem Marineblau; gedämpftes
      Bernstein als Bauteil-/Knopffarbe, ruhiges Blau als Akzent. */
-  --flow-color:          #38bdf8;
   --error-bg:            #3b1519;
   --error-border:        #b4454c;
   --error-text:          #fca5a5;
