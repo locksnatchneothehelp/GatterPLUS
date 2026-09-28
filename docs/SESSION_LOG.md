@@ -78,7 +78,10 @@
 | 21:51 | `fec03d8` | Sitzungsprotokoll ergänzt · **siebter Push** |
 | 21:59 | `7039902` | Hell/Dunkel: Kreis-Übergang etwas langsamer (750 statt 550 ms) |
 | 22:01 | `e5bf266` | Toolbar: gleicher Abstand über und unter Bauteilen/Werkzeugen (Knöpfe 18/18, Kästen 14/14 px), alles auf einer Mittellinie; Leiste 85 statt 71 px hoch |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **achter Push** |
+| 22:03 | `4c9ccca` | Sitzungsprotokoll ergänzt · **achter Push** |
+| 22:12 | `ef683ff` | Simulationsstart „Strom fließt“: Leitungen zeichnen sich von der Quelle zum Ziel, gestaffelt nach Signaltiefe (0,32 s je Stufe, max. ~2,4 s, Rückkopplungen gekappt); Gatter bleiben grau, bis ihr Signal ankommt (`simReveal`, CSS-Animationen) |
+| 22:12 | `2e3d386` | Power-Knopf: grüner Ring füllt sich beim Start (rückwärts beim Stoppen), grüner Puls während der Simulation; Knopf etwas vom Rand abgerückt |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **neunter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
