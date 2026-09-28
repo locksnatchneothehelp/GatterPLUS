@@ -53,7 +53,16 @@
 | 19:35 | `60c22c6` | Nutzer-Feedback „Kabel liegt nicht perfekt auf dem anderen“: Anschluss-Stummel aller Pins als SVG (`getGateStubs`), CSS-Stummel auf dem Whiteboard ausgeblendet (HTML/SVG runden je nach Anzeigeskalierung verschieden) |
 | 19:35 | `db87c7f` | „Alles anzeigen“: Schaltung füllt 60 % der Fläche, max. 200 % (Nutzer-Screenshot ~166 %) |
 | 19:59 | `0cab6d5` | Verneinung: Kreis direkt am Gehäuse (Klickfläche = Stummel, vor Bauteil-Auswahl geprüft), Buttons „Verneinung“ je Ein-/Ausgang im Eigenschaften-Panel |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **zweiter Push** |
+| 20:02 | `93a05d4` | Sitzungsprotokoll ergänzt · **zweiter Push** |
+| 20:14 | `05c486a` | Esc im Kabelmodus (ohne laufende Leitung) → Verschieben; **S** startet/stoppt Simulation; Theme-Knopf Hell/Dunkel; Auswahlrahmen ohne hellblauen Schein |
+| 20:15 | `8f0a174` | Toolbar: Werkzeugnamen „Verschieben“/„Verkabeln“, handschriftlicher Hinweis „Simulation starten/stoppen“ mit Pfeil |
+| 20:16 | `1b8de3f` | Palette: Anschlussstriche wieder innerhalb der Bauteile |
+| 20:18 | `07636db` | Hinweis unter 1520 px Fensterbreite ausgeblendet (sonst Scrollbalken) |
+| 20:18 | `ca076a9` | Hilfe-Menü: Fenster „Steuerung & Tastenkürzel“ |
+| 20:22 | `e076954` | Nicht aufeinander ablegen (zurück an Startposition + rote Meldung), Einfügen an freier Stelle, Leitungs-Sporne entfernt (`removeBacktracks`) |
+| 20:25 | `d9f607c` | Dunkles Design: Graphit-Schema, dunkle Bauteile, lesbare Simulationszustände |
+| 20:26 | `3453c0d` | Projektanalyse nachgezogen |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **dritter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
