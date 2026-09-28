@@ -70,6 +70,9 @@
 | 21:22 | `3eb0528` | Hell/Dunkel als Schiebeschalter (Sonne/Mond), Übergang als Kreis vom Schalter aus (View Transitions API) |
 | 21:23 | `ec13c5d` | Sitzungsprotokoll ergänzt · **fünfter Push** |
 | 21:33 | `65d0b0b` | Pfeil (Spitze auf Höhe der Power-Knopf-Mitte, Linie endet mittig) und Hell/Dunkel-Schalter (Knopf ringsum 2 px Abstand) exakt ausgerichtet – nachgemessen |
+| 21:34 | `ca561e6` | Sitzungsprotokoll ergänzt (ohne Push) |
+| 21:36 | `5ca96c3` | Hell/Dunkel: kein Flackern mehr – CSS-Farbübergänge von Menü, Toolbar, Zeichenfläche/Minimap und App-Rand standen im neuen Bild der View Transition noch auf der alten Farbe; `html.theme-switching` schaltet sie während des Umschaltens ab (gemessen: vorher 4 Flächen falsch, jetzt 0) |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **sechster Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
