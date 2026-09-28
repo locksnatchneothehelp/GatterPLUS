@@ -95,17 +95,16 @@ describe('LogikSim-Import', () => {
   it('4-Bit-Addierer rechnet nach dem Import korrekt (alle 256 Fälle)', async () => {
     const { project } = await load('logiksim-addierer-4bit.sim');
     const sim = new SimulationService();
-    const U = 48; // Pixel pro LogikSim-Rastereinheit (UNIT_PX = 2 × GRID)
-    // Bit 0 liegt rechts: Schalter x=7…4 (Zeilen y=5 und y=16), Anzeigen x=16…13 (y=24)
-    // Schalter/Anzeigen liegen mit ihrem Pin genau auf dem LogikSim-Punkt
-    const at = (ux: number, uy: number) => project.gates.find(g => {
-      const kind = g.type === 'input' ? 'output' : 'input';
-      const p = getPinWorldPos(g, kind, 0);
-      return (g.type === 'input' || g.type === 'output') && p.x === ux * U && p.y === uy * U;
-    })!;
-    const aBits = [7, 6, 5, 4].map(x => at(x, 5));
-    const bBits = [7, 6, 5, 4].map(x => at(x, 16));
-    const sBits = [16, 15, 14, 13].map(x => at(x, 24));
+    // Bit 0 liegt rechts: Schalter-Reihe A oben, B darunter, Anzeigen ganz unten.
+    // Über die Reihenfolge statt über Koordinaten gesucht – der Import rückt
+    // überlappende Schalter auseinander.
+    const inputs = project.gates.filter(g => g.type === 'input');
+    const rowY   = [...new Set(inputs.map(g => g.y))].sort((a, b) => a - b);
+    const byX    = (gs: GateInstance[]) => [...gs].sort((a, b) => b.x - a.x);
+    const aBits  = byX(inputs.filter(g => g.y === rowY[0]));
+    const bBits  = byX(inputs.filter(g => g.y === rowY[1]));
+    const sBits  = byX(project.gates.filter(g => g.type === 'output'));
+    expect([aBits.length, bBits.length, sBits.length]).toEqual([4, 4, 4]);
 
     for (let a = 0; a < 16; a++) {
       for (let b = 0; b < 16; b++) {

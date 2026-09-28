@@ -20,7 +20,7 @@
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
-| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`; Layout wie im Original: Schalter/LED-Drehung aus der Leitung, Pins auf LogikSim-Punkten (`UNIT_PX = 2 × GRID` → Pins auf dem Raster, kompakt; überlappende Textfelder werden verschoben; App zeigt danach `zoomToFit(0.9)`), Linien → `manualPoints`, weitere Ziele als Abzweig mit Verbindungspunkt) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
+| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`; Layout wie im Original: Schalter/LED-Drehung aus der Leitung, Pins auf LogikSim-Punkten (`UNIT_PX = GRID` → Pins auf dem Raster, so kompakt wie im Original; überlappende Schalter/Anzeigen werden quer zur Leitung auseinandergerückt, Textfelder verschoben; App zeigt danach `zoomToFit(0.9)`), Linien → `manualPoints`, weitere Ziele als Abzweig mit Verbindungspunkt) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
 | Automatische Leitungsführung (A*) – **toter Code seit Phase 7** | `models/wire-router.ts` (+spec), Cache in `Whiteboard.autoRoutes` (nicht mehr aufgerufen) |
 | PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |

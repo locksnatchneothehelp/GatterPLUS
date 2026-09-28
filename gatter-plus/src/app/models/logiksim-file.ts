@@ -39,12 +39,13 @@ export interface LogikSimImport {
 }
 
 /**
- * Pixel pro LogikSim-Rastereinheit — ein Vielfaches von GRID (Pins auf LogikSim-
- * Punkten liegen so auf dem Raster). In LogikSim liegen Anschlüsse eine Einheit
- * auseinander; 2 × GRID hält die Schaltung kompakt, ohne dass sich Bauteile
- * überlappen (1 × GRID: Schalter überlappen; Textfelder werden unten verschoben).
+ * Pixel pro LogikSim-Rastereinheit = GRID: In LogikSim liegen Anschlüsse eine
+ * Einheit auseinander, bei uns ein Rasterschritt – so bleibt die Schaltung so
+ * kompakt wie im Original und alle Pins liegen auf dem Raster. Schalter/Anzeigen
+ * sind bei uns breiter als in LogikSim; überlappende werden unten auseinander-
+ * gerückt, Textfelder ebenso verschoben.
  */
-const UNIT_PX = 2 * GRID;
+const UNIT_PX = GRID;
 
 /** LogikSim-Modulnamen mit Anschlusslisten → GatterPLUS-Typ. */
 const CONNECTOR_MODULES: Record<string, GateType> = {
@@ -244,6 +245,21 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
       ?? pins.find(q => q.gate === p.gate && q.kind === 'out' && q.index === 0)!;
     placeByPin(p.gate, anchor.kind === 'in' ? 'input' : 'output', 0, px(anchor));
     placed.add(p.gate);
+  }
+
+  // Schalter/Anzeigen sind breiter als in LogikSim: überlappende in Rasterschritten
+  // quer zu ihrer Leitung auseinanderrücken (von links/oben nach rechts/unten).
+  // Die Leitungen folgen, weil unten das erste/letzte gerade Stück auf den Pin
+  // geschoben wird (alignEndRuns).
+  const io = gates.filter(g => g.type === 'input' || g.type === 'output')
+    .sort((a, b) => a.x - b.x || a.y - b.y);
+  const fixed = gates.filter(g => !io.includes(g) && g.type !== 'text-label');
+  for (const g of io) {
+    const kind = g.type === 'input' ? 'output' : 'input';
+    const d = getPinDirection(g, kind);
+    const step = d.dx === 0 ? { x: GRID, y: 0 } : { x: 0, y: GRID }; // quer zur Leitung
+    for (let i = 0; i < 40 && fixed.some(f => gatesOverlap(g, f)); i++) { g.x += step.x; g.y += step.y; }
+    fixed.push(g);
   }
 
   const wires: WireConnection[] = [];
