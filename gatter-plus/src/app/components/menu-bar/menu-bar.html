@@ -61,6 +61,7 @@
 
     @if (openMenu === 'hilfe') {
       <div class="dropdown" (click)="$event.stopPropagation()">
+        <button class="dropdown-item" (click)="onWelcome()">Willkommensbildschirm</button>
         <button class="dropdown-item" (click)="onHelp()">Steuerung &amp; Tastenkürzel</button>
         <button class="dropdown-item" (click)="onAbout()">Über</button>
       </div>

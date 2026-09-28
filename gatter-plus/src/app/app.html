@@ -20,6 +20,7 @@
     (saveAsClicked)="onSaveAs()"
     (exportPngClicked)="onExportPng()"
     (importLogikSimClicked)="onImportLogikSim()"
+    (welcomeClicked)="welcomeOpen = true"
   ></app-menu-bar>
 
   <!--
@@ -58,5 +59,9 @@
 
 <!-- Willkommensbildschirm beim Start -->
 @if (welcomeOpen) {
-  <app-welcome-dialog (close)="welcomeOpen = false"></app-welcome-dialog>
+  <app-welcome-dialog
+    (close)="welcomeOpen = false"
+    (example)="onWelcomeExample()"
+    (importLogikSim)="onWelcomeImport()"
+  ></app-welcome-dialog>
 }

@@ -3,13 +3,14 @@ import { MenuBar }       from './components/menu-bar/menu-bar';
 import { ToolbarTop }    from './components/toolbar-top/toolbar-top';
 import { Whiteboard }    from './components/whiteboard/whiteboard';
 import { PropertiesPanel, GatePropertyChange } from './components/properties-panel/properties-panel';
-import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog';
+import { WelcomeDialog, showWelcomeOnStart } from './components/welcome-dialog/welcome-dialog';
 import { ToolMode }      from './components/toolbar-left/toolbar-left';
 import { GateInstance }  from './models/gate.model';
 import { ThemeService }  from './services/theme.service';
 import { ComponentSignalState } from './services/simulation.service';
 import { PROJECT_FILE_EXTENSION, parseProject, serializeProject } from './models/project-file';
 import { parseLogikSim } from './models/logiksim-file';
+import { halfAdderExample } from './models/example-circuit';
 
 /**
  * Root-Komponente von GatterPLUS.
@@ -38,8 +39,29 @@ export class App implements OnInit {
 
   activeTool:    ToolMode = 'pan';
   simulationMode = false;
-  /** Willkommensbildschirm beim Start (schließt per Esc oder „Los geht's“). */
-  welcomeOpen = true;
+  /**
+   * Willkommensbildschirm beim Start (schließt per Esc oder „Los geht's“);
+   * nicht, wenn „Beim Start nicht mehr anzeigen“ gewählt wurde. Hilfe-Menü öffnet ihn erneut.
+   */
+  welcomeOpen = showWelcomeOnStart();
+
+  /** Willkommensbildschirm: Beispielschaltung (Halbaddierer) laden. */
+  onWelcomeExample(): void {
+    if (this.whiteboardRef.gates.length > 0
+        && !confirm('Beispiel öffnen?\n\nDie aktuelle Schaltung wird ersetzt (Rückgängig mit Strg+Z).')) return;
+    this.welcomeOpen = false;
+    this.whiteboardRef.loadProject(halfAdderExample());
+    this.whiteboardRef.zoomToFit(); // wie „Alles anzeigen“: ruhig, nichts unter der Minimap
+    this.fileHandle     = null;
+    this.simulationMode = this.whiteboardRef.simulationMode;
+    this.activeTool     = this.whiteboardRef.toolMode;
+  }
+
+  /** Willkommensbildschirm: LogikSim-Datei importieren. */
+  onWelcomeImport(): void {
+    this.welcomeOpen = false;
+    this.onImportLogikSim();
+  }
 
   /** Beim Start das gespeicherte Theme laden und anwenden. */
   ngOnInit(): void {

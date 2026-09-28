@@ -1,4 +1,4 @@
-<!-- Willkommensbildschirm (Inhalt folgt später – vorerst Platzhalter) -->
+<!-- Willkommensbildschirm beim Start (auch über Hilfe → Willkommensbildschirm) -->
 <div class="welcome-backdrop">
   <div class="welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
 
@@ -6,33 +6,53 @@
     <div class="welcome-hero">
       <img class="welcome-icon" src="icon.svg" alt="" aria-hidden="true">
       <h1 id="welcome-title">Willkommen bei GatterPLUS</h1>
-      <p class="welcome-sub">Platzhalter: Untertitel</p>
+      <p class="welcome-sub">Logikschaltungen bauen und simulieren</p>
     </div>
 
     <div class="welcome-body">
-      <p class="placeholder-text">Platzhalter: Hier folgt eine kurze Einführung in GatterPLUS.</p>
-
       <div class="welcome-tiles">
         <div class="welcome-tile">
+          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="7" y="4" width="10" height="16" rx="1.5"></rect>
+            <path d="M3 9h4M3 15h4M17 12h4"></path>
+          </svg>
           <span class="tile-title">Platzieren</span>
-          <span class="tile-text">Platzhalter</span>
+          <span class="tile-text">Bauteile aus der Leiste auf das Whiteboard ziehen</span>
         </div>
         <div class="welcome-tile">
+          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
           <span class="tile-title">Verkabeln</span>
-          <span class="tile-text">Platzhalter</span>
+          <span class="tile-text">Ausgang anklicken, Kabel führen, Eingang anklicken</span>
         </div>
         <div class="welcome-tile">
+          <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2v9"></path>
+            <path d="M18.4 6.6a9 9 0 1 1-12.8 0"></path>
+          </svg>
           <span class="tile-title">Simulieren</span>
-          <span class="tile-text">Platzhalter</span>
+          <span class="tile-text">Mit S oder dem Power-Knopf starten</span>
         </div>
+      </div>
+
+      <div class="welcome-actions">
+        <button class="welcome-secondary" (click)="example.emit()">Beispiel öffnen</button>
+        <button class="welcome-secondary" (click)="importLogikSim.emit()">LogikSim importieren</button>
+        <button class="welcome-start" (click)="close.emit()">Los geht's</button>
+      </div>
+
+      <div class="welcome-options">
+        <label class="welcome-check">
+          <input type="checkbox" [checked]="hideOnStart" (change)="setHideOnStart($any($event).target.checked)">
+          Beim Start nicht mehr anzeigen
+        </label>
+        <span class="welcome-hint">Alle Tastenkürzel: Hilfe → Steuerung &amp; Tastenkürzel</span>
       </div>
     </div>
 
-    <div class="welcome-footer">
-      <button class="welcome-start" (click)="close.emit()">Los geht's</button>
-      <p class="welcome-credits">
-        Ein Projekt von Antonia, Constantin, Mark, Soumaya und Timo · Q12 2026 · Informatik-LK
-      </p>
-    </div>
+    <p class="welcome-credits">
+      Ein Projekt von Antonia, Constantin, Mark, Soumaya und Timo · Q12 2026 · Informatik-LK
+    </p>
   </div>
 </div>

@@ -59,6 +59,8 @@ export class MenuBar {
   @Output() exportPngClicked = new EventEmitter<void>();
   /** Datei-Aktion „Importieren (LogikSim)" (.sim-Datei). */
   @Output() importLogikSimClicked = new EventEmitter<void>();
+  /** Hilfe → Willkommensbildschirm erneut öffnen. */
+  @Output() welcomeClicked = new EventEmitter<void>();
 
   /** True, wenn gerade Dark Mode aktiv ist (für das Umschalt-Icon). */
   get isDark(): boolean {
@@ -186,4 +188,6 @@ export class MenuBar {
   helpOpen = false;
 
   onHelp(): void { this.helpOpen = true; this.closeMenu(); }
+
+  onWelcome(): void { this.welcomeClicked.emit(); this.closeMenu(); }
 }
