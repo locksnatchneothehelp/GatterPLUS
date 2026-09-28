@@ -100,7 +100,11 @@
 | 23:16 | `9ac068e` | Sitzungsprotokoll ergänzt · **vierzehnter Push** |
 | 23:21 | `1ff7df0` | Cursor alle gefüllt mit schwarzer Kontur (Linien-Varianten liefen bei geringer Auflösung zu Brei zusammen) |
 | 23:28 | `d33a7a1` | Stromfluss-Animation beim Simulationsstart auf Wunsch vollständig entfernt (kein toter Code: `simReveal`, Helfer, Template-Bindungen, CSS, `--flow-color`); Hell/Dunkel-Übergang und Ring/Puls am Power-Knopf bleiben |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **fünfzehnter Push** |
+| 23:29 | `ae2df95` | Sitzungsprotokoll ergänzt · **fünfzehnter Push** |
+| 23:34 | `e5a413f` | Willkommensbildschirm: Projekt-Nennung „Antonia, Constantin, Mark, Soumaya und Timo · Q12 2026 · Informatik-LK“ als Fußzeile |
+| 23:34 | `68ca544` | Hilfe: Überblick als schlichter Absatz statt Stichpunkt-Liste (wirkte generiert) |
+| 23:49 | `875e76d` | Willkommensbildschirm mit Inhalt: Untertitel, Kacheln mit Symbolen, „Beispiel öffnen“ (Halbaddierer aus Gattern, `models/example-circuit.ts` + Tests), „LogikSim importieren“, „Beim Start nicht mehr anzeigen“ (localStorage; Hilfe → Willkommensbildschirm öffnet erneut), Tastenkürzel-Hinweis |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **sechzehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
