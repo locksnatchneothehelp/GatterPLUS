@@ -625,6 +625,40 @@ export function manualWirePath(
   return path;
 }
 
+/**
+ * Ecke eines L-Stücks von a nach b (Phase 7, Verlegen wie in Shapez 2):
+ * erst waagerecht (horizontalFirst) bzw. erst senkrecht. null, wenn a und b
+ * schon auf einer Achse liegen (gerades Stück).
+ */
+export function lCorner(
+  a: { x: number; y: number }, b: { x: number; y: number }, horizontalFirst: boolean,
+): { x: number; y: number } | null {
+  if (a.x === b.x || a.y === b.y) return null;
+  return horizontalFirst ? { x: b.x, y: a.y } : { x: a.x, y: b.y };
+}
+
+/**
+ * Vollständiger Verlauf einer vom Nutzer verlegten Leitung (Phase 7): über die
+ * festen Punkte (bereits rechtwinklig zueinander) bis zum Ziel-Pin. Ohne feste
+ * Punkte und bei parallelen Pin-Richtungen als Z-Form mit dem Knick auf der
+ * Rastermitte, sonst wie manualWirePath (letztes Stück in Pin-Richtung).
+ */
+export function drawnWirePath(
+  start: { x: number; y: number }, fromDir: PinDirection,
+  bends: { x: number; y: number }[],
+  end: { x: number; y: number }, toDir: PinDirection,
+): { x: number; y: number }[] {
+  const aligned = start.x === end.x || start.y === end.y;
+  if (bends.length > 0 || aligned || (fromDir.dx !== 0) !== (toDir.dx !== 0)) {
+    return manualWirePath(start, fromDir, bends, end, toDir);
+  }
+  const mid = (a: number, b: number) => Math.round((a + b) / 2 / GRID) * GRID;
+  const pts = fromDir.dx !== 0
+    ? [start, { x: mid(start.x, end.x), y: start.y }, { x: mid(start.x, end.x), y: end.y }, end]
+    : [start, { x: start.x, y: mid(start.y, end.y) }, { x: end.x, y: mid(start.y, end.y) }, end];
+  return pts.filter((p, i) => i === 0 || p.x !== pts[i - 1].x || p.y !== pts[i - 1].y);
+}
+
 // ─── Legacy-Kompatibilität ────────────────────────────────────────────────────
 // Wird von simulation.service.ts und whiteboard.ts nicht mehr direkt genutzt,
 // aber zum Übergang behalten. Alle neuen Stellen nutzen getGatePinOffsets().

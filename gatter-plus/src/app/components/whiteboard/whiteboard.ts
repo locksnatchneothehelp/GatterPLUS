@@ -26,7 +26,7 @@ import {
   getPinWorldPos, isPointInGate,
   PIN_HIT_RADIUS, createGateInstance, computeOrthogonalWaypoints,
   getOutputPinMaxConnections, getPinDirection, manualWirePath,
-  snapGateToGrid, GRID,
+  snapGateToGrid, GRID, lCorner, drawnWirePath,
 } from '../../models/gate.model';
 import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
@@ -60,8 +60,12 @@ interface WireDrawingState {
    * fromGateId/fromPinIndex sind bis zum Abschluss leer ('' / -1).
    */
   reverse?: { gateId: string; pinIndex: number };
-  /** Bisher gesetzte Knickpunkte (Klick auf freie Fläche), in Zeichenreihenfolge. */
+  /** Bisher gesetzte feste Punkte (C / Klick auf freie Fläche), in Zeichenreihenfolge. */
   bends: { x: number; y: number }[];
+  /** Phase 7: wie viele Punkte jedes C gesetzt hat (Ecke + Punkt) – für Rückgängig. */
+  bendGroups: number[];
+  /** Phase 7: Knickreihenfolge des aktuellen Stücks umgedreht (Taste F). */
+  flip: boolean;
 }
 
 /** Zustand während des Verschiebens eines oder mehrerer Bauteile */
@@ -634,6 +638,12 @@ export class Whiteboard implements OnDestroy {
     if (this.simulationMode) return; // Strommodus: nichts löschen
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+    // Beim Verlegen: letzten festen Punkt zurücknehmen statt zu löschen
+    if (this.wireDrawing) {
+      event.preventDefault();
+      this.undoDrawingPoint();
+      return;
+    }
 
     if (this.selectedGateId) {
       event.preventDefault();
@@ -667,14 +677,16 @@ export class Whiteboard implements OnDestroy {
    */
   @HostListener('document:keydown', ['$event'])
   onKeyboardShortcut(event: KeyboardEvent): void {
-    if (!event.ctrlKey && !event.metaKey) return;
+    if (!event.ctrlKey && !event.metaKey) { this.onWireDrawingKey(event); return; }
     const active  = document.activeElement;
     const isInput = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement;
     switch (event.key.toLowerCase()) {
       case 'z':
         if (!isInput) {
           event.preventDefault();
-          if (event.shiftKey) this.redo(); else this.undo();
+          // Beim Verlegen: Strg+Z nimmt den letzten festen Punkt zurück
+          if (this.wireDrawing && !event.shiftKey) this.undoDrawingPoint();
+          else if (event.shiftKey) this.redo(); else this.undo();
         }
         break;
       case 'y':
@@ -1045,7 +1057,7 @@ export class Whiteboard implements OnDestroy {
           x1: pos.x, y1: pos.y,
           fromDir: getPinDirection(near.gate, 'input'),
           reverse: { gateId: near.gate.id, pinIndex: near.pinIndex },
-          bends: [],
+          bends: [], bendGroups: [], flip: false,
         };
         this.tentativeX = pos.x;
         this.tentativeY = pos.y;
@@ -1064,28 +1076,28 @@ export class Whiteboard implements OnDestroy {
           this.startWireAtOutput(stub.gate, stub.pinIndex);
           return;
         }
+        const point = this.snapOnWire(hit.point, hit.dir);
         this.wireDrawing = {
           fromGateId:   hit.wire.fromGateId,
           fromPinIndex: hit.wire.fromPinIndex,
-          x1: hit.point.x, y1: hit.point.y,
+          x1: point.x, y1: point.y,
           fromDir: hit.dir,
-          branchPoint: hit.point,
-          bends: [],
+          branchPoint: point,
+          bends: [], bendGroups: [], flip: false,
         };
-        this.tentativeX = hit.point.x;
-        this.tentativeY = hit.point.y;
+        this.tentativeX = point.x;
+        this.tentativeY = point.y;
       }
       return;
     }
 
     const drawing = this.wireDrawing;
 
-    // Knickpunkt setzen: Klick neben jeden Pin — normal gezogen auch auf eine
-    // Leitung (dort kann eine normal gezogene Leitung nicht enden), umgekehrt
-    // gezogen nur auf freie Fläche (Leitung = Abzweig-Ziel). Raster 24 px.
+    // Festen Punkt setzen (wie Taste C): Klick neben jeden Pin — normal gezogen
+    // auch auf eine Leitung (dort kann eine normal gezogene Leitung nicht enden),
+    // umgekehrt gezogen nur auf freie Fläche (Leitung = Abzweig-Ziel).
     if (!near && (!drawing.reverse || !this.findWireHitAt(lx, ly))) {
-      const GRID = 24;
-      drawing.bends = [...drawing.bends, { x: Math.round(lx / GRID) * GRID, y: Math.round(ly / GRID) * GRID }];
+      this.commitDrawingPoint({ x: lx, y: ly });
       return;
     }
     this.wireDrawing = null;
@@ -1112,10 +1124,11 @@ export class Whiteboard implements OnDestroy {
       }
       // Abzweig-Richtung: senkrecht zum getroffenen Segment, zum Ziel hin
       const inPos = getPinWorldPos(target, 'input', toPin);
+      const point = this.snapOnWire(hit.point, hit.dir);
       const dir: PinDirection = hit.dir.dx !== 0
-        ? { dx: Math.sign(inPos.x - hit.point.x) || 1, dy: 0 }
-        : { dx: 0, dy: Math.sign(inPos.y - hit.point.y) || 1 };
-      this.addWire(hit.wire.fromGateId, hit.wire.fromPinIndex, hit.point, dir, hit.point, target, toPin, bends);
+        ? { dx: Math.sign(inPos.x - point.x) || 1, dy: 0 }
+        : { dx: 0, dy: Math.sign(inPos.y - point.y) || 1 };
+      this.addWire(hit.wire.fromGateId, hit.wire.fromPinIndex, point, dir, point, target, toPin, bends);
       return;
     }
 
@@ -1135,10 +1148,97 @@ export class Whiteboard implements OnDestroy {
       fromPinIndex: pinIndex,
       x1: pos.x, y1: pos.y,
       fromDir: getPinDirection(gate, 'output'),
-      bends: [],
+      bends: [], bendGroups: [], flip: false,
     };
     this.tentativeX = pos.x;
     this.tentativeY = pos.y;
+  }
+
+  // ─── Verlegen wie in Shapez 2 (Phase 7) ─────────────────────────────────────
+
+  /** Punkt auf das Raster legen. */
+  private snapToGrid(p: { x: number; y: number }): { x: number; y: number } {
+    return { x: Math.round(p.x / GRID) * GRID, y: Math.round(p.y / GRID) * GRID };
+  }
+
+  /** Punkt auf einer Leitung nur entlang des Stücks aufs Raster legen (bleibt auf der Leitung). */
+  private snapOnWire(p: { x: number; y: number }, perpendicular: PinDirection): { x: number; y: number } {
+    // perpendicular = Abzweig-Richtung, also quer zum getroffenen Stück
+    return perpendicular.dx === 0
+      ? { x: Math.round(p.x / GRID) * GRID, y: p.y }
+      : { x: p.x, y: Math.round(p.y / GRID) * GRID };
+  }
+
+  /** Letzter fester Punkt der laufenden Leitung (sonst ihr Startpunkt). */
+  private drawingAnchor(d: WireDrawingState): { x: number; y: number } {
+    return d.bends[d.bends.length - 1] ?? { x: d.x1, y: d.y1 };
+  }
+
+  /**
+   * Knickreihenfolge des aktuellen Stücks: das erste Stück läuft in
+   * Pin-Richtung, jedes weitere zuerst quer zum vorigen Stück; F dreht um.
+   */
+  private drawingHorizontalFirst(d: WireDrawingState): boolean {
+    const pts = [{ x: d.x1, y: d.y1 }, ...d.bends];
+    const horizontal = pts.length < 2
+      ? d.fromDir.dx !== 0
+      : pts[pts.length - 2].y !== pts[pts.length - 1].y; // voriges Stück senkrecht → jetzt waagerecht
+    return horizontal !== d.flip;
+  }
+
+  /** Noch nicht festgelegtes L-Stück vom letzten festen Punkt zur (gerasterten) Maus. */
+  private pendingDrawingPoints(d: WireDrawingState, cursor: { x: number; y: number }): { x: number; y: number }[] {
+    const a = this.drawingAnchor(d), c = this.snapToGrid(cursor);
+    const corner = lCorner(a, c, this.drawingHorizontalFirst(d));
+    return [...(corner ? [corner] : []), c].filter(p => p.x !== a.x || p.y !== a.y);
+  }
+
+  /** Taste C / Klick auf freie Fläche: L-Stück bis zum Punkt festlegen. */
+  private commitDrawingPoint(cursor: { x: number; y: number }): void {
+    const d = this.wireDrawing;
+    if (!d) return;
+    const pts = this.pendingDrawingPoints(d, cursor);
+    if (pts.length === 0) return;
+    this.wireDrawing = { ...d, bends: [...d.bends, ...pts], bendGroups: [...d.bendGroups, pts.length], flip: false };
+  }
+
+  /** Backspace / Strg+Z beim Verlegen: letzten festen Punkt zurücknehmen. */
+  private undoDrawingPoint(): void {
+    const d = this.wireDrawing;
+    if (!d || d.bendGroups.length === 0) return;
+    const n = d.bendGroups[d.bendGroups.length - 1];
+    this.wireDrawing = { ...d, bends: d.bends.slice(0, -n), bendGroups: d.bendGroups.slice(0, -1), flip: false };
+  }
+
+  /**
+   * Tasten beim Verlegen: C = festen Punkt setzen, F = Knickreihenfolge umschalten.
+   * Aufruf aus onKeyboardShortcut – ein zweiter @HostListener('document:keydown')
+   * in derselben Klasse würde den ersten überschreiben.
+   */
+  private onWireDrawingKey(event: KeyboardEvent): void {
+    if (!this.wireDrawing || event.ctrlKey || event.metaKey || event.altKey) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
+    const key = event.key.toLowerCase();
+    if (key === 'c') {
+      event.preventDefault();
+      this.commitDrawingPoint({ x: this.tentativeX, y: this.tentativeY });
+    } else if (key === 'f') {
+      event.preventDefault();
+      this.wireDrawing = { ...this.wireDrawing, flip: !this.wireDrawing.flip };
+    }
+  }
+
+  /**
+   * Gültiges Ziel unter der Maus (für die Vorschau): normal gezogen ein freier
+   * Eingang eines anderen Bauteils, umgekehrt gezogen ein Ausgang.
+   */
+  private drawingTargetPin(d: WireDrawingState): { gate: GateInstance; pinType: 'input' | 'output'; pinIndex: number } | null {
+    const near = this.findNearestPin(this.tentativeX, this.tentativeY);
+    if (!near) return null;
+    if (d.reverse) return near.pinType === 'output' && near.gate.id !== d.reverse.gateId ? near : null;
+    return near.pinType === 'input' && near.gate.id !== d.fromGateId
+      && !this.isInputPinConnected(near.gate.id, near.pinIndex) ? near : null;
   }
 
   /**
@@ -1190,7 +1290,12 @@ export class Whiteboard implements OnDestroy {
       ),
       branchPoint,
       fromDir: branchPoint ? fromDir : undefined,
-      manualPoints: bends.length > 0 ? bends : undefined,
+      // Phase 7: kompletter sichtbarer Verlauf als feste Punkte – bleibt so, wie
+      // der Nutzer ihn verlegt hat; beim Verschieben passen sich nur die Enden an
+      manualPoints: (() => {
+        const inner = drawnWirePath(start, fromDir, bends, endPos, toDir).slice(1, -1);
+        return inner.length > 0 ? inner : undefined;
+      })(),
     };
     this.pushHistory(); // Zustand vor dem Hinzufügen der Leitung sichern
     this.wires = [...this.wires, newWire];
@@ -1653,27 +1758,22 @@ export class Whiteboard implements OnDestroy {
    * tatsächlichen Leitungsführung passt.
    */
   getTentativePointsString(): string {
-    if (!this.wireDrawing) return '';
-    const x1 = this.wireDrawing.x1;
-    const y1 = this.wireDrawing.y1;
-    const fromGate = this.gates.find(g => g.id === this.wireDrawing!.fromGateId);
-    // Umgekehrt gezogen: Vorschau startet am Eingangs-Pin in dessen Richtung
-    const dir = this.wireDrawing.reverse ? this.wireDrawing.fromDir
-      : fromGate ? getPinDirection(fromGate, 'output') : { dx: 1, dy: 0 };
+    const d = this.wireDrawing;
+    if (!d) return '';
+    const start = { x: d.x1, y: d.y1 };
+    const str = (pts: { x: number; y: number }[]) => pts.map(p => `${p.x},${p.y}`).join(' ');
 
-    // Mit Knickpunkten: Verlauf über die Knicke bis zur Maus (letztes Stück erst waagerecht)
-    if (this.wireDrawing.bends.length > 0) {
-      return manualWirePath({ x: x1, y: y1 }, dir, this.wireDrawing.bends,
-        { x: this.tentativeX, y: this.tentativeY }, { dx: 0, dy: 1 })
-        .map(p => `${p.x},${p.y}`).join(' ');
+    // Über einem gültigen Ziel-Pin: genau der Verlauf, der beim Klick entsteht
+    const target = this.drawingTargetPin(d);
+    if (target) {
+      const pin = getPinWorldPos(target.gate, target.pinType, target.pinIndex);
+      const pinDir = getPinDirection(target.gate, target.pinType);
+      return d.reverse
+        ? str(drawnWirePath(pin, pinDir, [...d.bends].reverse(), start, d.fromDir))
+        : str(drawnWirePath(start, d.fromDir, d.bends, pin, pinDir));
     }
-
-    if (dir.dy === 0) {
-      const midX = Math.round((x1 + this.tentativeX) / 2);
-      return `${x1},${y1} ${midX},${y1} ${midX},${this.tentativeY} ${this.tentativeX},${this.tentativeY}`;
-    }
-    const midY = Math.round((y1 + this.tentativeY) / 2);
-    return `${x1},${y1} ${x1},${midY} ${this.tentativeX},${midY} ${this.tentativeX},${this.tentativeY}`;
+    // Sonst: feste Punkte + L-Stück zur Maus (Shapez-Stil)
+    return str([start, ...d.bends, ...this.pendingDrawingPoints(d, { x: this.tentativeX, y: this.tentativeY })]);
   }
 
   isWireHigh(wire: WireConnection): boolean {

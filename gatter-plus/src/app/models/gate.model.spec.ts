@@ -8,6 +8,8 @@ import {
   getGatePinOffsets,
   getPinWorldPos,
   snapGateToGrid,
+  lCorner,
+  drawnWirePath,
   GRID,
   GateType,
   GateInstance,
@@ -327,5 +329,35 @@ describe('snapGateToGrid', () => {
     const g = snapGateToGrid(createGateInstance('g', 'and', 37, 101));
     expect(Math.abs(g.x - 37)).toBeLessThanOrEqual(GRID / 2);
     expect(Math.abs(g.y - 101)).toBeLessThanOrEqual(GRID / 2);
+  });
+});
+
+// ─── Tests: Verlegen durch den Nutzer (Phase 7) ───────────────────────────────
+
+describe('lCorner / drawnWirePath', () => {
+  const R = { dx: 1, dy: 0 }, L = { dx: -1, dy: 0 }, D = { dx: 0, dy: 1 };
+  const orth = (p: { x: number; y: number }[]) => p.every((q, i) => i === 0 || q.x === p[i - 1].x || q.y === p[i - 1].y);
+
+  it('L-Ecke erst waagerecht bzw. erst senkrecht, gerade Stücke ohne Ecke', () => {
+    expect(lCorner({ x: 0, y: 0 }, { x: 48, y: 72 }, true)).toEqual({ x: 48, y: 0 });
+    expect(lCorner({ x: 0, y: 0 }, { x: 48, y: 72 }, false)).toEqual({ x: 0, y: 72 });
+    expect(lCorner({ x: 0, y: 0 }, { x: 48, y: 0 }, true)).toBeNull();
+  });
+
+  it('ohne feste Punkte: Z-Form mit Knick auf der Rastermitte', () => {
+    expect(drawnWirePath({ x: 0, y: 0 }, R, [], { x: 144, y: 96 }, L))
+      .toEqual([{ x: 0, y: 0 }, { x: 72, y: 0 }, { x: 72, y: 96 }, { x: 144, y: 96 }]);
+  });
+
+  it('mit festen Punkten: über die Punkte, letztes Stück in Pin-Richtung', () => {
+    const p = drawnWirePath({ x: 0, y: 0 }, R, [{ x: 48, y: 0 }, { x: 48, y: -96 }], { x: 192, y: -144 }, L);
+    expect(orth(p)).toBe(true);
+    expect(p.slice(0, 3)).toEqual([{ x: 0, y: 0 }, { x: 48, y: 0 }, { x: 48, y: -96 }]);
+    expect(p[p.length - 2].y).toBe(-144); // läuft waagerecht in den Eingang
+  });
+
+  it('gemischte Pin-Richtungen: ein Knick', () => {
+    expect(drawnWirePath({ x: 0, y: 0 }, R, [], { x: 96, y: 96 }, D))
+      .toEqual([{ x: 0, y: 0 }, { x: 96, y: 0 }, { x: 96, y: 96 }]);
   });
 });
