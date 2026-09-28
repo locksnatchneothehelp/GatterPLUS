@@ -17,9 +17,10 @@
    (.gate-body, per --gate-fill umfärbbar), im Strommodus signalabhängig. */
 .gate.toolbar-mode {
   height: 44px;
-  .gate-body { width: 44px; background: var(--btn-bg, #f5b342); }
+  min-height: 0; /* sonst übersteuert min-height: 52px die Palettenhöhe */
+  .gate-body { width: 44px; height: 34px; align-self: center; background: var(--btn-bg, #f5b342); }
   .wire { width: 8px; }
-  .pins-in { padding: 6px 0; }
+  .pins-in { padding: 10px 0; }
   .slot { height: auto; flex: 1; }
   .symbol { font-size: 15px; }
 }

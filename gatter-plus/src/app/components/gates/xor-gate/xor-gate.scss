@@ -13,7 +13,7 @@
    Palette-Vorschau, nicht das Gatter auf dem Whiteboard. */
 .gate.toolbar-mode {
   height: 44px;
-  .gate-body { width: 44px; height: 34px; background: var(--btn-bg, #f5b342); }
+  .gate-body { width: 44px; height: 34px; align-self: center; background: var(--btn-bg, #f5b342); }
   .wire { width: 8px; }
   .pins-in { padding: 10px 0; } /* Körper hier nur 34 px hoch */
   .slot { height: auto; flex: 1; }
