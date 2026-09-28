@@ -89,7 +89,10 @@
 | 22:43 | `7c6aefe` | Fehlermeldungen: Wortlaut vom Nutzer angepasst (Komma statt Gedankenstrich, „letzte Position“) · einzeln gepusht |
 | 22:46 | `57cc889` | Stromfluss beginnt/endet direkt am Bauteil: Anschluss-Stummel leuchten mit (Ausgang während des Zeichnens, Eingang ab Ankunft) |
 | 22:46 | `fccc9bb` | Power-Knopf: noch deutlicherer Puls (zwei Wellen bis 20 px, passt in die Toolbar) |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **elfter Push** |
+| 22:47 | `99a3f16` | Sitzungsprotokoll ergänzt · **elfter Push** |
+| 22:50 | `3d287fe` | LogikSim-Import kompakter: `UNIT_PX = 2 × GRID` (vorher 3 × GRID, LogikSim-Anschlüsse liegen 1 Einheit auseinander; 1 × GRID → Schalter überlappen), überlappende Textfelder rücken auf freien Rasterplatz, danach `zoomToFit(0.9)` statt fester 50 % (4-Bit-Addierer: 67 % Zoom, gut lesbar); neuer Test „keine Überlappungen“ |
+| 22:51 | `59832cb` | Neu laden/Schließen: Browser-Rückfrage (`beforeunload`), sobald Bauteile auf dem Whiteboard liegen |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **zwölfter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
