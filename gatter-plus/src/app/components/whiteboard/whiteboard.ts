@@ -26,6 +26,7 @@ import {
   getPinWorldPos, isPointInGate,
   PIN_HIT_RADIUS, createGateInstance, computeOrthogonalWaypoints,
   getOutputPinMaxConnections, getPinDirection, manualWirePath,
+  snapGateToGrid, GRID,
 } from '../../models/gate.model';
 import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
@@ -280,12 +281,12 @@ export class Whiteboard implements OnDestroy {
 
   /**
    * Fügt die Zwischenablage ein.
-   * Jedes Bauteil erhält eine neue ID; Positionen werden um +20px versetzt.
+   * Jedes Bauteil erhält eine neue ID; Positionen werden um eine Rasterweite versetzt.
    * Kopierte Leitungen werden auf die neuen IDs umgeschrieben.
    */
   pasteClipboard(): void {
     if (!this.clipboard || this.simulationMode) return;
-    const OFFSET = 20;
+    const OFFSET = GRID; // bleibt auf dem Raster
     const idMap  = new Map<string, string>();
 
     const newGates = this.clipboard.gates.map(g => {
@@ -553,8 +554,10 @@ export class Whiteboard implements OnDestroy {
   updateGate(changes: Partial<GateInstance> & { id: string }): void {
     this.pushHistory(); // Zustand vor jeder Eigenschafts-Änderung sichern
     const periodChanged = changes.clockPeriodMs !== undefined;
+    // Drehung/Eingangsanzahl verschieben die Pins → wieder aufs Raster (Phase 7)
+    const resnap = changes.rotation !== undefined || changes.inputCount !== undefined;
     this.gates = this.gates.map(g =>
-      g.id !== changes.id ? g : { ...g, ...changes }
+      g.id !== changes.id ? g : resnap ? snapGateToGrid({ ...g, ...changes }) : { ...g, ...changes }
     );
     if (periodChanged) {
       const gate = this.gates.find(g => g.id === changes.id);
@@ -839,8 +842,15 @@ export class Whiteboard implements OnDestroy {
       const screenDx = event.clientX - this.gateDragState.startMouseX;
       const screenDy = event.clientY - this.gateDragState.startMouseY;
       // Bildschirm-Pixel → logische Koordinaten (sonst läuft das Bauteil bei Zoom ≠ 100 % davon)
-      const dx = screenDx / this.zoom;
-      const dy = screenDy / this.zoom;
+      let dx = screenDx / this.zoom;
+      let dy = screenDy / this.zoom;
+      // Rasterschritte: das gezogene Bauteil rastet ein, alle anderen folgen mit demselben Delta
+      const dragged = this.gates.find(g => g.id === this.gateDragState!.gateId);
+      if (dragged) {
+        const snapped = snapGateToGrid({ ...dragged, x: this.gateDragState.originX + dx, y: this.gateDragState.originY + dy });
+        dx = snapped.x - this.gateDragState.originX;
+        dy = snapped.y - this.gateDragState.originY;
+      }
       // Nur der Zuwachs seit dem letzten mousemove — für Werte, die am aktuellen
       // (schon verschobenen) Zustand hängen, z. B. Abzweigpunkte
       const stepX = dx - this.gateDragState.appliedDx;
@@ -1334,7 +1344,7 @@ export class Whiteboard implements OnDestroy {
     const dim  = getGateDimensions(gate);
     gate.x = Math.round(lx - dim.w / 2);
     gate.y = Math.round(ly - dim.h / 2);
-    this.gates = [...this.gates, gate];
+    this.gates = [...this.gates, snapGateToGrid(gate)];
     if (type === 'clock-gen' && this.simulationMode) this.startClockInterval(gate);
     if (this.simulationMode) this.recomputeSimulation();
   }

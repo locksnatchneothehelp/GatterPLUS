@@ -181,7 +181,7 @@ export const GATE_BASE_SIZE: Record<GateType, { w: number; h: number }> = {
   input:        { w: 72, h: 48 },
   output:       { w: 72, h: 48 },
   'clock-gen':  { w: 72, h: 48 },
-  'text-label': { w: 80, h: 30 },
+  'text-label': { w: 72, h: 24 }, // Text läuft mittig über (CSS), Mitte rastet ein
 };
 
 /**
