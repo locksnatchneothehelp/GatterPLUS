@@ -2,7 +2,68 @@
 
 > **Pflegeregel:** Diese Datei wird **nur am Ende einer Session und nur auf ausdrückliche Anweisung des Nutzers** ergänzt – nie zwischendurch, nie eigenmächtig. Neue Sessions werden **oben** angefügt (neueste zuerst). Zweck: In der nächsten Session nahtlos anschließen können.
 >
-> Detailwissen steht in: [PROJEKT_ANALYSE.md](PROJEKT_ANALYSE.md) (Code-Landkarte), [PHASE5_PLAN.md](PHASE5_PLAN.md) (inkl. `.sim`-Format), [PHASE6_PLAN.md](PHASE6_PLAN.md).
+> Detailwissen steht in: [PROJEKT_ANALYSE.md](PROJEKT_ANALYSE.md) (Code-Landkarte), [PHASE5_PLAN.md](PHASE5_PLAN.md) (inkl. `.sim`-Format), [PHASE6_PLAN.md](PHASE6_PLAN.md), [PHASE7_PLAN.md](PHASE7_PLAN.md).
+
+---
+
+## Session 2026-09-28 – Phase 7 (Raster, Leitungen verlegt der Nutzer)
+
+### Ausgangs- und Endstand
+
+| | |
+|---|---|
+| Start | `main` @ `1de0d4d` (Phase 6 + A*-Routing mit Ausweichspuren; 110 Unit-Tests) |
+| Ende | `main` @ Protokoll-Commit dieser Session, **gepusht** nach `origin/main` (Freigabe des Nutzers; löst GitHub-Pages-Deployment aus, Actions-Ergebnis nicht geprüft) |
+| Tests | 115 Unit-Tests (Vitest) grün, `ng build` ohne Fehler; E2E per headless Edge (Skripte nur im Scratchpad) |
+| Branches | `phase7-raster` per Fast-Forward in `main` gemergt (lokal noch vorhanden, lag nie auf GitHub) |
+
+### Anlass und Entscheidungen des Nutzers
+
+- Der Leitungsalgorithmus (A*) wird nie perfekt → neuer Ansatz: **Raster wie LogikSim**, **Leitungen legt der Nutzer selbst wie in Shapez 2**.
+- Pin-Abstand darf ans Raster angepasst werden; Bauteile dürfen sich beim Drehen leicht verschieben, solange die Pins auf dem Raster bleiben; **jedes Bauteil behält eine Spiegelachse**; Gatter mit gerader Eingangszahl werden höher (Mittelplatz frei, wie LogikSim).
+- Einrasten nur für Editor und LogikSim-Import (es gibt noch keine GatterPLUS-Dateien); Textfelder rasten **symmetrisch** (mittig) ein.
+- JK-FF und Volladdierer **96 px breit** (Variante a), damit die Pin-Beschriftungen Platz haben.
+- Verlegen: Taste zum Umschalten der Knickreihenfolge; **C** oder Klick setzt festen Punkt; **Backspace/Strg+Z** nimmt ihn zurück; rückwärts zeichnen bleibt (nicht Eingang→Eingang/Ausgang→Ausgang); Abzweig per Klick auf eine Leitung; beim Verschieben passt sich das Kabel nur bis zum festen Punkt an; feste Punkte einer angeklickten Leitung anzeigen, verschieben, hinzufügen, entfernen.
+- A*-Router **nicht löschen**, sondern als toter Code kennzeichnen.
+- Schritt 2 durfte am Stück umgesetzt, committet und gemergt werden; Details hat Claude entschieden (siehe unten, änderbar).
+
+### Von Claude entschiedene Details (Schritt 2)
+
+- Umschalt-Taste **F**; erstes Stück läuft in Pin-Richtung, jedes weitere zuerst quer zum vorigen.
+- Gespeichert wird der **komplette sichtbare Verlauf** als `manualPoints` (WYSIWYG); ohne feste Punkte Z-Form mit Knick auf der Rastermitte (`drawnWirePath`).
+- Bearbeiten per Griffen: ziehen (gerade Nachbarstücke wandern mit), **Doppelklick auf Griff = entfernen**, **Doppelklick auf Leitung = einfügen**; Entfernen ist immer erlaubt (Verlauf verbindet sich rechtwinklig neu).
+- Tastenhilfe oben im Whiteboard während des Verlegens.
+
+### Commits dieser Session (Zeitstempel = Commit-Zeit, Ortszeit)
+
+| Zeit | Commit | Inhalt |
+|---|---|---|
+| 17:57 | `d98248a` | Nebenbefund: Punktraster lag 2 px (× Zoom) versetzt → Punkte genau auf Vielfachen von 24 px |
+| 17:57 | `6eeb672` | **7.1** Pins auf 24-px-Raster: `GRID`, `getInputSlots`, `snapGateToGrid`, neue Bauteilgrößen (Breite 72), feste 24-px-Zeilen im Bauteil-CSS; Tests für Rasterlage aller Typen/Drehungen und Spiegelsymmetrie |
+| 18:10 | `c804664` | **7.1** JK-FF und Volladdierer 96 px breit (Beschriftungen stießen an) |
+| 18:12 | `54b5336` | **7.2** Einrasten beim Platzieren, Ziehen (Gruppe folgt), Drehen, Eingangsanzahl; Einfügen um 24 px; Textfeld 72×24 mittig |
+| 18:50 | `0d3fc67` | **7.3** LogikSim-Import: `UNIT_PX = 3 × GRID`, Textfelder rasten ein; Test: alle Fixtures auf dem Raster (keine Überlappungen) |
+| 18:51 | `7bf5fb7` | Doku: `docs/PHASE7_PLAN.md` angelegt, CLAUDE.md + Projektanalyse auf Raster-Stand |
+| 19:04 | `c46b27a` | **7.4** A*-Leitungsführung stillgelegt (toter Code, nicht gelöscht) |
+| 19:10 | `9021b17` | **7.5** Verlegen wie in Shapez 2: L-Stück zur Maus, F, C/Klick, Backspace/Strg+Z, Vorschau = endgültiger Verlauf, rückwärts, Abzweige auf dem Raster, Tastenhilfe; `lCorner`/`drawnWirePath` + Tests |
+| 19:13 | `9db8438` | **7.6** Feste Punkte bearbeiten: Griffe ziehen/entfernen/einfügen, Abzweige wandern mit, Strg+Z |
+| 19:14 | `d09bde3` | Doku: Phase 7 abgeschlossen (Plan, CLAUDE.md, Projektanalyse) |
+| 19:14 | `4d66c95` | Doku: keydown-Stolperstein im Plan richtig eingeordnet |
+| – | (dieser) | Sitzungsprotokoll · **Push** |
+
+### Stolpersteine / Wissen für die nächste Session
+
+- **Nur ein `@HostListener('document:keydown')` pro Klasse:** Ein zweiter überschreibt den ersten (Angular legt Host-Listener nach Ereignisnamen ab). In 7.5 kurz selbst verursacht (Strg+C/V/Z wären tot), vor dem Commit behoben – C/F laufen über `onKeyboardShortcut`.
+- Dev-Server-Fehler-Overlay nach Edits in falscher Reihenfolge (Verwendung vor Import) bleibt stehen → Server neu starten (wie schon am 2026-09-25 notiert).
+- Die Shell zerlegt lange Python-Heredocs mit gemischten Anführungszeichen falsch → Editier-Skripte als Datei im Scratchpad ablegen.
+- E2E: wie am 2026-09-25 per headless Edge + DevTools-Protokoll; Tasten mit `Input.dispatchKeyEvent` (Strg = `modifiers: 2`), Doppelklick = zwei Klicks mit `clickCount` 1 und 2.
+
+### Offene Punkte / Ideen
+
+- Leitungen sind nur über den 2-px-Strich anklickbar (Auswahl, Doppelklick zum Einfügen) – breitere unsichtbare Klickfläche wäre angenehmer.
+- „Verlauf automatisch“ im Eigenschaften-Panel entfernt die festen Punkte (→ einfache Z-Form); Name ggf. anpassen.
+- Branch `phase7-raster` kann gelöscht werden.
+- Handtest durch den Nutzer im echten Browser (Verlegen, Bearbeiten) steht aus.
 
 ---
 
