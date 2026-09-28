@@ -30,6 +30,7 @@
 | Palette + Werkzeug Pan/Wire + Simulations-Button | `components/toolbar-top/` |
 | App-Icon (Favicon + Toolbar links neben dem Namen) | `gatter-plus/public/icon.svg`; `public/favicon.ico` (16/32/48 px) daraus gerendert – bei Änderungen am SVG neu erzeugen |
 | Menü Datei/Bearbeiten/Hilfe + Theme-Toggle | `components/menu-bar/` |
+| Willkommensbildschirm beim Start (Inhalt noch Platzhalter; ✕/Esc/„Los geht's“, `App.welcomeOpen`, S gesperrt solange offen) | `components/welcome-dialog/` |
 | Eigenschaften (Rotation, Farbe, Eingänge, Takt, Label, Löschen) | `components/properties-panel/` |
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |

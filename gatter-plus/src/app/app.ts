@@ -3,6 +3,7 @@ import { MenuBar }       from './components/menu-bar/menu-bar';
 import { ToolbarTop }    from './components/toolbar-top/toolbar-top';
 import { Whiteboard }    from './components/whiteboard/whiteboard';
 import { PropertiesPanel, GatePropertyChange } from './components/properties-panel/properties-panel';
+import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog';
 import { ToolMode }      from './components/toolbar-left/toolbar-left';
 import { GateInstance }  from './models/gate.model';
 import { ThemeService }  from './services/theme.service';
@@ -26,7 +27,7 @@ import { parseLogikSim } from './models/logiksim-file';
  */
 @Component({
   selector: 'app-root',
-  imports: [MenuBar, ToolbarTop, Whiteboard, PropertiesPanel],
+  imports: [MenuBar, ToolbarTop, Whiteboard, PropertiesPanel, WelcomeDialog],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -37,6 +38,8 @@ export class App implements OnInit {
 
   activeTool:    ToolMode = 'pan';
   simulationMode = false;
+  /** Willkommensbildschirm beim Start (schließt per ✕, Esc oder „Los geht's“). */
+  welcomeOpen = true;
 
   /** Beim Start das gespeicherte Theme laden und anwenden. */
   ngOnInit(): void {
@@ -63,7 +66,7 @@ export class App implements OnInit {
     if (event.key.toLowerCase() !== 's' || event.ctrlKey || event.metaKey || event.altKey) return;
     const active = document.activeElement;
     if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
-    if (this.whiteboardRef?.isDrawingWire) return;
+    if (this.whiteboardRef?.isDrawingWire || this.welcomeOpen) return;
     event.preventDefault();
     this.onSimulationToggle();
   }

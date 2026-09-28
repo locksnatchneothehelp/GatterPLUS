@@ -1,0 +1,37 @@
+<!-- Willkommensbildschirm (Inhalt folgt später – vorerst Platzhalter) -->
+<div class="welcome-backdrop">
+  <div class="welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+
+    <button class="welcome-close" title="Schließen (Esc)" aria-label="Schließen" (click)="close.emit()">✕</button>
+
+    <!-- Kopf: Bernstein-Verlauf mit App-Icon -->
+    <div class="welcome-hero">
+      <img class="welcome-icon" src="icon.svg" alt="" aria-hidden="true">
+      <h1 id="welcome-title">Willkommen bei GatterPLUS</h1>
+      <p class="welcome-sub">Platzhalter: Untertitel</p>
+    </div>
+
+    <div class="welcome-body">
+      <p class="placeholder-text">Platzhalter: Hier folgt eine kurze Einführung in GatterPLUS.</p>
+
+      <div class="welcome-tiles">
+        <div class="welcome-tile">
+          <span class="tile-title">Platzieren</span>
+          <span class="tile-text">Platzhalter</span>
+        </div>
+        <div class="welcome-tile">
+          <span class="tile-title">Verkabeln</span>
+          <span class="tile-text">Platzhalter</span>
+        </div>
+        <div class="welcome-tile">
+          <span class="tile-title">Simulieren</span>
+          <span class="tile-text">Platzhalter</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="welcome-footer">
+      <button class="welcome-start" (click)="close.emit()">Los geht's</button>
+    </div>
+  </div>
+</div>
