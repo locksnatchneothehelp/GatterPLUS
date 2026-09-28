@@ -19,6 +19,8 @@
   height: 44px;
   .gate-body { width: 44px; background: var(--btn-bg, #f5b342); }
   .wire { width: 8px; }
+  .pins-in { padding: 6px 0; }
+  .slot { height: auto; flex: 1; }
   .symbol { font-size: 15px; }
 }
 
@@ -43,9 +45,14 @@
 .pins-in {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-self: stretch;
-  padding: 10px 0;
+}
+
+/* Eine Raster-Zeile (24 px = GRID) pro Eingangs-Platz, Draht in der Mitte */
+.slot {
+  height: 24px;
+  display: flex;
+  align-items: center;
 }
 
 /* Container für Ausgangs-Draht (rechts) */
@@ -68,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
+  width: 48px;
   align-self: stretch;
   background: var(--gate-fill, #f5b342);
   border: 2px solid #1e293b;

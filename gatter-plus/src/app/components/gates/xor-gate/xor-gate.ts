@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { getInputSlots, GRID } from '../../../models/gate.model';
 
 /**
  * Visuelles XOR-Gatter (Exklusiv-ODER) nach DIN 40900.
@@ -31,20 +32,15 @@ export class XorGate {
    */
   @Input() inputCount = 2;
 
-  /**
-   * Berechnet die Gatter-Höhe abhängig von inputCount.
-   * Minimum 52px, wächst mit mehr Eingängen.
-   */
+  /** Höhe: eine Raster-Zeile (GRID px) pro Eingangs-Platz, siehe getInputSlots. */
   get gateHeight(): number {
-    return Math.max(52, (this.inputCount + 1) * 16 + 8);
+    const s = getInputSlots(this.inputCount);
+    return this.toolbarMode ? 44 : (s[s.length - 1] + 1) * GRID;
   }
 
-  /**
-   * Liefert ein Array der Länge inputCount (im Toolbar-Modus immer 2)
-   * für das @for-Template.
-   */
-  get wireArray(): number[] {
-    const count = this.toolbarMode ? 2 : this.inputCount;
-    return Array.from({ length: count }, (_, i) => i);
+  /** Raster-Zeilen der Eingangsseite: true = Draht, false = freier Mittelplatz. */
+  get slots(): boolean[] {
+    const s = getInputSlots(this.toolbarMode ? 2 : this.inputCount);
+    return Array.from({ length: s[s.length - 1] + 1 }, (_, i) => s.includes(i));
   }
 }

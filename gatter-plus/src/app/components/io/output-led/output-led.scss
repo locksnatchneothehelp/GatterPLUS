@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 52px;
+  height: 48px;
   user-select: none;
 }
 
@@ -25,7 +25,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 64px;   /* 12px Stub + 64px Body = 76px gesamt → passt zum Modell */
+  width: 60px;   /* 12px Stub + 60px Body = 72px gesamt → passt zum Modell */
   height: 44px;
   background: var(--gate-fill, #ffffff);
   border: 2px solid #1e293b;

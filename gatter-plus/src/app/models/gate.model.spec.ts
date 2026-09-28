@@ -3,6 +3,12 @@ import {
   computeOrthogonalWaypoints,
   getPinDirection,
   manualWirePath,
+  createGateInstance,
+  getGateDimensions,
+  getGatePinOffsets,
+  getPinWorldPos,
+  snapGateToGrid,
+  GRID,
   GateType,
   GateInstance,
 } from './gate.model';
@@ -281,5 +287,45 @@ describe('manualWirePath', () => {
       [{ x: 30, y: 40 }, { x: 30, y: 40 }, { x: 90, y: 10 }], { x: 150, y: 70 }, LEFT);
     expect(isOrthogonal(p)).toBe(true);
     expect(p.some((q, i) => i > 0 && q.x === p[i - 1].x && q.y === p[i - 1].y)).toBe(false);
+  });
+});
+
+// ─── Tests: Raster (Phase 7) ──────────────────────────────────────────────────
+
+describe('snapGateToGrid', () => {
+  const TYPES: GateType[] = ['and', 'or', 'xor', 'not', 'jk-ff', 'half-adder', 'full-adder', 'input', 'output', 'clock-gen'];
+  const variants = (t: GateType) => (t === 'and' || t === 'or' || t === 'xor') ? [2, 3, 4, 5, 6, 7, 8] : [1];
+
+  it('legt alle Pins aller Bauteile in jeder Drehung aufs Raster', () => {
+    for (const type of TYPES) for (const n of variants(type)) for (const rotation of [0, 90, 180, 270] as const) {
+      const g = snapGateToGrid({ ...createGateInstance('g', type, 37, 101), inputCount: n, rotation });
+      const off = getGatePinOffsets(g);
+      const pins = [
+        ...off.inputs.map((_, i) => getPinWorldPos(g, 'input', i)),
+        ...off.outputs.map((_, i) => getPinWorldPos(g, 'output', i)),
+      ];
+      for (const p of pins) {
+        expect(Math.abs(p.x % GRID), `${type}/${n}/${rotation}`).toBe(0);
+        expect(Math.abs(p.y % GRID), `${type}/${n}/${rotation}`).toBe(0);
+      }
+    }
+  });
+
+  it('Pin-Anordnung ist spiegelsymmetrisch zur waagerechten Mittellinie', () => {
+    for (const type of TYPES) for (const n of variants(type)) {
+      const g = { ...createGateInstance('g', type, 0, 0), inputCount: n };
+      const h = getGateDimensions(g).h;
+      const off = getGatePinOffsets(g);
+      for (const list of [off.inputs, off.outputs]) {
+        const ys = list.map(p => p.y);
+        expect(ys.map(y => h - y).sort((a, b) => a - b), `${type}/${n}`).toEqual([...ys].sort((a, b) => a - b));
+      }
+    }
+  });
+
+  it('verschiebt ein Bauteil höchstens um eine halbe Rasterweite', () => {
+    const g = snapGateToGrid(createGateInstance('g', 'and', 37, 101));
+    expect(Math.abs(g.x - 37)).toBeLessThanOrEqual(GRID / 2);
+    expect(Math.abs(g.y - 101)).toBeLessThanOrEqual(GRID / 2);
   });
 });

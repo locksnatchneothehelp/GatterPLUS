@@ -8,8 +8,8 @@
 >
   <!-- Eingangs-Drähte (links, Anzahl abhängig von inputCount) -->
   <div class="pins-in">
-    @for (w of wireArray; track w) {
-      <div class="wire"></div>
+    @for (hasWire of slots; track $index) {
+      <div class="slot">@if (hasWire) { <div class="wire"></div> }</div>
     }
   </div>
 

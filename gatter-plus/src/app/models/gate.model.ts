@@ -147,21 +147,39 @@ export interface PinOffset {
 export const PIN_HIT_RADIUS = 12;
 
 /**
+ * Rasterweite (Punktraster des Whiteboards, Phase 7). Alle Pins eines
+ * Bauteils liegen untereinander auf Vielfachen davon — so bleiben sie auch
+ * nach jeder 90°-Drehung auf dem Raster, sobald ein Pin darauf liegt.
+ */
+export const GRID = 24;
+
+/**
+ * Plätze (Raster-Zeilen à GRID px, Pin in der Zeilenmitte) der Eingänge von
+ * and/or/xor. Bei gerader Anzahl bleibt der mittlere Platz frei, damit der
+ * Ausgang auf der Spiegelachse und trotzdem auf dem Raster liegt (wie LogikSim).
+ */
+export function getInputSlots(n: number): number[] {
+  const slots = Array.from({ length: n }, (_, i) => i);
+  return n % 2 === 0 ? slots.map(i => (i < n / 2 ? i : i + 1)) : slots;
+}
+
+/**
  * Feste Abmessungen aller Komponenten-Typen (nicht-rotiert, ohne variable Eingänge).
  * width  = Breite des gesamten visuellen Elements (inkl. Drähte)
  * height = Höhe des gesamten visuellen Elements
+ * Breite 72 = 3 × GRID (Ein- und Ausgangs-Pin liegen damit beide auf dem Raster).
  */
 export const GATE_BASE_SIZE: Record<GateType, { w: number; h: number }> = {
-  and:          { w: 76, h: 52 },
-  or:           { w: 76, h: 52 },
-  not:          { w: 76, h: 52 },
-  xor:          { w: 76, h: 52 },
-  'jk-ff':      { w: 76, h: 100 },
-  'half-adder': { w: 76, h: 52 },
-  'full-adder': { w: 76, h: 70 },
-  input:        { w: 76, h: 52 },
-  output:       { w: 76, h: 52 },
-  'clock-gen':  { w: 76, h: 52 },
+  and:          { w: 72, h: 72 },
+  or:           { w: 72, h: 72 },
+  not:          { w: 72, h: 48 },
+  xor:          { w: 72, h: 72 },
+  'jk-ff':      { w: 72, h: 120 },
+  'half-adder': { w: 72, h: 48 },
+  'full-adder': { w: 72, h: 72 },
+  input:        { w: 72, h: 48 },
+  output:       { w: 72, h: 48 },
+  'clock-gen':  { w: 72, h: 48 },
   'text-label': { w: 80, h: 30 },
 };
 
@@ -172,9 +190,9 @@ export const GATE_BASE_SIZE: Record<GateType, { w: number; h: number }> = {
 export function getGateDimensions(gate: GateInstance): { w: number; h: number } {
   const base = GATE_BASE_SIZE[gate.type];
   if (gate.type === 'and' || gate.type === 'or' || gate.type === 'xor') {
-    // Höhe wächst mit Eingangsanzahl: min. 52px, dann 16px pro Eingang
-    const h = Math.max(base.h, (gate.inputCount + 1) * 16 + 8);
-    return { w: base.w, h };
+    // Eine Raster-Zeile pro Eingangs-Platz (inkl. freiem Mittelplatz)
+    const slots = getInputSlots(gate.inputCount);
+    return { w: base.w, h: (slots[slots.length - 1] + 1) * GRID };
   }
   return { ...base };
 }
@@ -193,83 +211,67 @@ export function getGatePinOffsets(
     case 'and':
     case 'or':
     case 'xor': {
-      // Pin-Positionen exakt nach CSS-Logik berechnen:
-      //   .pins-in { justify-content: space-around; padding: 10px 0 }
-      //   .wire    { height: 2px }
-      // CSS space-around: jedes Element bekommt (freier_platz / n) als Einheit,
-      // davon je eine halbe Einheit vor und nach dem Element.
-      const PAD = 10;     // padding oben und unten
-      const T   = 2;      // Draht-Höhe in px
-      const n   = gate.inputCount;
-      const unit    = (dim.h - 2 * PAD - n * T) / n;
-      const halfUnit = unit / 2;
-      const inputs = Array.from({ length: n }, (_, i) => ({
-        x: 0,
-        y: Math.round(PAD + halfUnit + T / 2 + i * (unit + T)),
-      }));
-      return { inputs, outputs: [{ x: dim.w, y: Math.round(dim.h / 2) }] };
+      // Raster-Zeilen à GRID px, Pin in der Zeilenmitte (CSS: .slot { height: 24px })
+      const inputs = getInputSlots(gate.inputCount).map(s => ({ x: 0, y: s * GRID + GRID / 2 }));
+      return { inputs, outputs: [{ x: dim.w, y: dim.h / 2 }] };
     }
 
     case 'not':
       return {
-        inputs:  [{ x: 0,      y: 26 }],
-        outputs: [{ x: dim.w,  y: 26 }],
+        inputs:  [{ x: 0,      y: 24 }],
+        outputs: [{ x: dim.w,  y: 24 }],
       };
 
     case 'input':
       return {
         inputs:  [],
-        outputs: [{ x: dim.w, y: 26 }],
+        outputs: [{ x: dim.w, y: 24 }],
       };
 
     case 'output':
       return {
-        inputs:  [{ x: 0, y: 26 }],
+        inputs:  [{ x: 0, y: 24 }],
         outputs: [],
       };
 
     case 'clock-gen':
       return {
         inputs:  [],
-        outputs: [{ x: dim.w, y: 26 }],
+        outputs: [{ x: dim.w, y: 24 }],
       };
 
     case 'text-label':
       return { inputs: [], outputs: [] };
 
     case 'jk-ff':
-      // Eingänge (oben→unten): S, J, C (Takt), K, R
-      // CSS: .pins-in { padding: 8px 0; space-around; h=100px }
-      //   → Y_i = 8 + (84/5)*(i+0.5)  =  16, 33, 50, 67, 84
-      // Ausgänge: Q (oben), Q̄ (unten)
-      // CSS: .pins-out { padding: 20px 0; space-around; h=100px }
-      //   → Y_i = 20 + (60/2)*(i+0.5)  =  35, 65
+      // Eingänge (oben→unten): S, J, C (Takt), K, R in den Zeilen 1–5
+      // Ausgänge: Q (Zeile 2), Q̄ (Zeile 4) — Zeilen à 24 px, Pin in der Mitte
       return {
         inputs: [
-          { x: 0, y: 16 }, // S
-          { x: 0, y: 33 }, // J
-          { x: 0, y: 50 }, // C (Takt)
-          { x: 0, y: 67 }, // K
-          { x: 0, y: 84 }, // R
+          { x: 0, y: 12 },  // S
+          { x: 0, y: 36 },  // J
+          { x: 0, y: 60 },  // C (Takt)
+          { x: 0, y: 84 },  // K
+          { x: 0, y: 108 }, // R
         ],
         outputs: [
-          { x: dim.w, y: 35 }, // Q
-          { x: dim.w, y: 65 }, // Q̄
+          { x: dim.w, y: 36 }, // Q
+          { x: dim.w, y: 84 }, // Q̄
         ],
       };
 
     case 'half-adder':
-      // Eingänge: A, B — Ausgänge: S (Summe), C (Carry)
+      // Eingänge: A, B — Ausgänge: S (Summe), C (Carry); Zeilen 1–2
       return {
-        inputs:  [{ x: 0, y: 18 }, { x: 0, y: 34 }],
-        outputs: [{ x: dim.w, y: 18 }, { x: dim.w, y: 34 }],
+        inputs:  [{ x: 0, y: 12 }, { x: 0, y: 36 }],
+        outputs: [{ x: dim.w, y: 12 }, { x: dim.w, y: 36 }],
       };
 
     case 'full-adder':
-      // Eingänge: A, B, Cin — Ausgänge: S (Summe), Cout (Übertrag)
+      // Eingänge: A, B, Cin (Zeilen 1–3) — Ausgänge: S, Cout (Zeilen 1 und 3)
       return {
-        inputs:  [{ x: 0, y: 14 }, { x: 0, y: 35 }, { x: 0, y: 56 }],
-        outputs: [{ x: dim.w, y: 22 }, { x: dim.w, y: 48 }],
+        inputs:  [{ x: 0, y: 12 }, { x: 0, y: 36 }, { x: 0, y: 60 }],
+        outputs: [{ x: dim.w, y: 12 }, { x: dim.w, y: 60 }],
       };
 
     default:
@@ -325,6 +327,24 @@ export function getPinWorldPos(
   const ry = -dx * sin + dy * cos;
 
   return { x: Math.round(cx + rx), y: Math.round(cy + ry) };
+}
+
+/**
+ * Verschiebt ein Bauteil minimal so, dass sein erster Pin auf dem Raster liegt
+ * (Phase 7) — damit liegen alle Pins darauf (Abstände sind Vielfache von GRID).
+ * Bauteile ohne Pins rasten mit ihrem Mittelpunkt ein. Gibt ein neues Objekt zurück.
+ */
+export function snapGateToGrid(gate: GateInstance): GateInstance {
+  const offsets = getGatePinOffsets(gate);
+  const dim = getGateDimensions(gate);
+  const ref = offsets.inputs.length ? getPinWorldPos(gate, 'input', 0)
+            : offsets.outputs.length ? getPinWorldPos(gate, 'output', 0)
+            : { x: gate.x + dim.w / 2, y: gate.y + dim.h / 2 };
+  return {
+    ...gate,
+    x: gate.x + Math.round(ref.x / GRID) * GRID - ref.x,
+    y: gate.y + Math.round(ref.y / GRID) * GRID - ref.y,
+  };
 }
 
 /** Achsenparalleler Einheits-Richtungsvektor (immer dx/dy ∈ {-1,0,1}). */

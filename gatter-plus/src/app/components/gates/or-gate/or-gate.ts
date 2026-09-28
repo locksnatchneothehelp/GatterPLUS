@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { getInputSlots, GRID } from '../../../models/gate.model';
 
 /**
  * Visuelles ODER-Gatter (OR) nach DIN 40900.
@@ -21,10 +22,15 @@ export class OrGate {
   @Input() inputCount = 2;
   @Input() signalOutput: boolean | null = null;
 
+  /** Höhe: eine Raster-Zeile (GRID px) pro Eingangs-Platz, siehe getInputSlots. */
   get gateHeight(): number {
-    return this.toolbarMode ? 44 : Math.max(52, (this.inputCount + 1) * 16 + 8);
+    const s = getInputSlots(this.inputCount);
+    return this.toolbarMode ? 44 : (s[s.length - 1] + 1) * GRID;
   }
-  get wireArray(): number[] {
-    return Array.from({ length: this.toolbarMode ? 2 : this.inputCount }, (_, i) => i);
+
+  /** Raster-Zeilen der Eingangsseite: true = Draht, false = freier Mittelplatz. */
+  get slots(): boolean[] {
+    const s = getInputSlots(this.toolbarMode ? 2 : this.inputCount);
+    return Array.from({ length: s[s.length - 1] + 1 }, (_, i) => s.includes(i));
   }
 }
