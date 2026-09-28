@@ -30,7 +30,8 @@ export class OrGate {
 
   /** Raster-Zeilen der Eingangsseite: true = Draht, false = freier Mittelplatz. */
   get slots(): boolean[] {
-    const s = getInputSlots(this.toolbarMode ? 2 : this.inputCount);
+    if (this.toolbarMode) return [true, true]; // Palette: zwei gleichmäßig verteilte Eingänge
+    const s = getInputSlots(this.inputCount);
     return Array.from({ length: s[s.length - 1] + 1 }, (_, i) => s.includes(i));
   }
 }

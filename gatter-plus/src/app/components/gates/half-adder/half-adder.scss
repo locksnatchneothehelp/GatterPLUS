@@ -18,7 +18,7 @@
   .symbol { font-size: 13px; }
   .pin-label, .pin-label-out { display: none; }
   .pin-row, .pin-row-out { height: auto; }
-  .pins-in, .pins-out { padding: 4px 0; justify-content: space-around; }
+  .pins-in, .pins-out { padding: 10px 0; justify-content: space-around; } /* Körper 34 px hoch */
 }
 
 /* Simulations-Zustand HIGH (bezogen auf S) */
