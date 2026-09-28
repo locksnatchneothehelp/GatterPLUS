@@ -227,3 +227,8 @@
     color: var(--power-on-icon);
   }
 }
+
+/* Schmale Fenster: Hinweis ausblenden, sonst bekommt die Toolbar einen Scrollbalken */
+@media (max-width: 1520px) {
+  .sim-hint { display: none; }
+}
