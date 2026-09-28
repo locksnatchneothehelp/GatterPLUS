@@ -112,6 +112,13 @@
   .wire-line { pointer-events: none; }
 }
 
+/* Phase 7: CSS-Stummel der Bauteile auf dem Whiteboard ausblenden – die
+   Stummel-Ebene zeichnet sie als SVG (getGateStubs), sonst liegen sie je nach
+   Pixel-Rundung sichtbar neben der Leitung. Palette (toolbarMode) unverändert. */
+.placed-gate ::ng-deep .wire {
+  visibility: hidden;
+}
+
 /* Ausgewählte Leitung: blau hervorgehoben */
 .wire-line.wire-selected {
   stroke: #3b82f6;

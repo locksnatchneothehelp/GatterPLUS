@@ -1786,27 +1786,33 @@ export class Whiteboard implements OnDestroy {
   }
 
   /**
-   * Punktstrings der Anschluss-Stummel einer Leitung (Pin → Bauteil-Körper).
+   * Anschluss-Stummel ALLER Pins eines Bauteils (Pin → Bauteil-Körper) als SVG.
    *
-   * Die Stummel gehören zur Bauteil-Grafik (CSS `.wire` in der Komponente) und
-   * liegen über der Leitungs-Ebene; ohne Überzeichnung bliebe dort ein dunkles
-   * Stück, obwohl die Leitung z. B. HIGH (grün) ist. Die eigene Stummel-Ebene
-   * über den Bauteilen zeichnet deshalb nur diese Stücke in Leitungsfarbe.
-   * Abzweige (branchPoint) haben am Start keinen eigenen Stummel.
+   * Phase 7: Auf dem Whiteboard sind die CSS-Stummel der Bauteile (`.wire`)
+   * ausgeblendet – HTML und SVG werden je nach Browser/Anzeigeskalierung
+   * unterschiedlich auf Pixel gerundet, der CSS-Stummel lag dann sichtbar neben
+   * der Leitung. So liegen Stummel und Leitung in derselben SVG-Technik.
+   * Farbe: Ausgang nach Signal, Eingang nach seiner Leitung; ausgewählte
+   * Leitung blau.
    */
-  getWireStubPointStrings(wire: WireConnection): string[] {
-    const from = this.gates.find(g => g.id === wire.fromGateId);
-    const to   = this.gates.find(g => g.id === wire.toGateId);
-    if (!from || !to) return [];
-    // Stummel-Länge laut Komponenten-CSS: NOT 8 px (Ausgang hinter dem Invertierkreis), sonst 12 px
-    const len = (g: GateInstance) => (g.type === 'not' ? 8 : 12);
-    const stub = (g: GateInstance, kind: 'input' | 'output', pin: number) => {
-      const p = getPinWorldPos(g, kind, pin), d = getPinDirection(g, kind);
-      return `${p.x},${p.y} ${p.x - d.dx * len(g)},${p.y - d.dy * len(g)}`;
+  getGateStubs(gate: GateInstance): { points: string; high: boolean | null; wireId: string | null }[] {
+    // Stummel-Länge laut Komponenten-CSS: NOT 8 px (Invertierkreis), sonst 12 px
+    const len = gate.type === 'not' ? 8 : 12;
+    const offsets = getGatePinOffsets(gate);
+    const stub = (kind: 'input' | 'output', pin: number) => {
+      const p = getPinWorldPos(gate, kind, pin), d = getPinDirection(gate, kind);
+      return `${p.x},${p.y} ${p.x - d.dx * len},${p.y - d.dy * len}`;
     };
-    const stubs = [stub(to, 'input', wire.toPinIndex)];
-    if (!wire.branchPoint) stubs.push(stub(from, 'output', wire.fromPinIndex));
-    return stubs;
+    const res: { points: string; high: boolean | null; wireId: string | null }[] = [];
+    offsets.outputs.forEach((_, i) => {
+      const wire = this.wires.find(w => w.fromGateId === gate.id && w.fromPinIndex === i && !w.branchPoint);
+      res.push({ points: stub('output', i), high: this.getSignalOutput(gate.id, i), wireId: wire?.id ?? null });
+    });
+    offsets.inputs.forEach((_, i) => {
+      const wire = this.wires.find(w => w.toGateId === gate.id && w.toPinIndex === i);
+      res.push({ points: stub('input', i), high: wire ? this.isWireHigh(wire) : null, wireId: wire?.id ?? null });
+    });
+    return res;
   }
 
   /**

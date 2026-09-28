@@ -246,16 +246,16 @@
 
   <!-- ── Anschluss-Stummel in Leitungsfarbe (ÜBER den Bauteilen) ───────────
        Die Stummel sind Teil der Bauteil-Grafik und würden die Leitungsfarbe
-       sonst kurz vor dem Gehäuse unterbrechen (siehe getWireStubPointStrings). -->
+       sonst kurz vor dem Gehäuse unterbrechen (siehe getGateStubs). -->
   <svg class="wires-layer wire-stubs-layer" [style.transform]="getGatesLayerTransform()">
-    @for (wire of wires; track wire.id) {
-      @for (pts of getWireStubPointStrings(wire); track $index) {
+    @for (gate of gates; track gate.id) {
+      @for (s of getGateStubs(gate); track $index) {
         <polyline
-          [attr.points]="pts"
+          [attr.points]="s.points"
           class="wire-line"
-          [class.wire-high]="simulationMode && isWireHigh(wire)"
-          [class.wire-low]="simulationMode && !isWireHigh(wire)"
-          [class.wire-selected]="wire.id === selectedWireId"
+          [class.wire-high]="simulationMode && s.high === true"
+          [class.wire-low]="simulationMode && s.wireId !== null && s.high !== true"
+          [class.wire-selected]="s.wireId !== null && s.wireId === selectedWireId"
         />
       }
     }
