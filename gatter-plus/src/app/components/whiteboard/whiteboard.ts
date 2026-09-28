@@ -883,19 +883,10 @@ export class Whiteboard implements OnDestroy {
       const screenDx = event.clientX - this.gateDragState.startMouseX;
       const screenDy = event.clientY - this.gateDragState.startMouseY;
       // Bildschirm-Pixel → logische Koordinaten (sonst läuft das Bauteil bei Zoom ≠ 100 % davon)
-      let dx = screenDx / this.zoom;
-      let dy = screenDy / this.zoom;
-      // Rasterschritte: das gezogene Bauteil rastet ein, alle anderen folgen mit demselben Delta
-      const dragged = this.gates.find(g => g.id === this.gateDragState!.gateId);
-      if (dragged) {
-        const snapped = snapGateToGrid({ ...dragged, x: this.gateDragState.originX + dx, y: this.gateDragState.originY + dy });
-        dx = snapped.x - this.gateDragState.originX;
-        dy = snapped.y - this.gateDragState.originY;
-      }
-      // Nur der Zuwachs seit dem letzten mousemove — für Werte, die am aktuellen
-      // (schon verschobenen) Zustand hängen, z. B. Abzweigpunkte
-      const stepX = dx - this.gateDragState.appliedDx;
-      const stepY = dy - this.gateDragState.appliedDy;
+      // Frei der Maus folgen (kein Rastersprung pro Bewegung – das ließ Bauteile an
+      // Rastergrenzen hin- und herspringen); eingerastet wird weich beim Loslassen.
+      const dx = screenDx / this.zoom;
+      const dy = screenDy / this.zoom;
       if (!this.gateDragStarted && Math.hypot(screenDx, screenDy) > 4) {
         // Zustand EINMALIG vor dem ersten tatsächlichen Verschiebevorgang sichern,
         // damit Undo das Bauteil an die ursprüngliche Position zurückbewegt.
@@ -903,24 +894,63 @@ export class Whiteboard implements OnDestroy {
         this.gateDragStarted = true;
         this.fastRouting     = true; // A* erst beim Loslassen (s. onMouseUp)
       }
-      if (this.gateDragStarted) {
-        this.gateDragState.appliedDx = dx;
-        this.gateDragState.appliedDy = dy;
-        const movedId = this.gateDragState.gateId;
-        const newX    = this.gateDragState.originX + dx;
-        const newY    = this.gateDragState.originY + dy;
+      if (this.gateDragStarted) this.applyGateDrag(this.gateDragState, dx, dy);
+    }
+
+    // Leitungs-Vorschau aktualisieren
+    if (this.wireDrawing) {
+      const { lx, ly } = this.toLogical(event);
+      this.tentativeX = lx;
+      this.tentativeY = ly;
+    }
+
+    // Cursor-Hinweis im Pan-Modus (nicht während Ziehen/Verschieben)
+    if (this.toolMode === 'pan' && !this.isPanning && !this.gateDragState) {
+      const { lx, ly } = this.toLogical(event);
+      const gate = this.findGateAt(lx, ly);
+      this.hoverCursor = this.simulationMode
+        ? (gate?.type === 'input' ? 'pointer' : null)
+        : (this.findStubAt(lx, ly, 'output', true) || this.findStubAt(lx, ly, 'input', true)) ? 'negate'
+        : gate ? 'move' : null;
+    } else if (this.toolMode !== 'pan') {
+      this.hoverCursor = null;
+    }
+
+    // Leitungs-Modus: Leitung unter der Maus hervorheben (zeigt, wovon abgezweigt wird)
+    if (this.toolMode === 'wire') {
+      const { lx, ly } = this.toLogical(event);
+      this.hoverWireId = this.findNearestPin(lx, ly) ? null : (this.findWireHitAt(lx, ly)?.wire.id ?? null);
+    }
+  }
+
+  /**
+   * Verschiebt die gezogenen Bauteile um (dx, dy) gegenüber ihrer Startposition
+   * und führt die angeschlossenen Leitungen nach. Beim Ziehen frei, beim
+   * Loslassen schrittweise bis zum Rasterpunkt (weiches Einrasten, onMouseUp).
+   */
+  private applyGateDrag(drag: GateDragState, dx: number, dy: number): void {
+      // Nur der Zuwachs seit dem letzten Aufruf — für Werte, die am aktuellen
+      // (schon verschobenen) Zustand hängen, z. B. Abzweigpunkte
+      const stepX = dx - drag.appliedDx;
+      const stepY = dy - drag.appliedDy;
+      {
+        drag.appliedDx = dx;
+        drag.appliedDy = dy;
+        const movedId = drag.gateId;
+        const newX    = drag.originX + dx;
+        const newY    = drag.originY + dy;
 
         // Alle selektierten Bauteile um dasselbe Delta verschieben
         const updatedGates = this.gates.map(g => {
           if (g.id === movedId) return { ...g, x: newX, y: newY };
-          const origin = this.gateDragState!.otherOrigins.get(g.id);
+          const origin = drag.otherOrigins.get(g.id);
           if (origin) return { ...g, x: origin.ox + dx, y: origin.oy + dy };
           return g;
         });
         this.gates = updatedGates;
 
         // Waypoints aller angeschlossenen Leitungen neu berechnen
-        const movedIds = new Set([movedId, ...this.gateDragState.otherOrigins.keys()]);
+        const movedIds = new Set([movedId, ...drag.otherOrigins.keys()]);
         const updatedWires = this.wires.map(wire => {
           const fromMoved = movedIds.has(wire.fromGateId);
           const toMoved   = movedIds.has(wire.toGateId);
@@ -981,32 +1011,6 @@ export class Whiteboard implements OnDestroy {
         });
         if (this.simulationMode) this.recomputeSimulation();
       }
-    }
-
-    // Leitungs-Vorschau aktualisieren
-    if (this.wireDrawing) {
-      const { lx, ly } = this.toLogical(event);
-      this.tentativeX = lx;
-      this.tentativeY = ly;
-    }
-
-    // Cursor-Hinweis im Pan-Modus (nicht während Ziehen/Verschieben)
-    if (this.toolMode === 'pan' && !this.isPanning && !this.gateDragState) {
-      const { lx, ly } = this.toLogical(event);
-      const gate = this.findGateAt(lx, ly);
-      this.hoverCursor = this.simulationMode
-        ? (gate?.type === 'input' ? 'pointer' : null)
-        : (this.findStubAt(lx, ly, 'output', true) || this.findStubAt(lx, ly, 'input', true)) ? 'negate'
-        : gate ? 'move' : null;
-    } else if (this.toolMode !== 'pan') {
-      this.hoverCursor = null;
-    }
-
-    // Leitungs-Modus: Leitung unter der Maus hervorheben (zeigt, wovon abgezweigt wird)
-    if (this.toolMode === 'wire') {
-      const { lx, ly } = this.toLogical(event);
-      this.hoverWireId = this.findNearestPin(lx, ly) ? null : (this.findWireHitAt(lx, ly)?.wire.id ?? null);
-    }
   }
 
   @HostListener('document:mouseup', ['$event'])
@@ -1045,24 +1049,7 @@ export class Whiteboard implements OnDestroy {
       this.gateDragState   = null;
       this.gateDragStarted = false;
       this.fastRouting     = false;
-      // Nicht auf einem anderen Bauteil ablegen: zurück an die Startposition
-      // (Zustand von vor dem Ziehen – pushHistory beim ersten Bewegen)
-      if (dragged) {
-        const moved = new Set([drag.gateId, ...drag.otherOrigins.keys()]);
-        if (this.overlapsOthers(this.gates.filter(g => moved.has(g.id)), moved)) {
-          const snap = this.historyService.pop();
-          if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
-          this.showError('Dort liegt schon ein Bauteil, zurück an die letzte Position.');
-        } else {
-          // Bereinigten Verlauf (ohne Rückläufer) als feste Punkte übernehmen,
-          // damit keine Griffe neben der Leitung im Leeren hängen
-          this.wires = this.wires.map(w => {
-            if (!w.manualPoints?.length || (!moved.has(w.fromGateId) && !moved.has(w.toGateId))) return w;
-            const inner = (this.getWireDisplayPoints(w) ?? []).slice(1, -1);
-            return { ...w, manualPoints: inner.length > 0 ? inner : undefined };
-          });
-        }
-      }
+      if (dragged) this.snapDraggedGates(drag);
       return;
     }
 
@@ -1094,6 +1081,58 @@ export class Whiteboard implements OnDestroy {
     this.selectedWireId  = wire.id;
     this.selectedGateId  = null;
     this.selectedGateIds.clear();
+  }
+
+  // ─── Weiches Einrasten nach dem Ziehen ─────────────────────────────────────
+
+  /**
+   * Nach dem Loslassen gleiten die gezogenen Bauteile in SNAP_MS auf den
+   * nächsten Rasterpunkt (Leitungen gleiten mit, da applyGateDrag schrittweise
+   * aufgerufen wird). Danach: nicht auf einem anderen Bauteil ablegen (zurück
+   * an die Startposition) bzw. Leitungsverläufe bereinigen.
+   */
+  private snapDraggedGates(drag: GateDragState): void {
+    const SNAP_MS = 120;
+    const dragged = this.gates.find(g => g.id === drag.gateId);
+    const from = { dx: drag.appliedDx, dy: drag.appliedDy };
+    const target = dragged
+      ? (() => { const s = snapGateToGrid(dragged); return { dx: s.x - drag.originX, dy: s.y - drag.originY }; })()
+      : from;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = reduce ? 1 : Math.min(1, (now - start) / SNAP_MS);
+      const e = 1 - (1 - t) * (1 - t); // sanft auslaufen
+      this.applyGateDrag(drag, from.dx + (target.dx - from.dx) * e, from.dy + (target.dy - from.dy) * e);
+      if (t < 1) { requestAnimationFrame(step); this.cdr.markForCheck(); return; }
+      this.finishGateDrag(drag);
+      this.cdr.markForCheck(); // zoneless: rAF löst keine Änderungserkennung aus
+    };
+    requestAnimationFrame(step);
+  }
+
+  /** Abschluss nach dem Einrasten: Ablegeprüfung und saubere Leitungsverläufe. */
+  private finishGateDrag(drag: GateDragState): void {
+    const moved = new Set([drag.gateId, ...drag.otherOrigins.keys()]);
+    // Nicht auf einem anderen Bauteil ablegen: zurück an die Startposition
+    // (Zustand von vor dem Ziehen – pushHistory beim ersten Bewegen)
+    if (this.overlapsOthers(this.gates.filter(g => moved.has(g.id)), moved)) {
+      const snap = this.historyService.pop();
+      if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
+      this.showError('Dort liegt schon ein Bauteil, zurück an die letzte Position.');
+      return;
+    }
+    // Bereinigten Verlauf (ohne Rückläufer) als feste Punkte übernehmen, damit
+    // keine Griffe im Leeren hängen; auf ganze Pixel runden (beim freien Ziehen
+    // summieren sich Kommaschritte auf Knick- und Abzweigpunkte)
+    const r = (p: { x: number; y: number }) => ({ x: Math.round(p.x), y: Math.round(p.y) });
+    this.wires = this.wires.map(w => {
+      if (!moved.has(w.fromGateId) && !moved.has(w.toGateId)) return w;
+      const branchPoint = w.branchPoint && r(w.branchPoint);
+      if (!w.manualPoints?.length) return branchPoint ? { ...w, branchPoint } : w;
+      const inner = (this.getWireDisplayPoints({ ...w, branchPoint, manualPoints: w.manualPoints.map(r) }) ?? []).slice(1, -1);
+      return { ...w, branchPoint, manualPoints: inner.length > 0 ? inner : undefined };
+    });
   }
 
   // ─── Überlappung + Fehlermeldung ───────────────────────────────────────────
