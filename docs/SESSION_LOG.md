@@ -62,7 +62,9 @@
 | 20:22 | `e076954` | Nicht aufeinander ablegen (zurück an Startposition + rote Meldung), Einfügen an freier Stelle, Leitungs-Sporne entfernt (`removeBacktracks`) |
 | 20:25 | `d9f607c` | Dunkles Design: Graphit-Schema, dunkle Bauteile, lesbare Simulationszustände |
 | 20:26 | `3453c0d` | Projektanalyse nachgezogen |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **dritter Push** |
+| 20:34 | `cb0009f` | Sitzungsprotokoll ergänzt · **dritter Push** |
+| 20:36 | `08be49a` | Eigenschaften-Panel: Mülltonne bei Bauteilen und Leitungen entfernt (Löschen per Entf), Verneinung mit ausgeschriebenen Beschriftungen „Eingang/Eingänge“, „Ausgang/Ausgänge“ über den Buttons, Beschreibungen und Zustandstexte in schlichtem Deutsch ohne englische Begriffe (1/0 statt HIGH/LOW, „Exklusiv-ODER-Gatter“, „JK-Flipflop“) |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **vierter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
