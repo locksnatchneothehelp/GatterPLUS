@@ -81,7 +81,11 @@
 | 22:03 | `4c9ccca` | Sitzungsprotokoll ergänzt · **achter Push** |
 | 22:12 | `ef683ff` | Simulationsstart „Strom fließt“: Leitungen zeichnen sich von der Quelle zum Ziel, gestaffelt nach Signaltiefe (0,32 s je Stufe, max. ~2,4 s, Rückkopplungen gekappt); Gatter bleiben grau, bis ihr Signal ankommt (`simReveal`, CSS-Animationen) |
 | 22:12 | `2e3d386` | Power-Knopf: grüner Ring füllt sich beim Start (rückwärts beim Stoppen), grüner Puls während der Simulation; Knopf etwas vom Rand abgerückt |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **neunter Push** |
+| 22:22 | `506e46c` | Sitzungsprotokoll ergänzt · **neunter Push** |
+| 22:30 | `f8b3ea7` | Stromfluss-Animation in leuchtendem Himmelblau (`--flow-color`) statt kaum sichtbarem Grau, danach echte Signalfarbe |
+| 22:30 | `b40c3a6` | Power-Knopf: deutlicherer Puls (dauerhaftes Leuchten + Welle bis 14 px, alle 1,6 s) |
+| 22:33 | `a075e83` | Willkommensbildschirm beim Start (`components/welcome-dialog/`, Inhalt noch Platzhalter; ✕/Esc/„Los geht's“) |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **zehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
