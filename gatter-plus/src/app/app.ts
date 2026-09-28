@@ -38,7 +38,7 @@ export class App implements OnInit {
 
   activeTool:    ToolMode = 'pan';
   simulationMode = false;
-  /** Willkommensbildschirm beim Start (schließt per ✕, Esc oder „Los geht's“). */
+  /** Willkommensbildschirm beim Start (schließt per Esc oder „Los geht's“). */
   welcomeOpen = true;
 
   /** Beim Start das gespeicherte Theme laden und anwenden. */

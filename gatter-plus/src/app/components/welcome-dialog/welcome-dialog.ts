@@ -3,7 +3,7 @@ import { Component, EventEmitter, HostListener, Output } from '@angular/core';
 /**
  * Willkommensbildschirm beim Start der Software.
  *
- * Wird von der App beim Start eingeblendet und schließt per ✕, Esc oder den
+ * Wird von der App beim Start eingeblendet und schließt per Esc oder den
  * Knopf „Los geht's“ (Output `close`). Der Inhalt ist vorerst ein Platzhalter.
  */
 @Component({
