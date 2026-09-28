@@ -78,6 +78,9 @@
   --text-secondary:      #475569;
   --text-muted:          #64748b;
 
+  /* Stromfarbe der Start-Animation („Strom fließt“) */
+  --flow-color:          #0ea5e9;
+
   /* Fehlermeldungen (z. B. „Platz belegt“) */
   --error-bg:            #fee2e2;
   --error-border:        #f87171;
@@ -107,6 +110,7 @@
 :root[data-theme="dark"] {
   /* Ruhiges, neutrales Graphit statt gesättigtem Marineblau; gedämpftes
      Bernstein als Bauteil-/Knopffarbe, ruhiges Blau als Akzent. */
+  --flow-color:          #38bdf8;
   --error-bg:            #3b1519;
   --error-border:        #b4454c;
   --error-text:          #fca5a5;
