@@ -49,7 +49,11 @@
 | 19:13 | `9db8438` | **7.6** Feste Punkte bearbeiten: Griffe ziehen/entfernen/einfügen, Abzweige wandern mit, Strg+Z |
 | 19:14 | `d09bde3` | Doku: Phase 7 abgeschlossen (Plan, CLAUDE.md, Projektanalyse) |
 | 19:14 | `4d66c95` | Doku: keydown-Stolperstein im Plan richtig eingeordnet |
-| – | (dieser) | Sitzungsprotokoll · **Push** |
+| 19:20 | `473764a` | Sitzungsprotokoll · **erster Push** der Session |
+| 19:35 | `60c22c6` | Nutzer-Feedback „Kabel liegt nicht perfekt auf dem anderen“: Anschluss-Stummel aller Pins als SVG (`getGateStubs`), CSS-Stummel auf dem Whiteboard ausgeblendet (HTML/SVG runden je nach Anzeigeskalierung verschieden) |
+| 19:35 | `db87c7f` | „Alles anzeigen“: Schaltung füllt 60 % der Fläche, max. 200 % (Nutzer-Screenshot ~166 %) |
+| 19:59 | `0cab6d5` | Verneinung: Kreis direkt am Gehäuse (Klickfläche = Stummel, vor Bauteil-Auswahl geprüft), Buttons „Verneinung“ je Ein-/Ausgang im Eigenschaften-Panel |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **zweiter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
@@ -63,7 +67,7 @@
 - Leitungen sind nur über den 2-px-Strich anklickbar (Auswahl, Doppelklick zum Einfügen) – breitere unsichtbare Klickfläche wäre angenehmer.
 - „Verlauf automatisch“ im Eigenschaften-Panel entfernt die festen Punkte (→ einfache Z-Form); Name ggf. anpassen.
 - Branch `phase7-raster` kann gelöscht werden.
-- Handtest durch den Nutzer im echten Browser (Verlegen, Bearbeiten) steht aus.
+- Handtest durch den Nutzer: Verlegen läuft laut Nutzer „extrem gut“; Stummel-Versatz (nur bei seiner Anzeigeskalierung sichtbar, headless nicht nachstellbar) nach dem SVG-Umbau noch vom Nutzer zu bestätigen.
 
 ---
 
