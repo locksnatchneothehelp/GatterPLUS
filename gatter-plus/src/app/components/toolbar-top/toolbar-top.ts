@@ -49,17 +49,18 @@ export class ToolbarTop {
   /** Wird emittiert, wenn der Benutzer Pan oder Leitung auswählt. */
   @Output() toolSelected = new EventEmitter<ToolMode>();
 
+  /** Klick auf ein Bauteil während der Simulation – App zeigt eine Fehlermeldung. */
+  @Output() placeBlocked = new EventEmitter<void>();
+
   /**
    * Startet einen Drag-Vorgang aus der Palette.
    * Kein document:mouseup hier – das Whiteboard übernimmt das Cleanup.
    *
-   * Während der Simulation läuft das Platzieren neuer Bauteile nicht mehr
-   * sinnvoll (die Buttons sind dann auch visuell grau/deaktiviert) — der
-   * Guard hier stellt sicher, dass kein Drag startet, selbst wenn der Klick
-   * trotz pointer-events:none irgendwie durchkommt.
+   * Während der Simulation können keine Bauteile platziert werden (die Buttons
+   * sind dann grau): Statt eines Drags wird placeBlocked gemeldet.
    */
   onGateMouseDown(event: MouseEvent, gateType: GateType): void {
-    if (this.simulationMode) return;
+    if (this.simulationMode) { this.placeBlocked.emit(); return; }
     event.preventDefault();
     this.dragState.startDrag(gateType);
   }

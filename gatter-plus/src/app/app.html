@@ -32,6 +32,7 @@
     [activeTool]="activeTool"
     (simulationToggle)="onSimulationToggle()"
     (toolSelected)="onToolSelected($event)"
+    (placeBlocked)="whiteboardRef.showError('Während der Simulation können keine Bauteile platziert werden.')"
   ></app-toolbar-top>
 
   <!-- Hauptbereich: Whiteboard + Properties Panel -->

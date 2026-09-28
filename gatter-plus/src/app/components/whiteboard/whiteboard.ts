@@ -1143,7 +1143,7 @@ export class Whiteboard implements OnDestroy {
   }
 
   /** Rote Meldung an der Stelle der Tastenhilfe, verschwindet nach 2,5 s. */
-  private showError(message: string): void {
+  showError(message: string): void {
     this.errorMessage = message;
     if (this.errorTimer) clearTimeout(this.errorTimer);
     this.errorTimer = setTimeout(() => {

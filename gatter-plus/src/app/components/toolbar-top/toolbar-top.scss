@@ -113,14 +113,12 @@
  * Deaktivierter Zustand: nur während die Simulation läuft.
  * "Nur deaktivierte Elemente dürfen grau wirken" — hier via Graustufen-Filter
  * auf dem gesamten Palette-Item (färbt das jetzt tatsächlich goldene
- * Bauteil-Icon grau, der Kasten selbst bleibt ohnehin farblos). Zusätzlich
- * pointer-events:none und ein Guard in onGateMouseDown() verhindern das
- * tatsächliche Platzieren.
+ * Bauteil-Icon grau, der Kasten selbst bleibt ohnehin farblos). Klicks kommen
+ * an: onGateMouseDown() platziert dann nichts, sondern meldet eine Fehlermeldung.
  */
 .palette-item.disabled {
   filter: grayscale(1) opacity(0.55);
   cursor: not-allowed;
-  pointer-events: none;
 
   &:hover {
     background: none; /* kein Hover-Feedback auf deaktivierten Items */
