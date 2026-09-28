@@ -1093,7 +1093,7 @@ export class Whiteboard implements OnDestroy {
         if (this.overlapsOthers(this.gates.filter(g => moved.has(g.id)), moved)) {
           const snap = this.historyService.pop();
           if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
-          this.showError('Dort liegt schon ein Bauteil – zurück an die Startposition.');
+          this.showError('Dort liegt schon ein Bauteil, zurück an die letzte Position.');
         } else {
           // Bereinigten Verlauf (ohne Rückläufer) als feste Punkte übernehmen,
           // damit keine Griffe neben der Leitung im Leeren hängen
@@ -1681,7 +1681,7 @@ export class Whiteboard implements OnDestroy {
     gate.y = Math.round(ly - dim.h / 2);
     const placed = snapGateToGrid(gate);
     if (this.overlapsOthers([placed], new Set())) {
-      this.showError('Dort liegt schon ein Bauteil – nicht platziert.');
+      this.showError('Dort liegt schon ein Bauteil, nicht platziert.');
       return;
     }
     this.gateIdCounter++;
