@@ -1,25 +1,33 @@
 import { gatesOverlap, getPinDirection, getPinWorldPos, manualWirePath } from './gate.model';
-import { halfAdderExample } from './example-circuit';
+import { flipFlopExample } from './example-circuit';
 import { SimulationService } from '../services/simulation.service';
 
-describe('Beispielschaltung Halbaddierer', () => {
-  it('rechnet Summe und Übertrag richtig (alle 4 Fälle)', () => {
-    const { gates, wires } = halfAdderExample();
+describe('Beispielschaltung Flip-Flop', () => {
+  it('setzt, speichert und setzt zurück', () => {
+    const { gates, wires } = flipFlopExample();
     const sim = new SimulationService();
-    for (const [a, b] of [[0, 0], [0, 1], [1, 0], [1, 1]]) {
-      const gs = gates.map(g => g.label === 'A' ? { ...g, inputValue: a === 1 } : g.label === 'B' ? { ...g, inputValue: b === 1 } : g);
-      sim.clearState();
-      const s = sim.computeSignals(gs, wires);
-      const out = (label: string) => s.get(gs.find(g => g.label === label)!.id)!.inputSignals[0];
-      expect([out('Summe'), out('Übertrag')], `${a}+${b}`).toEqual([(a ^ b) === 1, (a & b) === 1]);
+    sim.clearState();
+    // [oberer Schalter, unterer Schalter] → [obere Anzeige, untere Anzeige]
+    const steps: [boolean, boolean, boolean, boolean][] = [
+      [true,  false, true,  false], // setzen
+      [false, false, true,  false], // speichern
+      [false, true,  false, true ], // zurücksetzen
+      [false, false, false, true ], // speichern
+    ];
+    for (const [s, r, q, qn] of steps) {
+      const gs = gates.map(g => g.id === 'gate-2' ? { ...g, inputValue: s } : g.id === 'gate-3' ? { ...g, inputValue: r } : g);
+      const sig = sim.computeSignals(gs, wires);
+      const out = (id: string) => sig.get(id)!.inputSignals[0];
+      expect([out('gate-8'), out('gate-9')], `S=${+s} R=${+r}`).toEqual([q, qn]);
     }
   });
 
   it('Leitungen verschiedener Signale liegen nicht aufeinander', () => {
-    const { gates, wires } = halfAdderExample();
+    const { gates, wires } = flipFlopExample();
     const G = new Map(gates.map(g => [g.id, g]));
     const segs = wires.flatMap(w => {
-      const pts = manualWirePath(getPinWorldPos(G.get(w.fromGateId)!, 'output', 0), getPinDirection(G.get(w.fromGateId)!, 'output'),
+      const from = G.get(w.fromGateId)!;
+      const pts = manualWirePath(w.branchPoint ?? getPinWorldPos(from, 'output', 0), w.fromDir ?? getPinDirection(from, 'output'),
         w.manualPoints ?? [], getPinWorldPos(G.get(w.toGateId)!, 'input', w.toPinIndex), getPinDirection(G.get(w.toGateId)!, 'input'));
       return pts.slice(1).map((p, i) => ({ net: w.fromGateId, a: pts[i], b: p }));
     });
@@ -36,7 +44,7 @@ describe('Beispielschaltung Halbaddierer', () => {
   });
 
   it('keine Bauteile übereinander', () => {
-    const { gates } = halfAdderExample();
+    const { gates } = flipFlopExample();
     expect(gates.some((g, i) => gates.slice(i + 1).some(h => gatesOverlap(g, h)))).toBe(false);
   });
 });

@@ -10,7 +10,7 @@ import { ThemeService }  from './services/theme.service';
 import { ComponentSignalState } from './services/simulation.service';
 import { PROJECT_FILE_EXTENSION, parseProject, serializeProject } from './models/project-file';
 import { parseLogikSim } from './models/logiksim-file';
-import { halfAdderExample } from './models/example-circuit';
+import { flipFlopExample } from './models/example-circuit';
 
 /**
  * Root-Komponente von GatterPLUS.
@@ -45,12 +45,12 @@ export class App implements OnInit {
    */
   welcomeOpen = showWelcomeOnStart();
 
-  /** Willkommensbildschirm: Beispielschaltung (Halbaddierer) laden. */
+  /** Willkommensbildschirm: Beispielschaltung (Flip-Flop) laden. */
   onWelcomeExample(): void {
     if (this.whiteboardRef.gates.length > 0
         && !confirm('Beispiel öffnen?\n\nDie aktuelle Schaltung wird ersetzt (Rückgängig mit Strg+Z).')) return;
     this.welcomeOpen = false;
-    this.whiteboardRef.loadProject(halfAdderExample());
+    this.whiteboardRef.loadProject(flipFlopExample());
     this.whiteboardRef.zoomToFit(); // wie „Alles anzeigen“: ruhig, nichts unter der Minimap
     this.fileHandle     = null;
     this.simulationMode = this.whiteboardRef.simulationMode;
