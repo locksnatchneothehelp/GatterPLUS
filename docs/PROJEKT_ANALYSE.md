@@ -105,7 +105,7 @@ interface WireConnection {
 | `input` | 72×48 | – | 1 | `inputValue` |
 | `output` | 72×48 | 1 | – | – |
 | `clock-gen` | 72×48 | – | 1 | `inputValue`, `clockPeriodMs` |
-| `text-label` | 72×24 (Text mittig, läuft symmetrisch über) | – | – | `label` |
+| `text-label` | Breite `textLabelWidth(label)` (mind. 72, wächst mit dem Text, Rastervielfaches; Mitte bleibt bei Textänderung in `updateGate`) × 24 | – | – | `label` |
 
 - **Raster (Phase 7):** `GRID = 24`. Pins eines Bauteils liegen untereinander auf Vielfachen von `GRID` (Pin in der Mitte einer 24-px-Zeile, Breiten 72/96) → nach jeder Drehung auf dem Raster, sobald ein Pin darauf liegt. and/or/xor: `getInputSlots(n)` – bei gerader Anzahl bleibt der Mittelplatz frei, Ausgang auf der Spiegelachse. `snapGateToGrid(gate)` verschiebt minimal, sodass der erste Pin (ohne Pins: die Mitte) auf dem Raster liegt. Aufrufer: `placeGate`, Drag: `onMouseMove` → `applyGateDrag` folgt frei, beim Loslassen gleitet `snapDraggedGates` in 120 ms auf das Raster (Gruppe mit demselben Delta), dann `finishGateDrag` (Ablegeschutz, feste Punkte runden), `updateGate` (bei `rotation`/`inputCount`), LogikSim-Import (Textfelder); `pasteClipboard` versetzt um `GRID`.
 - Pin-Offsets sind **manuell an das CSS-Layout** der Bauteil-Templates angeglichen (feste 24-px-Zeilen `.slot`/`.pin-row`, siehe `getGatePinOffsets`). Wer Bauteil-CSS ändert, muss die Offsets anpassen; Test `snapGateToGrid` in `gate.model.spec.ts` prüft Rasterlage und Spiegelsymmetrie.

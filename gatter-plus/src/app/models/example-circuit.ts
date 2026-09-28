@@ -1,6 +1,6 @@
 import {
   GateInstance, GateType, WireConnection,
-  createGateInstance, getPinWorldPos, snapGateToGrid,
+  createGateInstance, getPinWorldPos, snapGateToGrid, textLabelWidth,
 } from './gate.model';
 import { ProjectData } from './project-file';
 
@@ -12,7 +12,8 @@ import { ProjectData } from './project-file';
 export function flipFlopExample(): ProjectData {
   const gate = (n: number, type: GateType, x: number, y: number, extra: Partial<GateInstance> = {}): GateInstance =>
     snapGateToGrid({ ...createGateInstance(`gate-${n}`, type, x, y), ...extra });
-  const title = gate(1, 'text-label', 396, 12, { label: 'Flip-Flop Schaltung' });
+  const name  = 'Flip-Flop Schaltung';
+  const title = gate(1, 'text-label', 432 - textLabelWidth(name) / 2, 12, { label: name }); // Mitte x = 432
   const s     = gate(2, 'input',   48,  72);
   const r     = gate(3, 'input',   48, 312);
   const nor1  = gate(4, 'or',     312,  84, { negatedOutputs: [0] });

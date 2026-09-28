@@ -17,6 +17,9 @@ export class TextLabel {
   /** Anzuzeigender Beschriftungstext */
   @Input() label = 'Label';
 
+  /** Breite aus dem Modell (textLabelWidth), damit Box, Auswahl und Klickfläche übereinstimmen */
+  @Input() width = 72;
+
   /** Kompakter Toolbar-Modus */
   @Input() toolbarMode = false;
 }

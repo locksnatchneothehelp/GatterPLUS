@@ -126,6 +126,7 @@
           } @else {
             <app-text-label
               [label]="gate.label ?? 'Label'"
+              [width]="gateWidth(gate)"
             ></app-text-label>
           }
         }

@@ -583,9 +583,13 @@ export class Whiteboard implements OnDestroy {
     const periodChanged = changes.clockPeriodMs !== undefined;
     // Drehung/Eingangsanzahl verschieben die Pins → wieder aufs Raster (Phase 7)
     const resnap = changes.rotation !== undefined || changes.inputCount !== undefined;
-    this.gates = this.gates.map(g =>
-      g.id !== changes.id ? g : resnap ? snapGateToGrid({ ...g, ...changes }) : { ...g, ...changes }
-    );
+    this.gates = this.gates.map(g => {
+      if (g.id !== changes.id) return g;
+      const next = { ...g, ...changes };
+      // Textfeld wird mit dem Text breiter/schmaler → Mitte bleibt stehen
+      if (g.type === 'text-label') next.x = g.x + (getGateDimensions(g).w - getGateDimensions(next).w) / 2;
+      return resnap ? snapGateToGrid(next) : next;
+    });
     if (periodChanged) {
       const gate = this.gates.find(g => g.id === changes.id);
       if (gate) this.restartClockInterval(gate);
@@ -1721,6 +1725,11 @@ export class Whiteboard implements OnDestroy {
 
   getGatesLayerTransform(): string {
     return `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
+  }
+
+  /** Breite eines Bauteils im Modell (Textfelder: wächst mit dem Text). */
+  gateWidth(gate: GateInstance): number {
+    return getGateDimensions(gate).w;
   }
 
   getGateTransform(gate: GateInstance): string {

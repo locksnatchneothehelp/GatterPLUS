@@ -181,15 +181,25 @@ export const GATE_BASE_SIZE: Record<GateType, { w: number; h: number }> = {
   input:        { w: 72, h: 48 },
   output:       { w: 72, h: 48 },
   'clock-gen':  { w: 72, h: 48 },
-  'text-label': { w: 72, h: 24 }, // Text läuft mittig über (CSS), Mitte rastet ein
+  'text-label': { w: 72, h: 24 }, // Mindestbreite; wächst mit dem Text, Mitte rastet ein
 };
+
+/** Zeichenbreite der Textfeld-Schrift (12 px monospace, Courier New = 0,6 em; Consolas schmaler). */
+const TEXT_CHAR_PX = 7.2;
+
+/** Breite eines Textfelds: Text + Innenabstand, auf das Raster aufgerundet, mind. 72 px. */
+export function textLabelWidth(text: string): number {
+  return Math.max(GATE_BASE_SIZE['text-label'].w, Math.ceil((text.length * TEXT_CHAR_PX + 24) / GRID) * GRID);
+}
 
 /**
  * Gibt die tatsächlichen Abmessungen einer Komponenten-Instanz zurück.
- * Für and/or/xor wächst die Höhe mit der Eingangsanzahl.
+ * Für and/or/xor wächst die Höhe mit der Eingangsanzahl, Textfelder werden
+ * mit dem Text breiter.
  */
 export function getGateDimensions(gate: GateInstance): { w: number; h: number } {
   const base = GATE_BASE_SIZE[gate.type];
+  if (gate.type === 'text-label') return { w: textLabelWidth(gate.label ?? 'Label'), h: base.h };
   if (gate.type === 'and' || gate.type === 'or' || gate.type === 'xor') {
     // Eine Raster-Zeile pro Eingangs-Platz (inkl. freiem Mittelplatz)
     const slots = getInputSlots(gate.inputCount);

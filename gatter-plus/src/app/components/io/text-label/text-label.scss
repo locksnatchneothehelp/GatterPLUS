@@ -2,10 +2,8 @@
 .text-label {
   display: inline-flex;
   align-items: center;
-  /* Feste Box wie im Modell (72 × 24); längerer Text läuft nach beiden Seiten
-     gleich weit über → Beschriftung bleibt symmetrisch um den Rasterpunkt */
+  /* Breite kommt aus dem Modell ([style.width], wächst mit dem Text), Höhe 24 */
   justify-content: center;
-  width: 72px;
   height: 24px;
   user-select: none;
 }
@@ -15,6 +13,7 @@
   height: 24px;
 
   .label-body {
+    width: auto;
     height: 20px;
     padding: 0 8px;
   }
@@ -29,7 +28,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 60px;
+  width: 100%;
+  box-sizing: border-box;
   height: 22px;
   padding: 0 10px;
   background: var(--gate-fill, #f8fafc);

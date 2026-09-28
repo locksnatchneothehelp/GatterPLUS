@@ -1,6 +1,7 @@
 import {
   GateInstance, GateType, Rotation, WireConnection,
   createGateInstance, getPinDirection, getPinWorldPos, snapGateToGrid, gatesOverlap, GRID,
+  GATE_BASE_SIZE, getGateDimensions,
 } from './gate.model';
 import { ProjectData } from './project-file';
 import { simplify } from './wire-router';
@@ -169,6 +170,7 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
     if (name === 'TTextModule') {
       const g = newGate('text-label', ux, uy);
       g.label = String(m.props['Caption'] ?? '');
+      g.x += (GATE_BASE_SIZE['text-label'].w - getGateDimensions(g).w) / 2; // Mitte wie bei 72 px Breite
       Object.assign(g, snapGateToGrid(g)); // Mitte aufs Raster (Phase 7)
       continue;
     }

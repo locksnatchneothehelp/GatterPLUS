@@ -5,6 +5,7 @@ import {
   manualWirePath,
   createGateInstance,
   getGateDimensions,
+  textLabelWidth,
   getGatePinOffsets,
   getPinWorldPos,
   snapGateToGrid,
@@ -395,5 +396,19 @@ describe('removeBacktracks', () => {
   it('gerade Zwischenpunkte ohne Umkehr bleiben erhalten', () => {
     const p = [{ x: 0, y: 0 }, { x: 48, y: 0 }, { x: 96, y: 0 }, { x: 96, y: 48 }];
     expect(removeBacktracks(p)).toEqual(p);
+  });
+});
+
+describe('textLabelWidth', () => {
+  it('kurzer Text behält die Mindestbreite 72', () => {
+    expect(textLabelWidth('Label')).toBe(72);
+    expect(textLabelWidth('')).toBe(72);
+  });
+
+  it('langer Text macht das Textfeld breiter, auf das Raster gerundet', () => {
+    const w = textLabelWidth('Flip-Flop Schaltung');
+    expect(w).toBeGreaterThanOrEqual(19 * 7.2 + 24);
+    expect(w % GRID).toBe(0);
+    expect(getGateDimensions({ ...createGateInstance('t', 'text-label', 0, 0), label: 'Flip-Flop Schaltung' }).w).toBe(w);
   });
 });
