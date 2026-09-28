@@ -211,6 +211,12 @@ export class Whiteboard implements OnDestroy {
 
   // ─── Simulations-Modus ─────────────────────────────────────────────────────
   simulationMode = false;
+  /**
+   * Start-Animation der Simulation („Strom fließt“): Verzögerung je Gatter und
+   * Leitung (ms) ab dem Start; null, sobald sie abgelaufen ist.
+   */
+  simReveal: { gate: Map<string, number>; wire: Map<string, { delay: number; len: number }>; step: number } | null = null;
+  private simRevealTimer: ReturnType<typeof setTimeout> | null = null;
   private signalStates  = new Map<string, ComponentSignalState>();
   private clockIntervals = new Map<string, ReturnType<typeof setInterval>>();
 
@@ -515,7 +521,9 @@ export class Whiteboard implements OnDestroy {
       this.editingLabelGateId = null;   // Inline-Edit beim Start der Simulation schließen
       this.startClockIntervals();
       this.recomputeSimulation();
+      this.startSimReveal();
     } else {
+      this.stopSimReveal();
       this.stopClockIntervals();
       this.gates = this.gates.map(g => {
         if (g.type === 'input' || g.type === 'clock-gen') return { ...g, inputValue: false };
@@ -525,6 +533,57 @@ export class Whiteboard implements OnDestroy {
       this.signalStates.clear();
       this.simulationService.clearState();
     }
+  }
+
+  // ─── Start-Animation „Strom fließt“ ─────────────────────────────────────────
+
+  /**
+   * Berechnet, wann das Signal jedes Gatter erreicht: Schalter/Taktgeber (und
+   * Bauteile ohne Eingangsleitung) bei 0, jedes weitere Gatter eine Stufe nach
+   * seiner spätesten Quelle. Rückkopplungen (Flipflop) werden bei MAX_DEPTH
+   * gekappt, die Gesamtdauer bei TOTAL_MS. Leitungen zeichnen sich innerhalb
+   * einer Stufe von der Quelle zum Ziel.
+   */
+  private startSimReveal(): void {
+    this.stopSimReveal();
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const MAX_DEPTH = 12, TOTAL_MS = 2400;
+    const depth = new Map(this.gates.map(g => [g.id, 0]));
+    for (let pass = 0; pass < MAX_DEPTH; pass++) {
+      let changed = false;
+      for (const w of this.wires) {
+        const d = Math.min(MAX_DEPTH, (depth.get(w.fromGateId) ?? 0) + 1);
+        if (d > (depth.get(w.toGateId) ?? 0)) { depth.set(w.toGateId, d); changed = true; }
+      }
+      if (!changed) break;
+    }
+    const maxDepth = Math.max(1, ...depth.values());
+    const step = Math.min(320, TOTAL_MS / maxDepth);
+    const gate = new Map([...depth].map(([id, d]) => [id, d * step]));
+    const wire = new Map<string, { delay: number; len: number }>();
+    for (const w of this.wires) {
+      const pts = this.getWireDisplayPoints(w) ?? [];
+      let len = 0;
+      for (let i = 1; i < pts.length; i++) len += Math.abs(pts[i].x - pts[i - 1].x) + Math.abs(pts[i].y - pts[i - 1].y);
+      wire.set(w.id, { delay: (depth.get(w.fromGateId) ?? 0) * step, len: Math.max(1, Math.ceil(len)) });
+    }
+    this.simReveal = { gate, wire, step };
+    this.simRevealTimer = setTimeout(() => {
+      this.simReveal = null;
+      this.simRevealTimer = null;
+      this.cdr.markForCheck(); // zoneless: Timer löst keine Änderungserkennung aus
+    }, (maxDepth + 1) * step + 300);
+  }
+
+  private stopSimReveal(): void {
+    if (this.simRevealTimer) clearTimeout(this.simRevealTimer);
+    this.simRevealTimer = null;
+    this.simReveal = null;
+  }
+
+  /** Verzögerung (CSS-Wert) für ein Gatter während der Start-Animation. */
+  revealGateDelay(gateId: string): string | null {
+    return this.simReveal ? `${this.simReveal.gate.get(gateId) ?? 0}ms` : null;
   }
 
   // ─── Taktgeber-Intervalle ──────────────────────────────────────────────────

@@ -136,6 +136,30 @@
   stroke-width: 2;
 }
 
+/* ─── Start-Animation der Simulation („Strom fließt“) ────────────────────────
+   Leitung: Strich zeichnet sich von der Quelle zum Ziel (Länge/Verzögerung/
+   Dauer je Leitung per CSS-Variable). Gatter und ihre Anschlussstriche bleiben
+   entsättigt, bis ihr Signal ankommt, und springen dann in ihre Farbe. */
+.wire-line.wire-reveal {
+  pointer-events: none;
+  stroke-dasharray: var(--reveal-len);
+  stroke-dashoffset: var(--reveal-len);
+  animation: wire-draw var(--reveal-dur, 300ms) linear var(--reveal-delay, 0ms) forwards;
+}
+@keyframes wire-draw {
+  to { stroke-dashoffset: 0; }
+}
+.gate-reveal {
+  animation: gate-reveal 260ms ease-out var(--reveal-delay, 0ms) backwards;
+}
+@keyframes gate-reveal {
+  from { filter: saturate(0) brightness(0.9); }
+  to   { filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wire-line.wire-reveal, .gate-reveal { animation: none; stroke-dashoffset: 0; }
+}
+
 /* Vorschau-Leitung (gestrichelt) */
 .wire-tentative {
   stroke: #3b82f6;

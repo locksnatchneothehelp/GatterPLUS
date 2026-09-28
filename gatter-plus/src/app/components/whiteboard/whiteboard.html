@@ -47,6 +47,8 @@
         [style.transform]="getGateTransform(gate)"
         [style.--gate-fill]="getGateFill(gate)"
         [class.selected]="selectedGateIds.has(gate.id)"
+        [class.gate-reveal]="simReveal !== null"
+        [style.--reveal-delay]="revealGateDelay(gate.id)"
       >
 
         @if (gate.type === 'and') {
@@ -185,13 +187,26 @@
         <polyline
           [attr.points]="pts"
           class="wire-line"
-          [class.wire-high]="simulationMode && isWireHigh(wire)"
-          [class.wire-low]="simulationMode && !isWireHigh(wire)"
+          [class.wire-high]="simulationMode && !simReveal && isWireHigh(wire)"
+          [class.wire-low]="simulationMode && !simReveal && !isWireHigh(wire)"
           [class.wire-selected]="wire.id === selectedWireId"
           [class.wire-hover]="wire.id === hoverWireId"
           (click)="onWireClick(wire, $event)"
           (dblclick)="onWireDblClick(wire, $event)"
         />
+        <!-- Start-Animation: Signal zeichnet sich von der Quelle zum Ziel -->
+        @if (simReveal) {
+          @let rv = simReveal.wire.get(wire.id);
+          <polyline
+            [attr.points]="pts"
+            class="wire-line wire-reveal"
+            [class.wire-high]="isWireHigh(wire)"
+            [class.wire-low]="!isWireHigh(wire)"
+            [style.--reveal-len]="(rv?.len ?? 1) + 'px'"
+            [style.--reveal-delay]="(rv?.delay ?? 0) + 'ms'"
+            [style.--reveal-dur]="simReveal.step + 'ms'"
+          />
+        }
       }
     }
 
@@ -244,6 +259,8 @@
           [class.wire-high]="simulationMode && s.high === true"
           [class.wire-low]="simulationMode && s.wireId !== null && s.high !== true"
           [class.wire-selected]="s.wireId !== null && s.wireId === selectedWireId"
+          [class.gate-reveal]="simReveal !== null"
+          [style.--reveal-delay]="revealGateDelay(gate.id)"
         />
       }
     }
