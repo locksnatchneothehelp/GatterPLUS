@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-28 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C, Import-Layout, UI-Feinschliff `972aa5b`, Phase 7 Raster + manuelles Verlegen `9db8438`)
+- **Stand:** 2026-09-28 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C, Import-Layout, UI-Feinschliff `972aa5b`, Phase 7 Raster + manuelles Verlegen `9db8438`, weiches Einrasten `ce1baee`)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -107,7 +107,7 @@ interface WireConnection {
 | `clock-gen` | 72×48 | – | 1 | `inputValue`, `clockPeriodMs` |
 | `text-label` | 72×24 (Text mittig, läuft symmetrisch über) | – | – | `label` |
 
-- **Raster (Phase 7):** `GRID = 24`. Pins eines Bauteils liegen untereinander auf Vielfachen von `GRID` (Pin in der Mitte einer 24-px-Zeile, Breiten 72/96) → nach jeder Drehung auf dem Raster, sobald ein Pin darauf liegt. and/or/xor: `getInputSlots(n)` – bei gerader Anzahl bleibt der Mittelplatz frei, Ausgang auf der Spiegelachse. `snapGateToGrid(gate)` verschiebt minimal, sodass der erste Pin (ohne Pins: die Mitte) auf dem Raster liegt. Aufrufer: `placeGate`, Drag in `onMouseMove` (gezogenes Bauteil rastet, Gruppe folgt mit demselben Delta), `updateGate` (bei `rotation`/`inputCount`), LogikSim-Import (Textfelder); `pasteClipboard` versetzt um `GRID`.
+- **Raster (Phase 7):** `GRID = 24`. Pins eines Bauteils liegen untereinander auf Vielfachen von `GRID` (Pin in der Mitte einer 24-px-Zeile, Breiten 72/96) → nach jeder Drehung auf dem Raster, sobald ein Pin darauf liegt. and/or/xor: `getInputSlots(n)` – bei gerader Anzahl bleibt der Mittelplatz frei, Ausgang auf der Spiegelachse. `snapGateToGrid(gate)` verschiebt minimal, sodass der erste Pin (ohne Pins: die Mitte) auf dem Raster liegt. Aufrufer: `placeGate`, Drag: `onMouseMove` → `applyGateDrag` folgt frei, beim Loslassen gleitet `snapDraggedGates` in 120 ms auf das Raster (Gruppe mit demselben Delta), dann `finishGateDrag` (Ablegeschutz, feste Punkte runden), `updateGate` (bei `rotation`/`inputCount`), LogikSim-Import (Textfelder); `pasteClipboard` versetzt um `GRID`.
 - Pin-Offsets sind **manuell an das CSS-Layout** der Bauteil-Templates angeglichen (feste 24-px-Zeilen `.slot`/`.pin-row`, siehe `getGatePinOffsets`). Wer Bauteil-CSS ändert, muss die Offsets anpassen; Test `snapGateToGrid` in `gate.model.spec.ts` prüft Rasterlage und Spiegelsymmetrie.
 - `createGateInstance(id, type, x, y)` liefert Defaults: rotation 0, color default, inputCount 2 (and/or/xor) sonst 1, inputValue/ffState false, clockPeriodMs 1000, label 'Label' nur bei text-label.
 - Geometrie-Helfer: `getGateDimensions`, `getPinWorldPos` (mit Rotation, Vorzeichen −), `getPinDirection`, `isPointInGate` (inverse Rotation, Vorzeichen +), `computeOrthogonalWaypoints`, `PIN_HIT_RADIUS = 12`.
@@ -148,7 +148,7 @@ Beispiel Menüeintrag (analog Undo):
 3. `app.html`: `(xClicked)="onX()"`; `app.ts`: `onX(): void { this.whiteboardRef.x(); }`.
 4. Logik in `Whiteboard` (mit `pushHistory()`, falls verändernd).
 
-- Palette: `toolbar-top.html` `.palette-item` mit `(mousedown)="onGateMouseDown($event, 'typ')"` → `DragStateService.startDrag` → `Whiteboard.onMouseUp` → `placeGate`. Deaktiviert bei `simulationMode`.
+- Palette: `toolbar-top.html` `.palette-item` mit `(mousedown)="onGateMouseDown($event, 'typ')"` → `DragStateService.startDrag` → `Whiteboard.onMouseUp` → `placeGate`. Bei `simulationMode` ausgegraut; Klick emittiert `placeBlocked` → App ruft `whiteboardRef.showError(…)`.
 - Properties: `GatePropertyChange` (`properties-panel.ts`) → `gateChange` → `App.onGateChange` → `Whiteboard.updateGate`.
 - Datei-Menü: `Öffnen`/`Speichern`/`Speichern unter` → `openClicked`/`saveClicked`/`saveAsClicked` → `App.onOpen`/`onSave`/`onSaveAs` (`App.fileHandle` = zuletzt geöffnete/exportierte Datei, „Speichern“ schreibt ohne Dialog dorthin; Datei-Dialoge per File System Access API, Fallback Download bzw. `<input type="file">`; Fehler per `alert`) → `Whiteboard.loadProject`/`getProjectData`. `Importieren (LogikSim)` → `importLogikSimClicked` → `App.onImportLogikSim`. `Neu` → `newClicked` → `App.onNew` (`confirm`, dann `loadProject` mit leerem Projekt, `fileHandle = null`, per Undo rückgängig). Hilfe „Steuerung & Tastenkürzel“ (`onHelp`, Fenster `helpOpen` in `menu-bar.html`; Esc/✕/Klick daneben schließt) – bei neuen Kürzeln dort nachtragen. „Über“ (`onAbout`) ist **Platzhalter** (`console.log`).
 - **Neuer Bauteiltyp** berührt: `GateType`, `GATE_BASE_SIZE`, `getGatePinOffsets`, ggf. `createGateInstance` (model); `computeGateOutput` (+ ggf. `isSource`) (simulation); neue Komponente unter `components/gates|io/`; `imports` + `@if`-Block in `whiteboard.ts/html`; Palette in `toolbar-top.ts/html`; `getTypeName`/`getGateDescription`/`getCurrentStateDescription` (properties-panel).
