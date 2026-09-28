@@ -87,10 +87,11 @@ export class MenuBar {
     this.closeMenu();
   }
 
-  /** Escape schließt ebenfalls das offene Menü. */
+  /** Escape schließt ebenfalls das offene Menü (und das Hilfe-Fenster). */
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeMenu();
+    this.helpOpen = false;
   }
 
   /** Wechselt zwischen Light und Dark Mode. */
@@ -139,4 +140,9 @@ export class MenuBar {
   // ─── Hilfe-Aktionen (Platzhalter) ──────────────────────────────────────────
 
   onAbout(): void { console.log('[Menü] About'); this.closeMenu(); }
+
+  /** Hilfe-Fenster „Steuerung & Tastenkürzel“ sichtbar? */
+  helpOpen = false;
+
+  onHelp(): void { this.helpOpen = true; this.closeMenu(); }
 }

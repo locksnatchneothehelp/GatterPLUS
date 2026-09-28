@@ -61,6 +61,7 @@
 
     @if (openMenu === 'hilfe') {
       <div class="dropdown" (click)="$event.stopPropagation()">
+        <button class="dropdown-item" (click)="onHelp()">Steuerung &amp; Tastenkürzel</button>
         <button class="dropdown-item" (click)="onAbout()">Über</button>
       </div>
     }
@@ -79,3 +80,49 @@
   </button>
 
 </nav>
+
+<!-- ── Hilfe-Fenster: Steuerung & Tastenkürzel ───────────────────────────── -->
+@if (helpOpen) {
+  <div class="help-backdrop" (click)="helpOpen = false">
+    <div class="help-dialog" role="dialog" aria-label="Steuerung und Tastenkürzel" (click)="$event.stopPropagation()">
+      <div class="help-header">
+        <span>Steuerung &amp; Tastenkürzel</span>
+        <button class="help-close" title="Schließen (Esc)" (click)="helpOpen = false">✕</button>
+      </div>
+
+      <div class="help-body">
+        <h3>So funktioniert GatterPLUS</h3>
+        <ol>
+          <li><b>Bauteile platzieren:</b> Bauteil aus der Leiste oben auf das Whiteboard ziehen. Es rastet auf dem Punktraster ein.</li>
+          <li><b>Verkabeln:</b> Werkzeug „Verkabeln“ wählen, auf einen Ausgang klicken, das Kabel über das Raster führen und auf einen Eingang klicken.</li>
+          <li><b>Simulieren:</b> Mit dem Power-Knopf oben rechts (oder <kbd>S</kbd>) die Simulation starten und die Schalter (IN) anklicken. Grün = 1, grau = 0.</li>
+        </ol>
+
+        <h3>Maus</h3>
+        <table>
+          <tr><td>Bauteil ziehen</td><td>verschieben (rastet ein; nicht auf ein anderes Bauteil ablegbar)</td></tr>
+          <tr><td>Leere Fläche ziehen</td><td>Ansicht verschieben</td></tr>
+          <tr><td>Mausrad</td><td>zoomen</td></tr>
+          <tr><td>Strg/Umschalt + Klick oder Rahmen ziehen</td><td>mehrere Bauteile auswählen</td></tr>
+          <tr><td>Doppelklick auf Bauteil</td><td>Beschriftung bearbeiten</td></tr>
+          <tr><td>Klick auf das kurze Stück am Pin</td><td>Ein-/Ausgang verneinen (Kreis) – auch im Eigenschaften-Panel</td></tr>
+          <tr><td>Leitung anklicken</td><td>auswählen; Punkte ziehen = verschieben, Doppelklick auf Punkt = entfernen, Doppelklick auf Leitung = Punkt einfügen</td></tr>
+          <tr><td>Verkabeln: Klick auf eine Leitung</td><td>Abzweig von dieser Leitung starten</td></tr>
+          <tr><td>Verkabeln: Start an einem Eingang</td><td>Leitung rückwärts zu einem Ausgang ziehen</td></tr>
+        </table>
+
+        <h3>Tastatur</h3>
+        <table>
+          <tr><td><kbd>S</kbd></td><td>Simulation starten / stoppen</td></tr>
+          <tr><td><kbd>C</kbd> oder Klick</td><td>beim Verkabeln: festen Punkt setzen</td></tr>
+          <tr><td><kbd>F</kbd></td><td>beim Verkabeln: Knick umschalten (erst waagerecht / erst senkrecht)</td></tr>
+          <tr><td><kbd>Rück</kbd> / <kbd>Strg</kbd>+<kbd>Z</kbd></td><td>beim Verkabeln: letzten Punkt zurücknehmen</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Verkabeln abbrechen; danach zurück zu „Verschieben“; Auswahl aufheben</td></tr>
+          <tr><td><kbd>Entf</kbd> / <kbd>Rück</kbd></td><td>Ausgewähltes löschen</td></tr>
+          <tr><td><kbd>Strg</kbd>+<kbd>Z</kbd> / <kbd>Strg</kbd>+<kbd>Y</kbd></td><td>Rückgängig / Wiederherstellen</td></tr>
+          <tr><td><kbd>Strg</kbd>+<kbd>C</kbd> / <kbd>Strg</kbd>+<kbd>V</kbd></td><td>Kopieren / Einfügen (an freier Stelle)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+}

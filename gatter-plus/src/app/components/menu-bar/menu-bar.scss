@@ -130,3 +130,63 @@
     background: var(--menu-hover-bg);
   }
 }
+
+/* ─── Hilfe-Fenster „Steuerung & Tastenkürzel“ ─────────────────────────────── */
+.help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+.help-dialog {
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  background: var(--dropdown-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--dropdown-border);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px var(--dropdown-shadow);
+}
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 15px;
+  border-bottom: 1px solid var(--dropdown-sep);
+}
+.help-close {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+}
+.help-body {
+  overflow-y: auto;
+  padding: 4px 16px 16px;
+  font-size: 13px;
+  line-height: 1.45;
+
+  h3 { margin: 14px 0 6px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 4px 6px; border-bottom: 1px solid var(--dropdown-sep); vertical-align: top; }
+  td:first-child { width: 38%; color: var(--text-secondary); }
+  kbd {
+    display: inline-block;
+    padding: 0 5px;
+    border: 1px solid var(--input-border);
+    border-radius: 3px;
+    background: var(--input-bg);
+    font-family: inherit;
+    font-size: 12px;
+  }
+}
