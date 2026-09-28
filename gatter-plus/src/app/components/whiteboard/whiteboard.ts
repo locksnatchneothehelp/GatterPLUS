@@ -2039,17 +2039,18 @@ export class Whiteboard implements OnDestroy {
 
   /**
    * „Alles anzeigen“: Zoom und Pan so setzen, dass alle Bauteile und Leitungen
-   * mit etwas Rand ins Whiteboard passen und dort zentriert sind.
-   * Zoom-Grenzen wie beim Mausrad (0.1–5).
+   * mit großzügigem Rand ins Whiteboard passen und dort zentriert sind.
+   * Die Schaltung füllt höchstens FILL der Fläche (Nutzerwunsch: nicht bis an
+   * den Rand) und wird höchstens auf MAX_ZOOM vergrößert (kleine Schaltungen).
    */
   zoomToFit(): void {
     if (this.gates.length === 0 || !this.viewportRef) return;
-    const MARGIN = 40; // Bildschirm-px Rand, Platz für Label-Overlays
+    const FILL = 0.6, MAX_ZOOM = 2;
     const { minX, minY, maxX, maxY } = this.getContentBounds();
     const vp = this.viewportRef.nativeElement;
     const w  = Math.max(1, maxX - minX), h = Math.max(1, maxY - minY);
-    const zoom = Math.max(0.1, Math.min(5,
-      Math.min((vp.clientWidth - 2 * MARGIN) / w, (vp.clientHeight - 2 * MARGIN) / h)));
+    const zoom = Math.max(0.1, Math.min(MAX_ZOOM,
+      FILL * Math.min(vp.clientWidth / w, vp.clientHeight / h)));
     this.zoom = zoom;
     this.panX = vp.clientWidth  / 2 - (minX + w / 2) * zoom;
     this.panY = vp.clientHeight / 2 - (minY + h / 2) * zoom;
