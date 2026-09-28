@@ -166,6 +166,39 @@
 /* Spacer schiebt den Power-Button nach rechts */
 .spacer { flex: 1; }
 
+/* ─── Werkzeugnamen links neben den Werkzeug-Buttons ───────────────────────── */
+.tool-items { align-items: center; }
+.tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--toolbar-text);
+  margin-right: 2px;
+  white-space: nowrap;
+}
+/* Großer Abstand vor dem zweiten Paar: Name gehört sichtbar zum rechten Button */
+.tool-name-next { margin-left: 22px; }
+
+/* ─── Handschriftlicher Hinweis „Simulation starten“ ───────────────────────── */
+.sim-hint {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 6px 0 28px;
+  color: var(--toolbar-title);
+  pointer-events: none;
+  user-select: none;
+}
+.sim-hint-text {
+  font-family: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+  font-size: 15px;
+  transform: rotate(-4deg);
+  white-space: nowrap;
+}
+.sim-hint-arrow {
+  width: 52px;
+  height: 24px;
+}
+
 /* ─── Simulations-/Power-Button (rund, oben rechts) ────────────────────────── */
 .sim-btn {
   display: flex;

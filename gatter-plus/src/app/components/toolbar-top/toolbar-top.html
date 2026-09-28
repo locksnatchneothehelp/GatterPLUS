@@ -88,11 +88,13 @@
     Werkzeug: Pan (Verschieben) / Leitung (Wire).
     Steht an der Stelle, an der zuvor die Bearbeiten-Buttons (Undo/Redo/Copy/
     Paste) waren — diese sind jetzt im Bearbeiten-Menü der Menüleiste.
-    SVG-Icons statt Emoji, kein Text-Label, exakt zentriert.
+    SVG-Icons statt Emoji, exakt zentriert; links daneben der Werkzeugname
+    (mit großem Abstand zwischen den Paaren, damit die Namen eindeutig bleiben).
   -->
   <div class="palette-group">
     <span class="group-label">Werkzeug</span>
-    <div class="palette-items">
+    <div class="palette-items tool-items">
+      <span class="tool-name">Verschieben</span>
       <button
         class="tool-toggle"
         [disabled]="simulationMode"
@@ -111,6 +113,7 @@
           <line x1="12" y1="2" x2="12" y2="22"></line>
         </svg>
       </button>
+      <span class="tool-name tool-name-next">Verkabeln</span>
       <button
         class="tool-toggle"
         [disabled]="simulationMode"
@@ -129,6 +132,16 @@
 
   <!-- Spacer schiebt Simulations-Button nach rechts -->
   <div class="spacer"></div>
+
+  <!-- Handschriftlicher Hinweis mit gezeichnetem Pfeil auf den Power-Button -->
+  <div class="sim-hint" aria-hidden="true">
+    <span class="sim-hint-text">{{ simulationMode ? 'Simulation stoppen' : 'Simulation starten' }}</span>
+    <svg class="sim-hint-arrow" viewBox="0 0 64 28" fill="none" stroke="currentColor"
+         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17 C 16 8, 30 22, 44 14 S 56 11, 60 13"></path>
+      <path d="M52 6 L 60 13 L 51 19"></path>
+    </svg>
+  </div>
 
   <!-- Simulations-Toggle: runder Power-Button (gelb = läuft, grau = gestoppt) -->
   <button
