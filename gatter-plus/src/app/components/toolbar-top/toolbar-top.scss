@@ -11,7 +11,10 @@
   /* Heller blaugrauer Hintergrund (wie Referenzbild) */
   background: var(--toolbar-bg);
   color: var(--toolbar-text);
-  padding: 0 12px;
+  /* Unten so viel Raum wie die Gruppenbeschriftung oben belegt (12 px + 2 px
+     Abstand): Bauteile und Werkzeug-Knöpfe sitzen mit gleichem Abstand nach oben
+     und unten mittig in der Leiste */
+  padding: 0 12px 14px;
   gap: 0;
   flex-shrink: 0;
   border-bottom: 1px solid var(--menu-border);
@@ -239,4 +242,9 @@
 /* Schmale Fenster: Hinweis ausblenden, sonst bekommt die Toolbar einen Scrollbalken */
 @media (max-width: 1560px) {
   .sim-hint { display: none; }
+}
+
+/* Elemente ohne Gruppenbeschriftung auf dieselbe Mittellinie wie die Bauteile */
+.app-icon, .app-title, .divider, .sim-hint, .sim-btn {
+  margin-top: 14px;
 }
