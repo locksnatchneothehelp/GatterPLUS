@@ -245,6 +245,51 @@
 }
 
 /* Elemente ohne Gruppenbeschriftung auf dieselbe Mittellinie wie die Bauteile */
-.app-icon, .app-title, .divider, .sim-hint, .sim-btn {
+.app-icon, .app-title, .divider, .sim-hint, .sim-btn-wrap {
   margin-top: 14px;
+}
+
+/* ─── Power-Knopf: Ring beim Start, Puls während der Simulation ─────────────── */
+.sim-btn-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-right: 14px; /* etwas Luft zum Rand, damit Ring und Schein wirken */
+  flex-shrink: 0;
+}
+.sim-ring {
+  position: absolute;
+  inset: 0;
+  width: 56px;
+  height: 56px;
+  transform: rotate(-90deg); /* Start oben */
+  pointer-events: none;
+
+  circle {
+    fill: none;
+    stroke: #16a34a;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 157.1;   /* 2π · 25 */
+    stroke-dashoffset: 157.1;  /* leer */
+    transition: stroke-dashoffset 0.4s ease-in;
+  }
+}
+.sim-btn-wrap.running .sim-ring circle {
+  stroke-dashoffset: 0;      /* voll */
+  transition: stroke-dashoffset 0.6s ease-out;
+}
+.sim-btn-wrap.running .sim-btn {
+  animation: sim-pulse 2.2s ease-in-out 0.6s infinite;
+}
+@keyframes sim-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+  50%      { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sim-ring circle { transition: none !important; }
+  .sim-btn-wrap.running .sim-btn { animation: none; }
 }
