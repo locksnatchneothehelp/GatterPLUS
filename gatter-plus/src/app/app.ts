@@ -257,6 +257,9 @@ export class App implements OnInit {
     try {
       result = await parseLogikSim(new Uint8Array(await picked.file.arrayBuffer()));
       this.whiteboardRef.loadProject(result.project);
+      // Passend groß und mittig statt fester Import-Ansicht; Importe füllen die Fläche
+      // stärker (90 %) als der Knopf „Alles anzeigen“ (60 %), sonst wirken sie winzig
+      this.whiteboardRef.zoomToFit(0.9);
     } catch (e) {
       alert(`Die Datei konnte nicht importiert werden.\n\n${(e as Error).message}`);
       return;

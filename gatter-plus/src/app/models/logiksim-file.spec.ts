@@ -1,4 +1,4 @@
-import { GateInstance, WireConnection, createGateInstance, getPinWorldPos, getGatePinOffsets, getGateDimensions, GRID } from './gate.model';
+import { GateInstance, WireConnection, createGateInstance, getPinWorldPos, getGatePinOffsets, getGateDimensions, gatesOverlap, GRID } from './gate.model';
 import { LogikSimImport, parseLogikSim } from './logiksim-file';
 import { SimulationService } from '../services/simulation.service';
 
@@ -95,7 +95,7 @@ describe('LogikSim-Import', () => {
   it('4-Bit-Addierer rechnet nach dem Import korrekt (alle 256 Fälle)', async () => {
     const { project } = await load('logiksim-addierer-4bit.sim');
     const sim = new SimulationService();
-    const U = 72; // Pixel pro LogikSim-Rastereinheit (UNIT_PX = 3 × GRID)
+    const U = 48; // Pixel pro LogikSim-Rastereinheit (UNIT_PX = 2 × GRID)
     // Bit 0 liegt rechts: Schalter x=7…4 (Zeilen y=5 und y=16), Anzeigen x=16…13 (y=24)
     // Schalter/Anzeigen liegen mit ihrem Pin genau auf dem LogikSim-Punkt
     const at = (ux: number, uy: number) => project.gates.find(g => {
@@ -206,6 +206,14 @@ describe('LogikSim-Import', () => {
           expect(Math.abs(p.y % GRID), `${f} ${g.type} ${g.id}`).toBe(0);
         }
       }
+    }
+  });
+
+  it('Nach dem Import überlappt kein Bauteil ein anderes (Textfelder werden verschoben)', async () => {
+    for (const f of FIXTURES) {
+      const gs = (await load(f)).project.gates;
+      const pairs = gs.flatMap((a, i) => gs.slice(i + 1).filter(b => gatesOverlap(a, b)).map(b => `${a.type}/${b.type}`));
+      expect(pairs, f).toEqual([]);
     }
   });
 });

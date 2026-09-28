@@ -2184,9 +2184,9 @@ export class Whiteboard implements OnDestroy {
    * Die Schaltung füllt höchstens FILL der Fläche (Nutzerwunsch: nicht bis an
    * den Rand) und wird höchstens auf MAX_ZOOM vergrößert (kleine Schaltungen).
    */
-  zoomToFit(): void {
+  zoomToFit(fill = 0.6): void {
     if (this.gates.length === 0 || !this.viewportRef) return;
-    const FILL = 0.6, MAX_ZOOM = 2;
+    const FILL = fill, MAX_ZOOM = 2;
     const { minX, minY, maxX, maxY } = this.getContentBounds();
     const vp = this.viewportRef.nativeElement;
     const w  = Math.max(1, maxX - minX), h = Math.max(1, maxY - minY);

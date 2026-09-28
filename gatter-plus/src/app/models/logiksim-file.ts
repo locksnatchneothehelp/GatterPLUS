@@ -1,6 +1,6 @@
 import {
   GateInstance, GateType, Rotation, WireConnection,
-  createGateInstance, getPinDirection, getPinWorldPos, snapGateToGrid, GRID,
+  createGateInstance, getPinDirection, getPinWorldPos, snapGateToGrid, gatesOverlap, GRID,
 } from './gate.model';
 import { ProjectData } from './project-file';
 import { simplify } from './wire-router';
@@ -39,10 +39,12 @@ export interface LogikSimImport {
 }
 
 /**
- * Pixel pro LogikSim-Rastereinheit — groß genug, dass sich Bauteile nicht überlappen,
- * und ein Vielfaches von GRID: Pins auf LogikSim-Punkten liegen so auf dem Raster.
+ * Pixel pro LogikSim-Rastereinheit — ein Vielfaches von GRID (Pins auf LogikSim-
+ * Punkten liegen so auf dem Raster). In LogikSim liegen Anschlüsse eine Einheit
+ * auseinander; 2 × GRID hält die Schaltung kompakt, ohne dass sich Bauteile
+ * überlappen (1 × GRID: Schalter überlappen; Textfelder werden unten verschoben).
  */
-const UNIT_PX = 3 * GRID;
+const UNIT_PX = 2 * GRID;
 
 /** LogikSim-Modulnamen mit Anschlusslisten → GatterPLUS-Typ. */
 const CONNECTOR_MODULES: Record<string, GateType> = {
@@ -293,7 +295,23 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
     warnings.push(`${multiSource} Leitung(en) mit mehreren Signalquellen wurden nicht übernommen.`);
   }
 
+  // Textfelder, die auf einem Bauteil liegen, auf den nächsten freien Rasterplatz
+  // (Ringe um die Ausgangsstelle, erst oben/unten, dann seitlich)
+  for (const label of gates.filter(g => g.type === 'text-label')) {
+    const others = () => gates.filter(g => g !== label);
+    if (!others().some(g => gatesOverlap(label, g))) continue;
+    const x0 = label.x, y0 = label.y;
+    search: for (let r = 1; r <= 8; r++) {
+      for (const [dx, dy] of [[0, -r], [0, r], [-r, 0], [r, 0], [-r, -r], [r, -r], [-r, r], [r, r]]) {
+        label.x = x0 + dx * GRID; label.y = y0 + dy * GRID;
+        if (!others().some(g => gatesOverlap(label, g))) break search;
+      }
+      label.x = x0; label.y = y0;
+    }
+  }
+
   // Ansicht: halbe Größe, linke obere Ecke der Schaltung knapp im Bild
+  // (die App passt die Ansicht nach dem Import zusätzlich per „Alles anzeigen“ an)
   const zoom = 0.5;
   const minX = Math.min(0, ...gates.map(g => g.x));
   const minY = Math.min(0, ...gates.map(g => g.y));
