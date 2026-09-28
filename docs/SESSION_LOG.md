@@ -104,7 +104,12 @@
 | 23:34 | `e5a413f` | Willkommensbildschirm: Projekt-Nennung „Antonia, Constantin, Mark, Soumaya und Timo · Q12 2026 · Informatik-LK“ als Fußzeile |
 | 23:34 | `68ca544` | Hilfe: Überblick als schlichter Absatz statt Stichpunkt-Liste (wirkte generiert) |
 | 23:49 | `875e76d` | Willkommensbildschirm mit Inhalt: Untertitel, Kacheln mit Symbolen, „Beispiel öffnen“ (Halbaddierer aus Gattern, `models/example-circuit.ts` + Tests), „LogikSim importieren“, „Beim Start nicht mehr anzeigen“ (localStorage; Hilfe → Willkommensbildschirm öffnet erneut), Tastenkürzel-Hinweis |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **sechzehnter Push** |
+| 23:50 | `0a6db25` | Sitzungsprotokoll ergänzt · **sechzehnter Push** |
+| 23:56 | `8bed021` | Bauteile ruckelfrei ziehen: Bauteil folgt der Maus frei (`applyGateDrag`), rastet erst beim Loslassen weich in 120 ms ein (`snapDraggedGates`, bei „Bewegung reduzieren“ sofort), danach Ablegeschutz/Leitungsbereinigung (`finishGateDrag`) – vorher wackelte es von Rasterpunkt zu Rasterpunkt |
+| 23:58 | `ce1baee` | Klick auf die graue Palette während der Simulation zeigt die rote Meldung „Während der Simulation können keine Bauteile platziert werden.“ (Output `placeBlocked`, `showError` öffentlich, `pointer-events: none` entfernt) |
+| 23:58 | `8c0ba83` | Projektanalyse nachgezogen |
+| 00:04 (29.09.) | `c935e7c` | „Beispiel öffnen“ lädt jetzt die Flip-Flop-Schaltung (zwei rückgekoppelte NOR = ODER mit verneintem Ausgang, dahinter NICHT; Überschrift „Flip-Flop Schaltung“) statt des Halbaddierers; `flipFlopExample()` + Tests (Setzen/Speichern/Zurücksetzen, keine Überlappungen) |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **siebzehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
@@ -118,6 +123,8 @@
 - Leitungen sind nur über den 2-px-Strich anklickbar (Auswahl, Doppelklick zum Einfügen) – breitere unsichtbare Klickfläche wäre angenehmer.
 - „Verlauf automatisch“ im Eigenschaften-Panel entfernt die festen Punkte (→ einfache Z-Form); Name ggf. anpassen.
 - Branch `phase7-raster` kann gelöscht werden.
+- Nach dem Verschieben kann eine Leitung zwei gleiche feste Punkte hintereinander enthalten (Übernahme des Anzeigeverlaufs in `finishGateDrag`, älter als das weiche Einrasten) – harmlos fürs Bild, evtl. zwei Griffe übereinander; Nutzer noch nicht entschieden.
+- Das Beispiel heißt auf Wunsch „Flip-Flop Schaltung“; fachlich ist es ein RS-Flipflop (kein T-Flipflop).
 - Handtest durch den Nutzer: Verlegen läuft laut Nutzer „extrem gut“; Stummel-Versatz (nur bei seiner Anzeigeskalierung sichtbar, headless nicht nachstellbar) nach dem SVG-Umbau noch vom Nutzer zu bestätigen.
 
 ---
