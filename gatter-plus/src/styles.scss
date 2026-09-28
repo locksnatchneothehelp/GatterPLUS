@@ -270,7 +270,7 @@ body {
   animation: none;
 }
 ::view-transition-new(root) {
-  animation: theme-reveal 550ms ease-in-out both;
+  animation: theme-reveal 750ms ease-in-out both;
 }
 @keyframes theme-reveal {
   from { clip-path: circle(0 at var(--theme-x, 100%) var(--theme-y, 0)); }
