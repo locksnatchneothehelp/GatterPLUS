@@ -255,3 +255,13 @@ body {
   /* Weicher Übergang beim Theme-Wechsel */
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* ─── Übergang Hell/Dunkel (MenuBar.toggleTheme) ──────────────────────────────
+   Die View Transition zeigt altes und neues Bild übereinander; die eigene
+   Animation (Kreis vom Schalter aus) läuft per Web Animations API auf dem
+   neuen Bild – Standard-Überblendung daher aus. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

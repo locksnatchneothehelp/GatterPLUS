@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, inject, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, inject, Input, Output } from '@angular/core';
 import { ThemeService } from '../../services/theme.service';
 
 /** Name eines Menüs in der Leiste. */
@@ -31,6 +31,7 @@ export type MenuName = 'datei' | 'bearbeiten' | 'hilfe';
 })
 export class MenuBar {
   private readonly themeService = inject(ThemeService);
+  private readonly cdr          = inject(ChangeDetectorRef);
 
   /**
    * Name des aktuell geöffneten Menüs oder null, wenn kein Dropdown offen ist.
@@ -94,9 +95,31 @@ export class MenuBar {
     this.helpOpen = false;
   }
 
-  /** Wechselt zwischen Light und Dark Mode. */
-  toggleTheme(): void {
-    this.themeService.toggleTheme();
+  /**
+   * Wechselt zwischen hellem und dunklem Design. Übergang: das neue Design
+   * breitet sich als Kreis vom Schalter aus (View Transitions API, Chrome/Edge);
+   * ohne Unterstützung oder bei „Bewegung reduzieren“ sofortiger Wechsel.
+   */
+  toggleTheme(event?: MouseEvent): void {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (!doc.startViewTransition || reduce || !event) {
+      this.themeService.toggleTheme();
+      return;
+    }
+    const btn = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = btn.left + btn.width / 2, y = btn.top + btn.height / 2;
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const transition = doc.startViewTransition(() => {
+      this.themeService.toggleTheme();
+      this.cdr.detectChanges(); // Schalter schon im neuen Bild in der neuen Stellung
+    });
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+        { duration: 550, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' },
+      );
+    });
   }
 
   // ─── Bearbeiten-Aktionen ────────────────────────────────────────────────────
