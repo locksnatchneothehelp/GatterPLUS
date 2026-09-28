@@ -257,16 +257,28 @@ body {
 }
 
 /* ─── Übergang Hell/Dunkel (MenuBar.toggleTheme) ──────────────────────────────
-   Die View Transition zeigt altes und neues Bild übereinander; die eigene
-   Animation (Kreis vom Schalter aus) läuft per Web Animations API auf dem
-   neuen Bild – Standard-Überblendung daher aus. */
+   Die View Transition zeigt altes und neues Bild übereinander. Das alte bleibt
+   stehen, das neue wächst als Kreis vom Schalter aus (--theme-x/-y/-r setzt
+   toggleTheme). Als CSS-Animation direkt am Pseudo-Element, damit sie ab dem
+   ersten Frame greift (per JS erst nach „ready“ gestartet blitzte das neue Bild
+   vorher kurz vollständig auf). */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
   mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation: theme-reveal 550ms ease-in-out both;
+}
+@keyframes theme-reveal {
+  from { clip-path: circle(0 at var(--theme-x, 100%) var(--theme-y, 0)); }
+  to   { clip-path: circle(var(--theme-r, 150vmax) at var(--theme-x, 100%) var(--theme-y, 0)); }
 }
 
 /* Während des Umschaltens keine CSS-Übergänge (siehe MenuBar.toggleTheme) */
+html.theme-switching,
 html.theme-switching *,
 html.theme-switching *::before,
 html.theme-switching *::after {

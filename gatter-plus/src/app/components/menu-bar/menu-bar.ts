@@ -95,6 +95,8 @@ export class MenuBar {
     this.helpOpen = false;
   }
 
+  private themeSwitchToken = 0;
+
   /**
    * Wechselt zwischen hellem und dunklem Design. Übergang: das neue Design
    * breitet sich als Kreis vom Schalter aus (View Transitions API, Chrome/Edge);
@@ -109,25 +111,32 @@ export class MenuBar {
     // des Umschaltens aus: sonst stehen sie im neuen Bild noch auf der alten Farbe
     // und springen erst danach um (Flackern).
     root.classList.add('theme-switching');
+    const token = ++this.themeSwitchToken; // nur der zuletzt gestartete Wechsel räumt auf
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (!doc.startViewTransition || reduce || !event) {
       this.themeService.toggleTheme();
-      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (token === this.themeSwitchToken) root.classList.remove('theme-switching');
+      }));
       return;
     }
+    // Kreismitte (Schalter) und Radius für die CSS-Animation @keyframes theme-reveal
+    // (styles.scss). Bewusst CSS statt Web Animations in transition.ready: so ist das
+    // neue Bild schon im ersten Frame beschnitten – sonst blitzte es kurz ganz auf.
     const btn = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const x = btn.left + btn.width / 2, y = btn.top + btn.height / 2;
     const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    root.style.setProperty('--theme-x', `${x}px`);
+    root.style.setProperty('--theme-y', `${y}px`);
+    root.style.setProperty('--theme-r', `${Math.ceil(r)}px`);
     const transition = doc.startViewTransition(() => {
       this.themeService.toggleTheme();
       this.cdr.detectChanges(); // Schalter schon im neuen Bild in der neuen Stellung
     });
-    transition.finished.finally(() => root.classList.remove('theme-switching'));
-    transition.ready.then(() => {
-      document.documentElement.animate(
-        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
-        { duration: 550, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' },
-      );
+    // Schnelles Doppelklicken bricht den ersten Übergang ab – dessen Ende darf die
+    // Klasse nicht entfernen, solange der zweite noch läuft
+    transition.finished.finally(() => {
+      if (token === this.themeSwitchToken) root.classList.remove('theme-switching');
     });
   }
 
