@@ -85,7 +85,11 @@
 | 22:30 | `f8b3ea7` | Stromfluss-Animation in leuchtendem Himmelblau (`--flow-color`) statt kaum sichtbarem Grau, danach echte Signalfarbe |
 | 22:30 | `b40c3a6` | Power-Knopf: deutlicherer Puls (dauerhaftes Leuchten + Welle bis 14 px, alle 1,6 s) |
 | 22:33 | `a075e83` | Willkommensbildschirm beim Start (`components/welcome-dialog/`, Inhalt noch Platzhalter; ✕/Esc/„Los geht's“) |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **zehnter Push** |
+| 22:33 | `809c86b` | Sitzungsprotokoll ergänzt · **zehnter Push** |
+| 22:43 | `7c6aefe` | Fehlermeldungen: Wortlaut vom Nutzer angepasst (Komma statt Gedankenstrich, „letzte Position“) · einzeln gepusht |
+| 22:46 | `57cc889` | Stromfluss beginnt/endet direkt am Bauteil: Anschluss-Stummel leuchten mit (Ausgang während des Zeichnens, Eingang ab Ankunft) |
+| 22:46 | `fccc9bb` | Power-Knopf: noch deutlicherer Puls (zwei Wellen bis 20 px, passt in die Toolbar) |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **elfter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
