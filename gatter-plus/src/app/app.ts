@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, inject, OnInit, ViewChild } from '@angular/core';
 import { MenuBar }       from './components/menu-bar/menu-bar';
 import { ToolbarTop }    from './components/toolbar-top/toolbar-top';
 import { Whiteboard }    from './components/whiteboard/whiteboard';
@@ -55,6 +55,17 @@ export class App implements OnInit {
     // toggleSimulation() schaltet intern auf Pan um, daher muss activeTool
     // hier nachgezogen werden, damit der Toolbar-Button korrekt hervorgehoben ist.
     this.activeTool = this.whiteboardRef.toolMode;
+  }
+
+  /** Taste S: Simulation starten/stoppen (nicht beim Tippen und nicht beim Verlegen einer Leitung). */
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key.toLowerCase() !== 's' || event.ctrlKey || event.metaKey || event.altKey) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
+    if (this.whiteboardRef?.isDrawingWire) return;
+    event.preventDefault();
+    this.onSimulationToggle();
   }
 
   /** Ausgewähltes Bauteil (für Properties Panel) */

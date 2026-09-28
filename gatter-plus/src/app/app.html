@@ -37,7 +37,7 @@
   <div class="main-area">
 
     <!-- Whiteboard: Schaltkreis-Editor -->
-    <app-whiteboard></app-whiteboard>
+    <app-whiteboard (toolModeChange)="activeTool = $event"></app-whiteboard>
 
     <!-- Properties Panel: erscheint wenn ein Bauteil ODER eine Leitung angeklickt wurde -->
     <app-properties-panel

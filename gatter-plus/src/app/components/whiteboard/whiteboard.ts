@@ -2,9 +2,11 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
   inject,
   OnDestroy,
+  Output,
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -145,6 +147,8 @@ export class Whiteboard implements OnDestroy {
 
   // ─── Werkzeug-Modus ────────────────────────────────────────────────────────
   toolMode: ToolMode = 'pan';
+  /** Werkzeug per Tastatur gewechselt (Esc im Kabelmodus) – die App zieht die Toolbar nach. */
+  @Output() toolModeChange = new EventEmitter<ToolMode>();
 
   // ─── Leitungs-Zeichnen ─────────────────────────────────────────────────────
   wireDrawing: WireDrawingState | null = null;
@@ -626,6 +630,12 @@ export class Whiteboard implements OnDestroy {
     }
     if (this.editingLabelGateId) {
       this.cancelEditLabel();
+      return;
+    }
+    // Kabelmodus ohne laufende Leitung → zurück zum Verschieben
+    if (this.toolMode === 'wire') {
+      this.setToolMode('pan');
+      this.toolModeChange.emit('pan');
       return;
     }
     // Mehrfachauswahl oder Einzel-Auswahl aufheben
