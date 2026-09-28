@@ -1678,7 +1678,7 @@ export class Whiteboard implements OnDestroy {
   getGateFill(gate: GateInstance): string | null {
     // Strommodus: Gatter grau (LOW-Farbe; HIGH-Regel der Bauteile färbt grün),
     // Ein-/Ausgabe-Bauteile behalten ihre Standardoptik.
-    if (this.simulationMode) return IO_TYPES.has(gate.type) ? null : '#f1f5f9';
+    if (this.simulationMode) return IO_TYPES.has(gate.type) ? null : 'var(--sim-gate-fill, #f1f5f9)';
     const map: Record<GateColor, string | null> = {
       default: null,
       yellow:  '#fde047',

@@ -105,74 +105,131 @@
 
 /* ─── Dark Mode ─────────────────────────────────────────────────────────────*/
 :root[data-theme="dark"] {
+  /* Ruhiges, neutrales Graphit statt gesättigtem Marineblau; gedämpftes
+     Bernstein als Bauteil-/Knopffarbe, ruhiges Blau als Akzent. */
   --error-bg:            #3b1519;
   --error-border:        #b4454c;
   --error-text:          #fca5a5;
-  --bg-app:              #12141c;
+  --bg-app:              #16181d;
 
-  --menu-bg:             #1f2333;
-  --menu-text:           #e2e8f0;
-  --menu-hover-bg:       #2d3348;
-  --menu-border:         #333a52;
+  --menu-bg:             #1c1f25;
+  --menu-text:           #e6e8ec;
+  --menu-hover-bg:       #2a2e36;
+  --menu-border:         #2c3038;
 
-  --toolbar-bg:          #2a3050;
-  --toolbar-title:       #aab4e8;
-  --toolbar-text:        #cbd3f0;
-  --divider:             rgba(255, 255, 255, 0.14);
+  --toolbar-bg:          #22262e;
+  --toolbar-title:       #e6e8ec;
+  --toolbar-text:        #c9ced8;
+  --divider:             rgba(255, 255, 255, 0.10);
 
-  --btn-bg:              #f5b342;
-  --btn-border:          #10131b;
+  --btn-bg:              #e0a43c;
+  --btn-border:          #0e1014;
   --btn-text:            #2a1d00;
-  --btn-hover-bg:        #f8c364;
-  --btn-active-bg:       #e89b1f;
-  --btn-active-border:   #8a5a12;
+  --btn-hover-bg:        #ebb455;
+  --btn-active-bg:       #d08f22;
+  --btn-active-border:   #6b4a12;
   --btn-active-text:     #2a1d00;
-  --btn-selected-bg:     #e89b1f;
-  --btn-selected-border: #60a5fa;
+  --btn-selected-bg:     #d08f22;
+  --btn-selected-border: #7aa2f7;
   --btn-selected-text:   #2a1d00;
-  --btn-disabled-bg:     #3a4055;
-  --btn-disabled-border: #4a5170;
-  --btn-disabled-text:   #6b7590;
+  --btn-disabled-bg:     #2c3038;
+  --btn-disabled-border: #3a3f49;
+  --btn-disabled-text:   #6b7280;
 
-  --panel-bg:            #1c1f2b;
-  --panel-header-bg:     #242836;
-  --panel-border:        #2f3446;
+  --panel-bg:            #1c1f25;
+  --panel-header-bg:     #22262e;
+  --panel-border:        #2c3038;
 
-  --surface-bg:          #242836;
-  --surface-border:      #2f3446;
+  --surface-bg:          #22262e;
+  --surface-border:      #353a44;
 
-  --canvas-bg:           #171a24;
-  --grid-dot:            #2f3650;
+  --canvas-bg:           #1a1d23;
+  --grid-dot:            #353b47;
 
-  /* Hell genug, um sich klar von der dunklen Zeichenfläche abzuheben
-     (das bisherige dunkle Navy #1e293b der Pin-Drähte wäre hier fast
-     unsichtbar gewesen). */
-  --wire-stroke:         #94a3b8;
+  /* Hell genug, um sich klar von der dunklen Zeichenfläche abzuheben. */
+  --wire-stroke:         #aeb6c4;
 
-  --input-bg:            #242836;
-  --input-border:        #3a4055;
-  --input-text:          #e2e8f0;
-  --input-focus:         #60a5fa;
+  --input-bg:            #22262e;
+  --input-border:        #3a3f49;
+  --input-text:          #e6e8ec;
+  --input-focus:         #7aa2f7;
 
-  --text-primary:        #e2e8f0;
-  --text-secondary:      #aab2c5;
-  --text-muted:          #7d879e;
+  --text-primary:        #e6e8ec;
+  --text-secondary:      #a9b0bd;
+  --text-muted:          #7c8491;
 
-  --accent:              #60a5fa;
-  --accent-soft:         #1e3a5f;
-  --accent-strong:       #93c5fd;
+  --accent:              #7aa2f7;
+  --accent-soft:         #1f2b45;
+  --accent-strong:       #a9c1fb;
 
-  --dropdown-bg:         #242836;
-  --dropdown-border:     #3a4055;
-  --dropdown-shadow:     rgba(0, 0, 0, 0.5);
-  --dropdown-sep:        #333a52;
+  --dropdown-bg:         #22262e;
+  --dropdown-border:     #353a44;
+  --dropdown-shadow:     rgba(0, 0, 0, 0.55);
+  --dropdown-sep:        #2c3038;
 
-  --power-bg:            #3a4055;
-  --power-border:        #64748b;
-  --power-icon:          #cbd5e1;
-  --power-on-bg:         #f5b342;
-  --power-on-border:     #8a5a12;
+  --power-bg:            #2c3038;
+  --power-border:        #4b5260;
+  --power-icon:          #d6dae2;
+  --power-on-bg:         #e0a43c;
+  --power-on-border:     #6b4a12;
   --power-on-icon:       #2a1d00;
+
+  /* Gatter im Strommodus (Whiteboard.getGateFill): dunkelgrau statt fast weiß */
+  --sim-gate-fill:       #3a3f49;
+}
+
+/* ─── Dark Mode: Bauteile ───────────────────────────────────────────────────
+   Die Bauteil-Komponenten haben feste helle Farben (weiße Kästen); im dunklen
+   Design blendeten sie. Globale Regeln mit höherer Spezifität als die
+   Komponenten-Stile; eine eigene Bauteilfarbe (--gate-fill) bleibt Vorrang,
+   Zustände der Simulation sind unten eigens dunkel abgestimmt. „html“ im
+   Selektor: gekapselte Komponenten-Stile (_ngcontent-Attribute) sonst gleich
+   spezifisch und später geladen. */
+html:root[data-theme="dark"] {
+  .switch-body, .led-body {
+    background: var(--gate-fill, #262a32);
+    border-color: #aeb6c4;
+  }
+  .switch-body .label, .led-body .label { color: #9aa3b2; }
+  .value-display { color: #e6e8ec; }
+
+  .clock-body {
+    background: var(--gate-fill, #1f2a3d);
+    border-color: #7aa2f7;
+    .label  { color: #a9c1fb; }
+    .period { color: #7aa2f7; }
+  }
+
+  .label-body {
+    background: var(--gate-fill, #262a32);
+    border-color: #3a3f49;
+  }
+  .label-text { color: #e6e8ec; }
+
+  /* Gatter mit LOW-Signal im Strommodus: dunkelgrau statt fast weiß */
+  .gate.signal-low .gate-body {
+    background: var(--sim-gate-fill, #3a3f49);
+    border-color: #7c8491;
+  }
+  /* Helle Schrift auf allen dunkelgrauen Simulations-Gattern (LOW oder ohne
+     Signal); grüne HIGH-Gatter behalten ihre dunkle Schrift */
+  .placed-gate[style*="sim-gate-fill"] .gate:not(.signal-high) .symbol { color: #e6e8ec; }
+
+  /* Eingeschalteter Schalter: grüner Körper, dunkelgrüne Schrift */
+  .input-switch.value-high .switch-body .label,
+  .input-switch.value-high .value-display { color: #15803d; }
+
+  /* Aktiver Taktgeber: kräftigeres Blau statt Hellblau, Schrift bleibt lesbar */
+  .clock-body.active {
+    background: #2d4b7c;
+    border-color: #a9c1fb;
+  }
+
+  /* Farbkreis „Standard“: dunkler Kreis mit hellem Rand statt grellem Weiß */
+  .color-swatch.color-default {
+    background: #262a32;
+    border-color: #aeb6c4;
+  }
 }
 
 /* ─── CSS-Reset ─────────────────────────────────────────────────────────────*/
