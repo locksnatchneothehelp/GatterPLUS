@@ -72,7 +72,10 @@
 | 21:33 | `65d0b0b` | Pfeil (Spitze auf Höhe der Power-Knopf-Mitte, Linie endet mittig) und Hell/Dunkel-Schalter (Knopf ringsum 2 px Abstand) exakt ausgerichtet – nachgemessen |
 | 21:34 | `ca561e6` | Sitzungsprotokoll ergänzt (ohne Push) |
 | 21:36 | `5ca96c3` | Hell/Dunkel: kein Flackern mehr – CSS-Farbübergänge von Menü, Toolbar, Zeichenfläche/Minimap und App-Rand standen im neuen Bild der View Transition noch auf der alten Farbe; `html.theme-switching` schaltet sie während des Umschaltens ab (gemessen: vorher 4 Flächen falsch, jetzt 0) |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **sechster Push** |
+| 21:39 | `bf77dfd` | Sitzungsprotokoll ergänzt · **sechster Push** |
+| 21:44 | `8bb83ff` | App-Icon (Gatter mit „+“ auf Bernstein): `public/icon.svg` als Favicon, daraus gerendertes `favicon.ico` (16/32/48), in der Toolbar links neben dem Namen; Simulations-Hinweis erst ab 1560 px |
+| 21:48 | `6bd03f7` | Hell/Dunkel endgültig ohne Aufblitzen: Kreis als CSS-Animation direkt an `::view-transition-new(root)` (vorher per JS erst nach `ready` → ein Frame ungeschnitten = weiße „Welle“), Farbübergang auf `<html>` selbst mit abgeschaltet, Aufräumen nur durch den letzten Wechsel; geprüft per Frame-Aufzeichnung beider Richtungen |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **siebter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
