@@ -1,6 +1,6 @@
 import {
   GateInstance, GateType, Rotation, WireConnection,
-  createGateInstance, getPinDirection, getPinWorldPos,
+  createGateInstance, getPinDirection, getPinWorldPos, snapGateToGrid, GRID,
 } from './gate.model';
 import { ProjectData } from './project-file';
 import { simplify } from './wire-router';
@@ -38,8 +38,11 @@ export interface LogikSimImport {
   warnings: string[];
 }
 
-/** Pixel pro LogikSim-Rastereinheit — groß genug, dass sich Bauteile nicht überlappen. */
-const UNIT_PX = 80;
+/**
+ * Pixel pro LogikSim-Rastereinheit — groß genug, dass sich Bauteile nicht überlappen,
+ * und ein Vielfaches von GRID: Pins auf LogikSim-Punkten liegen so auf dem Raster.
+ */
+const UNIT_PX = 3 * GRID;
 
 /** LogikSim-Modulnamen mit Anschlusslisten → GatterPLUS-Typ. */
 const CONNECTOR_MODULES: Record<string, GateType> = {
@@ -163,6 +166,7 @@ export async function parseLogikSim(data: Uint8Array): Promise<LogikSimImport> {
     if (name === 'TTextModule') {
       const g = newGate('text-label', ux, uy);
       g.label = String(m.props['Caption'] ?? '');
+      Object.assign(g, snapGateToGrid(g)); // Mitte aufs Raster (Phase 7)
       continue;
     }
 
