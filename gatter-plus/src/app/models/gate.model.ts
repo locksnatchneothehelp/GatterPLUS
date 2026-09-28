@@ -167,16 +167,17 @@ export function getInputSlots(n: number): number[] {
  * Feste Abmessungen aller Komponenten-Typen (nicht-rotiert, ohne variable Eingänge).
  * width  = Breite des gesamten visuellen Elements (inkl. Drähte)
  * height = Höhe des gesamten visuellen Elements
- * Breite 72 = 3 × GRID (Ein- und Ausgangs-Pin liegen damit beide auf dem Raster).
+ * Breite 72 = 3 × GRID bzw. 96 = 4 × GRID (JK-FF, VA: Platz für Pin-Beschriftungen) —
+ * Ein- und Ausgangs-Pin liegen damit beide auf dem Raster.
  */
 export const GATE_BASE_SIZE: Record<GateType, { w: number; h: number }> = {
   and:          { w: 72, h: 72 },
   or:           { w: 72, h: 72 },
   not:          { w: 72, h: 48 },
   xor:          { w: 72, h: 72 },
-  'jk-ff':      { w: 72, h: 120 },
+  'jk-ff':      { w: 96, h: 120 },
   'half-adder': { w: 72, h: 48 },
-  'full-adder': { w: 72, h: 72 },
+  'full-adder': { w: 96, h: 72 },
   input:        { w: 72, h: 48 },
   output:       { w: 72, h: 48 },
   'clock-gen':  { w: 72, h: 48 },

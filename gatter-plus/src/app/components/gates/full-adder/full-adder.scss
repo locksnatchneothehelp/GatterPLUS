@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 72px;
+  width: 96px; /* 4 × GRID: Platz für die Pin-Beschriftungen */
   height: 72px;
   user-select: none;
 }
@@ -12,6 +12,7 @@
 /* Toolbar-Modus: Körper wird gold/gelb eingefärbt (--btn-bg) — nur die
    Palette-Vorschau, nicht das Gatter auf dem Whiteboard. */
 .gate.toolbar-mode {
+  width: 72px;
   height: 44px;
   .gate-body { width: 44px; height: 34px; background: var(--btn-bg, #f5b342); }
   .wire { width: 8px; }
@@ -67,7 +68,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
+  width: 72px;
   align-self: stretch;
   background: var(--gate-fill, #f5b342);
   border: 2px solid #1e293b;
