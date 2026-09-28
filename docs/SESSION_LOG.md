@@ -92,7 +92,10 @@
 | 22:47 | `99a3f16` | Sitzungsprotokoll ergänzt · **elfter Push** |
 | 22:50 | `3d287fe` | LogikSim-Import kompakter: `UNIT_PX = 2 × GRID` (vorher 3 × GRID, LogikSim-Anschlüsse liegen 1 Einheit auseinander; 1 × GRID → Schalter überlappen), überlappende Textfelder rücken auf freien Rasterplatz, danach `zoomToFit(0.9)` statt fester 50 % (4-Bit-Addierer: 67 % Zoom, gut lesbar); neuer Test „keine Überlappungen“ |
 | 22:51 | `59832cb` | Neu laden/Schließen: Browser-Rückfrage (`beforeunload`), sobald Bauteile auf dem Whiteboard liegen |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **zwölfter Push** |
+| 22:53 | `def4c4d` | Sitzungsprotokoll ergänzt · **zwölfter Push** |
+| 23:03 | `61bc8e3` | Willkommensbildschirm ohne Schließen-Kreuz („Los geht's“/Esc) |
+| 23:05 | `7aa37ec` | LogikSim-Import so kompakt wie im Original: `UNIT_PX = GRID`, überlappende Schalter/Anzeigen rücken quer zur Leitung auseinander (Leitungen folgen); 4-Bit-Addierer bei 117 % statt 67 %; Addierer-Test sucht Schalter über die Reihenfolge |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **dreizehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
