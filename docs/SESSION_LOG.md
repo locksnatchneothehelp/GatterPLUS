@@ -97,7 +97,10 @@
 | 23:05 | `7aa37ec` | LogikSim-Import so kompakt wie im Original: `UNIT_PX = GRID`, überlappende Schalter/Anzeigen rücken quer zur Leitung auseinander (Leitungen folgen); 4-Bit-Addierer bei 117 % statt 67 %; Addierer-Test sucht Schalter über die Reihenfolge |
 | 23:06 | `8683a7f` | Sitzungsprotokoll ergänzt · **dreizehnter Push** |
 | 23:15 | `bb06150` | Eigene Cursor im Bernstein-Stil (vom Nutzer aus drei Entwürfen gewählt): 8 SVG in `src/cursors/` (Pfeil, Zeigehand, offene/geschlossene Hand, Text, Vier-Pfeile über Bauteilen, Verkabeln, Verneinen über dem Pin-Stummel), Variablen `--cursor-*`, `Whiteboard.hoverCursor` |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **vierzehnter Push** |
+| 23:16 | `9ac068e` | Sitzungsprotokoll ergänzt · **vierzehnter Push** |
+| 23:21 | `1ff7df0` | Cursor alle gefüllt mit schwarzer Kontur (Linien-Varianten liefen bei geringer Auflösung zu Brei zusammen) |
+| 23:28 | `d33a7a1` | Stromfluss-Animation beim Simulationsstart auf Wunsch vollständig entfernt (kein toter Code: `simReveal`, Helfer, Template-Bindungen, CSS, `--flow-color`); Hell/Dunkel-Übergang und Ring/Puls am Power-Knopf bleiben |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **fünfzehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
