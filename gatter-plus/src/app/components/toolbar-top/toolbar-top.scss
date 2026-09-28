@@ -20,6 +20,14 @@
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+/* App-Icon links neben dem Namen (public/icon.svg, auch Favicon) */
+.app-icon {
+  width: 30px;
+  height: 30px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
 /* App-Name links */
 .app-title {
   font-size: 18px;
@@ -229,6 +237,6 @@
 }
 
 /* Schmale Fenster: Hinweis ausblenden, sonst bekommt die Toolbar einen Scrollbalken */
-@media (max-width: 1520px) {
+@media (max-width: 1560px) {
   .sim-hint { display: none; }
 }

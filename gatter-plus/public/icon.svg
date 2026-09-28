@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- GatterPLUS: Gatter mit zwei Eingängen, einem Ausgang und „+“ im Gehäuse -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8c55e"/>
+      <stop offset="1" stop-color="#e89b1f"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <g stroke="#1e2340" stroke-width="4" stroke-linecap="round" fill="none">
+    <line x1="9" y1="24" x2="20" y2="24"/>
+    <line x1="9" y1="40" x2="20" y2="40"/>
+    <line x1="44" y1="32" x2="55" y2="32"/>
+    <rect x="20" y="13" width="24" height="38" rx="3" fill="#fff8e6"/>
+    <line x1="32" y1="25" x2="32" y2="39"/>
+    <line x1="25" y1="32" x2="39" y2="32"/>
+  </g>
+</svg>
