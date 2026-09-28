@@ -95,7 +95,9 @@
 | 22:53 | `def4c4d` | Sitzungsprotokoll ergänzt · **zwölfter Push** |
 | 23:03 | `61bc8e3` | Willkommensbildschirm ohne Schließen-Kreuz („Los geht's“/Esc) |
 | 23:05 | `7aa37ec` | LogikSim-Import so kompakt wie im Original: `UNIT_PX = GRID`, überlappende Schalter/Anzeigen rücken quer zur Leitung auseinander (Leitungen folgen); 4-Bit-Addierer bei 117 % statt 67 %; Addierer-Test sucht Schalter über die Reihenfolge |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **dreizehnter Push** |
+| 23:06 | `8683a7f` | Sitzungsprotokoll ergänzt · **dreizehnter Push** |
+| 23:15 | `bb06150` | Eigene Cursor im Bernstein-Stil (vom Nutzer aus drei Entwürfen gewählt): 8 SVG in `src/cursors/` (Pfeil, Zeigehand, offene/geschlossene Hand, Text, Vier-Pfeile über Bauteilen, Verkabeln, Verneinen über dem Pin-Stummel), Variablen `--cursor-*`, `Whiteboard.hoverCursor` |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **vierzehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
