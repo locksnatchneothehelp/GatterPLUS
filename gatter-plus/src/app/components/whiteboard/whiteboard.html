@@ -25,9 +25,11 @@
         [attr.width]="24 * zoom"
         [attr.height]="24 * zoom"
         patternUnits="userSpaceOnUse"
-        [attr.x]="panX % (24 * zoom)"
-        [attr.y]="panY % (24 * zoom)"
+        [attr.x]="panX % (24 * zoom) - 2 * zoom"
+        [attr.y]="panY % (24 * zoom) - 2 * zoom"
       >
+        <!-- Kachel um den Punkt-Versatz (2 px) zurückschieben: Punkte liegen genau
+             auf Vielfachen von 24 px = GRID, dort wo die Pins einrasten (Phase 7) -->
         <circle [attr.cx]="2 * zoom" [attr.cy]="2 * zoom" [attr.r]="1.2 * zoom" class="grid-dot"/>
       </pattern>
     </defs>
