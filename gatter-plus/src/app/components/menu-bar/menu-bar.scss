@@ -136,8 +136,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 46px;
-  height: 22px;
+  box-sizing: border-box;
+  width: 48px;   /* innen 46: Knopf 18 + je 2 px Rand, Weg 24 px */
+  height: 24px;  /* innen 22: Knopf 18 + je 2 px Rand oben/unten */
   padding: 0 5px;
   border-radius: 999px;
   border: 1px solid var(--menu-border);
@@ -166,7 +167,7 @@
 }
 .theme-switch.dark {
   .theme-track { background: #2a2e36; }
-  .theme-knob  { transform: translateX(24px); background: #e6e8ec; }
+  .theme-knob  { transform: translateX(24px); background: #e6e8ec; } /* 46 − 18 − 2·2 */
   .theme-icon.sun  { color: #7c8491; opacity: 0.6; }
   .theme-icon.moon { color: #a9c1fb; opacity: 1; }
 }
