@@ -1,6 +1,9 @@
 import { PinDirection } from './gate.model';
 
 /**
+ * TOTER CODE seit Phase 7: Leitungen verlegt der Nutzer selbst (Whiteboard ruft
+ * autoRoutes()/routeWire nicht mehr auf). Bewusst behalten, nicht löschen.
+ *
  * Automatische Leitungsführung (Phase 6C): A*-Wegsuche über ein
  * Sichtbarkeitsgitter.
  *

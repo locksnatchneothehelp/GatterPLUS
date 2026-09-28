@@ -1423,13 +1423,8 @@ export class Whiteboard implements OnDestroy {
     const from = this.gates.find(g => g.id === wire.fromGateId);
     const to   = this.gates.find(g => g.id === wire.toGateId);
     if (!from || !to) return null;
-
-    // Automatische Führung (A*, Phase 6C) aus dem Cache — nur für Leitungen des
-    // aktuellen Zustands und nicht während eines Bauteil-Drags (dort schnell).
-    if (!this.fastRouting && this.wires.includes(wire)) {
-      const cached = this.autoRoutes().paths.get(wire.id);
-      if (cached) return cached;
-    }
+    // Phase 7: Der Nutzer legt den Verlauf fest (feste Punkte = manualPoints);
+    // die automatische A*-Führung (autoRoutes) wird nicht mehr aufgerufen.
     return this.legacyWirePoints(wire, from, to);
   }
 
@@ -1458,6 +1453,8 @@ export class Whiteboard implements OnDestroy {
   }
 
   // ─── Automatische Leitungsführung (A*, Phase 6C) ───────────────────────────
+  // TOTER CODE seit Phase 7: Leitungen verlegt der Nutzer selbst, autoRoutes()
+  // wird nirgends mehr aufgerufen. Bewusst behalten (Nutzer-Entscheidung), nicht löschen.
 
   /** Während eines Bauteil-Drags: schneller Alt-Router statt A* (flüssiges Ziehen). */
   private fastRouting = false;
@@ -1565,12 +1562,8 @@ export class Whiteboard implements OnDestroy {
     return this.routeCache;
   }
 
-  /** Aktueller Startpunkt einer Abzweig-Leitung (auf den Verlauf projiziert). */
+  /** Startpunkt einer Abzweig-Leitung (Phase 7: gespeicherter Punkt, keine A*-Projektion mehr). */
   private branchStart(wire: WireConnection): { x: number; y: number } | undefined {
-    if (!wire.branchPoint) return undefined;
-    if (!this.fastRouting && this.wires.includes(wire)) {
-      return this.autoRoutes().branchStarts.get(wire.id) ?? wire.branchPoint;
-    }
     return wire.branchPoint;
   }
 
