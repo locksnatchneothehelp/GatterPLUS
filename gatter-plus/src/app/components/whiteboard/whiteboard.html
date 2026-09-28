@@ -9,6 +9,9 @@
 <div
   #viewport
   class="whiteboard-viewport"
+  [class.over-gate]="hoverCursor === 'move'"
+  [class.over-stub]="hoverCursor === 'negate'"
+  [class.over-switch]="hoverCursor === 'pointer'"
   [class.panning]="isPanning"
   [class.dragging]="isDraggingGate"
   [class.wire-mode]="toolMode === 'wire'"

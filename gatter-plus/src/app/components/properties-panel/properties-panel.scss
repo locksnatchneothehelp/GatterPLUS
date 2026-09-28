@@ -33,7 +33,7 @@
 .delete-btn {
   background: none;
   border: none;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   font-size: 16px;
   color: #ef4444;
   padding: 2px 4px;
@@ -107,7 +107,7 @@
   border-radius: 4px;
   background: var(--input-bg);
   font-size: 11px;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   color: var(--text-secondary);
 
   &:hover {
@@ -132,7 +132,7 @@
   height: 24px;
   border-radius: 50%;
   border: 2px solid transparent;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
 
   &.active {
     border-color: var(--text-primary);
@@ -161,7 +161,7 @@
     background: var(--input-bg);
     color: var(--text-primary);
     font-size: 16px;
-    cursor: pointer;
+    cursor: var(--cursor-pointer);
 
     &:hover:not(:disabled) {
       background: var(--menu-hover-bg);
@@ -169,7 +169,7 @@
 
     &:disabled {
       opacity: 0.4;
-      cursor: default;
+      cursor: var(--cursor-default);
     }
   }
 }

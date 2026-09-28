@@ -23,7 +23,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  cursor: grab;
+  cursor: var(--cursor-grab);
   /* Zeichenflächen-Hintergrund – das gepunktete Raster liegt darüber */
   background: var(--canvas-bg);
   user-select: none;
@@ -44,9 +44,12 @@
   fill: var(--grid-dot);
 }
 
-.whiteboard-viewport.panning       { cursor: grabbing; }
-.whiteboard-viewport.dragging      { cursor: copy; }
-.whiteboard-viewport.wire-mode     { cursor: crosshair; }
+.whiteboard-viewport.over-switch   { cursor: var(--cursor-pointer); }
+.whiteboard-viewport.over-gate     { cursor: var(--cursor-move); }
+.whiteboard-viewport.over-stub     { cursor: var(--cursor-negate); }
+.whiteboard-viewport.panning       { cursor: var(--cursor-grabbing); }
+.whiteboard-viewport.dragging      { cursor: var(--cursor-grabbing); }
+.whiteboard-viewport.wire-mode     { cursor: var(--cursor-wire); }
 
 /* ── Komponenten-Layer ──────────────────────────────────────────────────── */
 
@@ -96,7 +99,7 @@
   stroke-width: 2;
   fill: none;
   pointer-events: stroke;  /* Klick nur auf dem Strich (nicht im leeren Bereich) */
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
 }
 
 /* Leitungs-Modus: Leitung unter der Maus (hier startet/endet ein Abzweig) */
@@ -207,7 +210,7 @@
   stroke: #3b82f6;
   stroke-width: 2;
   pointer-events: all;
-  cursor: move;
+  cursor: var(--cursor-move);
 }
 
 /* Verbindungs-Punkt (T-Junction): ein Ausgang → mehrere Eingänge */
@@ -398,7 +401,7 @@
 .minimap-toggle-btn {
   background: none;
   border: none;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   padding: 3px;
   color: var(--text-secondary, #475569);
   display: flex;

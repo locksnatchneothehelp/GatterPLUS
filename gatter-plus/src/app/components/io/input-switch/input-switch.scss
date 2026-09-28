@@ -29,7 +29,7 @@
 
 /* Simulations-Modus: Cursor zeigt Klickbarkeit */
 .input-switch.simulation-mode {
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   .switch-body:hover {
     filter: brightness(0.92);
   }

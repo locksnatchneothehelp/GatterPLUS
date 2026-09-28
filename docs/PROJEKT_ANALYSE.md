@@ -29,6 +29,7 @@
 | Drag aus Palette → Whiteboard | `services/drag-state.service.ts` |
 | Palette + Werkzeug Pan/Wire + Simulations-Button | `components/toolbar-top/` |
 | App-Icon (Favicon + Toolbar links neben dem Namen) | `gatter-plus/public/icon.svg`; `public/favicon.ico` (16/32/48 px) daraus gerendert – bei Änderungen am SVG neu erzeugen |
+| Eigene Cursor (Bernstein-Stil, 28 px SVG) | `gatter-plus/src/cursors/*.svg` (in `src/`, damit Angular sie bündelt – funktioniert mit jedem base-href); Variablen `--cursor-*` in `styles.scss`, überall `cursor: var(--cursor-…)` statt System-Namen; Zeichenfläche: `Whiteboard.hoverCursor` → Klassen `over-gate`/`over-stub`/`over-switch` |
 | Menü Datei/Bearbeiten/Hilfe + Theme-Toggle | `components/menu-bar/` |
 | Willkommensbildschirm beim Start (Inhalt noch Platzhalter; Esc/„Los geht's“, `App.welcomeOpen`, S gesperrt solange offen) | `components/welcome-dialog/` |
 | Eigenschaften (Rotation, Farbe, Eingänge, Takt, Label, Löschen) | `components/properties-panel/` |

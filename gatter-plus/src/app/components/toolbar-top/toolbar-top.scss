@@ -95,7 +95,7 @@
   justify-content: center;
   width: 64px;
   height: 56px;
-  cursor: grab;
+  cursor: var(--cursor-grab);
   transition: filter 0.15s, opacity 0.15s;
 
   /* Dezentes Hover-Feedback auf dem sonst leeren Kasten (rein interaktiv,
@@ -105,7 +105,7 @@
     border-radius: 6px;
   }
   &:active {
-    cursor: grabbing;
+    cursor: var(--cursor-grabbing);
   }
 }
 
@@ -142,7 +142,7 @@
   border-radius: 6px;
   background: var(--btn-bg);
   color: var(--btn-text);
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   padding: 0;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 
@@ -223,7 +223,7 @@
   color: var(--power-icon);
   font-size: 18px;
   line-height: 1;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 

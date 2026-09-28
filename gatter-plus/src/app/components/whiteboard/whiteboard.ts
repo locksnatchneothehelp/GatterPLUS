@@ -157,6 +157,12 @@ export class Whiteboard implements OnDestroy {
   /** Leitung unter der Maus im Leitungs-Modus (Hervorhebung), sonst null. */
   hoverWireId: string | null = null;
 
+  /**
+   * Cursor-Hinweis im Pan-Modus: über einem Bauteil Vier-Pfeile (verschieben),
+   * über dem Pin-Stummel Verneinen, im Strommodus über Schaltern Zeigehand.
+   */
+  hoverCursor: 'move' | 'negate' | 'pointer' | null = null;
+
   /** Kurze Fehlermeldung (rot, an der Stelle der Tastenhilfe), z. B. „Platz belegt“. */
   errorMessage: string | null = null;
   private errorTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1053,6 +1059,18 @@ export class Whiteboard implements OnDestroy {
       const { lx, ly } = this.toLogical(event);
       this.tentativeX = lx;
       this.tentativeY = ly;
+    }
+
+    // Cursor-Hinweis im Pan-Modus (nicht während Ziehen/Verschieben)
+    if (this.toolMode === 'pan' && !this.isPanning && !this.gateDragState) {
+      const { lx, ly } = this.toLogical(event);
+      const gate = this.findGateAt(lx, ly);
+      this.hoverCursor = this.simulationMode
+        ? (gate?.type === 'input' ? 'pointer' : null)
+        : (this.findStubAt(lx, ly, 'output', true) || this.findStubAt(lx, ly, 'input', true)) ? 'negate'
+        : gate ? 'move' : null;
+    } else if (this.toolMode !== 'pan') {
+      this.hoverCursor = null;
     }
 
     // Leitungs-Modus: Leitung unter der Maus hervorheben (zeigt, wovon abgezweigt wird)

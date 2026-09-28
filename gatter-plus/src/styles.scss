@@ -81,6 +81,17 @@
   /* Stromfarbe der Start-Animation („Strom fließt“) */
   --flow-color:          #0ea5e9;
 
+  /* Eigene Cursor (public/cursors/*.svg, Bernstein-Stil) mit Hotspot und
+     System-Cursor als Rückfall – für Hell und Dunkel gleich */
+  --cursor-default:  url(cursors/arrow.svg) 5 5, default;
+  --cursor-pointer:  url(cursors/point.svg) 9 3, pointer;
+  --cursor-grab:     url(cursors/hand.svg) 14 14, grab;
+  --cursor-grabbing: url(cursors/grab.svg) 14 14, grabbing;
+  --cursor-text:     url(cursors/text.svg) 14 14, text;
+  --cursor-move:     url(cursors/move.svg) 14 14, move;
+  --cursor-wire:     url(cursors/wire.svg) 14 14, crosshair;
+  --cursor-negate:   url(cursors/negate.svg) 14 14, pointer;
+
   /* Fehlermeldungen (z. B. „Platz belegt“) */
   --error-bg:            #fee2e2;
   --error-border:        #f87171;
@@ -288,3 +299,9 @@ html.theme-switching *::before,
 html.theme-switching *::after {
   transition: none !important;
 }
+
+/* ─── Eigene Cursor: Grundregeln (Variablen oben in :root) ────────────────── */
+html { cursor: var(--cursor-default); }
+button, a, select, label[for] { cursor: var(--cursor-pointer); }
+button:disabled { cursor: not-allowed; }
+input[type="text"], input[type="number"], input:not([type]), textarea { cursor: var(--cursor-text); }

@@ -103,7 +103,7 @@
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   transition: background 0.15s;
 
   &:hover { background: var(--btn-hover-bg); }
