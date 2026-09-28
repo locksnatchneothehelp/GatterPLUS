@@ -153,6 +153,9 @@ export class Whiteboard implements OnDestroy {
   /** Leitung unter der Maus im Leitungs-Modus (Hervorhebung), sonst null. */
   hoverWireId: string | null = null;
 
+  // ─── Feste Punkte einer Leitung verschieben (Phase 7) ──────────────────────
+  private handleDrag: { wireId: string; index: number; started: boolean; orig: { x: number; y: number }[] } | null = null;
+
   // ─── Gatter verschieben ────────────────────────────────────────────────────
   private gateDragState:   GateDragState | null = null;
   private gateDragStarted = false;
@@ -831,6 +834,8 @@ export class Whiteboard implements OnDestroy {
 
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
+    if (this.handleDrag) { this.moveWireHandle(event); return; }
+
     // Panning
     if (this.isPanning) {
       this.panX = this.panStartOffsetX + (event.clientX - this.panStartMouseX);
@@ -970,6 +975,7 @@ export class Whiteboard implements OnDestroy {
 
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent): void {
+    if (this.handleDrag) { this.handleDrag = null; return; }
     if (this.isPanning) {
       this.isPanning = false;
       return;
@@ -1032,6 +1038,107 @@ export class Whiteboard implements OnDestroy {
     this.selectedWireId  = wire.id;
     this.selectedGateId  = null;
     this.selectedGateIds.clear();
+  }
+
+  // ─── Feste Punkte einer ausgewählten Leitung bearbeiten (Phase 7) ──────────
+
+  /** Feste Punkte der ausgewählten Leitung (Griffe zum Verschieben/Entfernen). */
+  getSelectedWireHandles(): { x: number; y: number }[] {
+    if (this.simulationMode || !this.selectedWireId) return [];
+    return this.wires.find(w => w.id === this.selectedWireId)?.manualPoints ?? [];
+  }
+
+  /** Griff anfassen → Verschieben startet (Undo-Sicherung erst bei echter Bewegung). */
+  onHandleMouseDown(index: number, event: MouseEvent): void {
+    const orig = this.wires.find(w => w.id === this.selectedWireId)?.manualPoints;
+    if (event.button !== 0 || !this.selectedWireId || !orig) return;
+    event.stopPropagation();
+    event.preventDefault();
+    this.handleDrag = { wireId: this.selectedWireId, index, started: false, orig };
+  }
+
+  /** Doppelklick auf einen Griff → festen Punkt entfernen (Verlauf bleibt rechtwinklig). */
+  onHandleDblClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    const wire = this.wires.find(w => w.id === this.selectedWireId);
+    if (!wire?.manualPoints || this.simulationMode) return;
+    const rest = wire.manualPoints.filter((_, i) => i !== index);
+    this.pushHistory();
+    this.replaceWirePoints(wire, rest.length > 0 ? rest : undefined);
+  }
+
+  /** Doppelklick auf eine Leitung → an dieser Stelle einen festen Punkt einfügen. */
+  onWireDblClick(wire: WireConnection, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.simulationMode) return;
+    const pts = this.getWireDisplayPoints(wire);
+    if (!pts || pts.length < 2) return;
+    const { lx, ly } = this.toLogical(event);
+    let best = { dist: Infinity, index: 0, point: pts[0] };
+    for (let i = 0; i < pts.length - 1; i++) {
+      const { dist, point } = this.closestPointOnSegment(lx, ly, pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
+      if (dist < best.dist) best = { dist, index: i, point };
+    }
+    const a = pts[best.index], b = pts[best.index + 1];
+    const point = this.snapOnWire(best.point, a.y === b.y ? { dx: 0, dy: 1 } : { dx: 1, dy: 0 });
+    // Aktuellen Verlauf als feste Punkte übernehmen und den neuen dazwischen einfügen
+    const inner = pts.slice(1, -1);
+    inner.splice(best.index, 0, point);
+    this.pushHistory();
+    this.replaceWirePoints(wire, inner);
+    this.selectedWireId = wire.id;
+    this.selectedGateId = null;
+    this.selectedGateIds.clear();
+  }
+
+  /**
+   * Griff folgt der Maus (auf dem Raster). Gerade Nachbarstücke wandern mit:
+   * ein direkter Nachbar auf derselben Waagerechten/Senkrechten übernimmt die
+   * neue y- bzw. x-Koordinate – so bleibt die Leitung rechtwinklig ohne Zickzack.
+   */
+  private moveWireHandle(event: MouseEvent): void {
+    const drag = this.handleDrag!;
+    const wire = this.wires.find(w => w.id === drag.wireId);
+    const old  = drag.orig[drag.index];
+    if (!wire || !old) return;
+    const { lx, ly } = this.toLogical(event);
+    const p = this.snapToGrid({ x: lx, y: ly });
+    const cur = wire.manualPoints?.[drag.index];
+    if (cur && p.x === cur.x && p.y === cur.y) return;
+    if (!drag.started) { this.pushHistory(); drag.started = true; }
+    const pts = drag.orig.map(q => ({ ...q }));
+    for (const n of [drag.index - 1, drag.index + 1]) {
+      const q = pts[n];
+      if (!q || (q.x === old.x && q.y === old.y)) continue;
+      if (q.y === old.y) q.y = p.y;
+      else if (q.x === old.x) q.x = p.x;
+    }
+    pts[drag.index] = p;
+    this.replaceWirePoints(wire, pts);
+  }
+
+  /**
+   * Ersetzt die festen Punkte einer Leitung. Abzweige desselben Signals, die
+   * auf dem alten Verlauf saßen, werden auf den neuen Verlauf gesetzt.
+   */
+  private replaceWirePoints(wire: WireConnection, manualPoints: { x: number; y: number }[] | undefined): void {
+    const oldPath = this.getWireDisplayPoints(wire) ?? [];
+    const updated: WireConnection = { ...wire, manualPoints };
+    const newPath = this.getWireDisplayPoints(updated) ?? [];
+    const nearest = (p: { x: number; y: number }, path: { x: number; y: number }[]) => {
+      let best = { dist: Infinity, point: p };
+      for (let i = 0; i < path.length - 1; i++) {
+        const r = this.closestPointOnSegment(p.x, p.y, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+        if (r.dist < best.dist) best = r;
+      }
+      return best;
+    };
+    this.wires = this.wires.map(w => {
+      if (w.id === wire.id) return updated;
+      if (!w.branchPoint || w.fromGateId !== wire.fromGateId || w.fromPinIndex !== wire.fromPinIndex) return w;
+      if (nearest(w.branchPoint, oldPath).dist > 0.5) return w;
+      return { ...w, branchPoint: nearest(w.branchPoint, newPath).point };
+    });
   }
 
   // ─── Leitungs-Logik ────────────────────────────────────────────────────────

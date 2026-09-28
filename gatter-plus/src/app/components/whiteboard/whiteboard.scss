@@ -139,6 +139,15 @@
   opacity: 0.8;
 }
 
+/* Feste Punkte der ausgewählten Leitung (Phase 7): Griffe zum Verschieben */
+.wire-handle {
+  fill: #ffffff;
+  stroke: #3b82f6;
+  stroke-width: 2;
+  pointer-events: all;
+  cursor: move;
+}
+
 /* Verbindungs-Punkt (T-Junction): ein Ausgang → mehrere Eingänge */
 .wire-junction {
   fill: var(--wire-stroke, #1e293b);

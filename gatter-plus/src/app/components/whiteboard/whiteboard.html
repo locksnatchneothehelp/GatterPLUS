@@ -190,6 +190,7 @@
           [class.wire-selected]="wire.id === selectedWireId"
           [class.wire-hover]="wire.id === hoverWireId"
           (click)="onWireClick(wire, $event)"
+          (dblclick)="onWireDblClick(wire, $event)"
         />
       }
     }
@@ -213,6 +214,19 @@
         class="wire-junction"
         [class.junction-high]="simulationMode && getSignalOutput(pt.gateId, pt.pinIndex) === true"
         [class.junction-low]="simulationMode && getSignalOutput(pt.gateId, pt.pinIndex) === false"
+      />
+    }
+
+    <!-- Feste Punkte der ausgewählten Leitung (Phase 7): ziehen = verschieben,
+         Doppelklick = entfernen; Doppelklick auf die Leitung fügt einen hinzu -->
+    @for (p of getSelectedWireHandles(); track $index) {
+      <circle
+        [attr.cx]="p.x"
+        [attr.cy]="p.y"
+        r="5"
+        class="wire-handle"
+        (mousedown)="onHandleMouseDown($index, $event)"
+        (dblclick)="onHandleDblClick($index, $event)"
       />
     }
 
