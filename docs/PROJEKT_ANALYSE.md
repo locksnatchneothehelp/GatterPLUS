@@ -133,7 +133,7 @@ Ebenen (unten → oben) im `#viewport`-Div (empfängt `mousedown`/`dblclick`; `m
 
 - Bauteil-Komponenten sind rein darstellend: Inputs `toolbarMode` (Palettenansicht), `signalOutput*`/`signalInput`, `inputCount`, `value`, `label`. Symbole nach DIN 40900 (`&`, `≥1`, `=1` …).
 - **Theme:** `ThemeService` setzt nur `data-theme="light|dark"` an `<html>`, persistiert in `localStorage['gatterplus-theme']`, geladen in `App.ngOnInit`. Farben als CSS-Variablen in `styles.scss` (`:root` / `:root[data-theme="dark"]`). Neues Theme = neuer Block + `ThemeName` erweitern.
-- Bauteil-SCSS nutzt teils feste Farben (z. B. `#f1f5f9`, `#f5b342` als Fallback) → nicht vollständig theme-fähig.
+- Bauteil-SCSS nutzt teils feste Farben (z. B. `#f1f5f9`, `#f5b342` als Fallback). Das dunkle Design überschreibt sie zentral in `styles.scss` (Block `html:root[data-theme="dark"]` – „html“ nötig, sonst sind die gekapselten Komponenten-Stile gleich spezifisch und gewinnen): dunkle IN/OUT/Textfeld/Taktgeber, Simulationszustände, Farbkreis „Standard“. Gatter im Strommodus über `--sim-gate-fill` (`getGateFill`). Fehlermeldungen über `--error-*`.
 
 ## UI-Muster für neue Bedienelemente
 
@@ -147,7 +147,7 @@ Beispiel Menüeintrag (analog Undo):
 
 - Palette: `toolbar-top.html` `.palette-item` mit `(mousedown)="onGateMouseDown($event, 'typ')"` → `DragStateService.startDrag` → `Whiteboard.onMouseUp` → `placeGate`. Deaktiviert bei `simulationMode`.
 - Properties: `GatePropertyChange` (`properties-panel.ts`) → `gateChange` → `App.onGateChange` → `Whiteboard.updateGate`.
-- Datei-Menü: `Öffnen`/`Speichern`/`Speichern unter` → `openClicked`/`saveClicked`/`saveAsClicked` → `App.onOpen`/`onSave`/`onSaveAs` (`App.fileHandle` = zuletzt geöffnete/exportierte Datei, „Speichern“ schreibt ohne Dialog dorthin; Datei-Dialoge per File System Access API, Fallback Download bzw. `<input type="file">`; Fehler per `alert`) → `Whiteboard.loadProject`/`getProjectData`. `Importieren (LogikSim)` → `importLogikSimClicked` → `App.onImportLogikSim`. `Neu` → `newClicked` → `App.onNew` (`confirm`, dann `loadProject` mit leerem Projekt, `fileHandle = null`, per Undo rückgängig). Hilfe „Über“ (`onAbout`) ist **Platzhalter** (`console.log`).
+- Datei-Menü: `Öffnen`/`Speichern`/`Speichern unter` → `openClicked`/`saveClicked`/`saveAsClicked` → `App.onOpen`/`onSave`/`onSaveAs` (`App.fileHandle` = zuletzt geöffnete/exportierte Datei, „Speichern“ schreibt ohne Dialog dorthin; Datei-Dialoge per File System Access API, Fallback Download bzw. `<input type="file">`; Fehler per `alert`) → `Whiteboard.loadProject`/`getProjectData`. `Importieren (LogikSim)` → `importLogikSimClicked` → `App.onImportLogikSim`. `Neu` → `newClicked` → `App.onNew` (`confirm`, dann `loadProject` mit leerem Projekt, `fileHandle = null`, per Undo rückgängig). Hilfe „Steuerung & Tastenkürzel“ (`onHelp`, Fenster `helpOpen` in `menu-bar.html`; Esc/✕/Klick daneben schließt) – bei neuen Kürzeln dort nachtragen. „Über“ (`onAbout`) ist **Platzhalter** (`console.log`).
 - **Neuer Bauteiltyp** berührt: `GateType`, `GATE_BASE_SIZE`, `getGatePinOffsets`, ggf. `createGateInstance` (model); `computeGateOutput` (+ ggf. `isSource`) (simulation); neue Komponente unter `components/gates|io/`; `imports` + `@if`-Block in `whiteboard.ts/html`; Palette in `toolbar-top.ts/html`; `getTypeName`/`getGateDescription`/`getCurrentStateDescription` (properties-panel).
 
 ## Verbindungsregeln und Simulation
@@ -158,6 +158,8 @@ Beispiel Menüeintrag (analog Undo):
 - Routing (Phase 6C, **seit Phase 7 toter Code** – `getWireDisplayPoints` nutzt nur `manualPoints` bzw. `computeOrthogonalWaypoints`, `branchStart` = gespeicherter `branchPoint`): `models/wire-router.ts` `routeWire` = A* über Sichtbarkeitsgitter (Bauteile + 12 px Abstand als Hindernisse, Knick- und Fremd-Überlappungs-Kosten, gleiches Signal darf teilen; **Ausweichspuren**: zusätzliche Gitterlinien im Abstand `LANE` = 10 px neben fremden Leitungen im Umkreis `LANE_MARGIN` = 200 px). Die festen Pin-Stücke (`ROUTE_EXIT` = 20 px) aller Ein-/Ausgänge gibt `autoRoutes` vorab als belegt mit (eigene Liste `pinStubs`, nicht für die Abzweig-Projektion). `Whiteboard.autoRoutes()` cacht alle Verläufe (gleiche Array-Referenzen oder Layout-Signatur), Reihenfolge: eigene Knicke → direkte → Abzweige (auf aktuellen Signal-Verlauf projiziert, `branchStart`). Während Bauteil-Drag `fastRouting` = Alt-Router `computeOrthogonalWaypoints` (Z-/U-Form), ebenso als Rückfall ohne Weg.
 - Negation: Im Pan-Modus (nicht Simulation) Klick auf den Stummel zwischen Pin und Gehäuse (`findStubAt(…, inward = true)`, 12 px bzw. NOT 8 px, geprüft **vor** der Bauteil-Auswahl) → `toggleNegation(id, pin, kind)` (`negatedOutputs`/`negatedInputs`); zusätzlich Buttons „Verneinung“ im Eigenschaften-Panel (Pin-Namen, über `gateChange` → `updateGate`). Kreise (r = 6) via `getNegationDots` direkt am Gehäuse in der Stummel-Ebene (Farbe = Signal auf der Leitung am Kreis).
 - Löschen eines Bauteils entfernt alle anhängenden Leitungen.
+- **Nicht aufeinander ablegen:** `gatesOverlap`/`getGateBounds` (model). Ziehen: landet ein bewegtes Bauteil auf einem anderen, stellt `onMouseUp` den Zustand von vor dem Ziehen her (`historyService.pop()`), sonst werden die festen Punkte angehängter Leitungen auf den bereinigten Verlauf gesetzt (`removeBacktracks` in `manualWirePath` entfernt Rückläufer/Sporne). `placeGate` lehnt belegte Stellen ab, `pasteClipboard` sucht in Rasterschritten eine freie Stelle. Meldung: `showError` → rote `.wire-draw-error` an der Stelle der Tastenhilfe (2,5 s).
+- **Tasten:** S = Simulation (App `onKeyDown`), Esc im Kabelmodus ohne laufende Leitung → Verschieben (Whiteboard `toolModeChange` → App `activeTool`).
 
 **Simulation** (`SimulationService.computeSignals(gates, wires) → Map<id, {inputSignals, outputSignals}>`; Werte `true|false|null`):
 1. Ausgänge initialisieren: Quellen (`input`, `clock-gen`) aus `inputValue`, JK-FF aus `ffState`, übrige aus `prevOutputs` (Rückkopplungsstart).
@@ -207,7 +209,6 @@ Alle Befehle in `gatter-plus/`:
 - Leitungen sind nur über ihren 2-px-Strich anklickbar (Auswahl, Doppelklick zum Einfügen eines Punkts).
 - **Mutation in `computeSignals`** (`ffState`, `ffPrevClock`) widerspricht dem Immutable-Pattern; Objekte werden nicht ersetzt.
 - **`app.spec.ts`** ist das CLI-Template (erwartet `<h1>Hello, gatter-plus`) → schlägt bei `ng test` vermutlich fehl, falls `ng test` `vitest.config.ts` nicht nutzt (**unsicher, nicht verifiziert**).
-- Tooltip „Simulation starten (F5)“ – **kein F5-Handler** implementiert.
 - `ToolbarLeft` wird nicht gerendert; nur `ToolMode` wird daraus importiert.
 - `DragStateService.gateType` ist `string`, wird im Whiteboard per Cast zu `GateType`.
 - `PropertiesPanel.selectedGate` ist `any`; `App.onGateChange` castet `as any`.
