@@ -60,6 +60,18 @@ export class App implements OnInit {
     this.activeTool = this.whiteboardRef.toolMode;
   }
 
+  /**
+   * Neu laden/Schließen per Browser: Rückfrage, sobald etwas auf dem Whiteboard
+   * liegt (sonst ginge die Schaltung verloren). Der Browser zeigt dafür seinen
+   * eigenen Standard-Dialog; ein eigener Text ist nicht möglich.
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (!this.whiteboardRef?.gates.length) return;
+    event.preventDefault();
+    event.returnValue = ''; // ältere Browser brauchen zusätzlich returnValue
+  }
+
   /** Taste S: Simulation starten/stoppen (nicht beim Tippen und nicht beim Verlegen einer Leitung). */
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {

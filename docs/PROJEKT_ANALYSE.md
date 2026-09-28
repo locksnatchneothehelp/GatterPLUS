@@ -20,7 +20,7 @@
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
-| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`; Layout wie im Original: Schalter/LED-Drehung aus der Leitung, Pins auf LogikSim-Punkten (`UNIT_PX = 3 × GRID` → Pins auf dem Raster), Linien → `manualPoints`, weitere Ziele als Abzweig mit Verbindungspunkt) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
+| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`; Layout wie im Original: Schalter/LED-Drehung aus der Leitung, Pins auf LogikSim-Punkten (`UNIT_PX = 2 × GRID` → Pins auf dem Raster, kompakt; überlappende Textfelder werden verschoben; App zeigt danach `zoomToFit(0.9)`), Linien → `manualPoints`, weitere Ziele als Abzweig mit Verbindungspunkt) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
 | Automatische Leitungsführung (A*) – **toter Code seit Phase 7** | `models/wire-router.ts` (+spec), Cache in `Whiteboard.autoRoutes` (nicht mehr aufgerufen) |
 | PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
@@ -161,6 +161,7 @@ Beispiel Menüeintrag (analog Undo):
 - Negation: Im Pan-Modus (nicht Simulation) Klick auf den Stummel zwischen Pin und Gehäuse (`findStubAt(…, inward = true)`, 12 px bzw. NOT 8 px, geprüft **vor** der Bauteil-Auswahl) → `toggleNegation(id, pin, kind)` (`negatedOutputs`/`negatedInputs`); zusätzlich Buttons „Verneinung“ im Eigenschaften-Panel (Pin-Namen, über `gateChange` → `updateGate`). Kreise (r = 6) via `getNegationDots` direkt am Gehäuse in der Stummel-Ebene (Farbe = Signal auf der Leitung am Kreis).
 - Löschen eines Bauteils entfernt alle anhängenden Leitungen.
 - **Nicht aufeinander ablegen:** `gatesOverlap`/`getGateBounds` (model). Ziehen: landet ein bewegtes Bauteil auf einem anderen, stellt `onMouseUp` den Zustand von vor dem Ziehen her (`historyService.pop()`), sonst werden die festen Punkte angehängter Leitungen auf den bereinigten Verlauf gesetzt (`removeBacktracks` in `manualWirePath` entfernt Rückläufer/Sporne). `placeGate` lehnt belegte Stellen ab, `pasteClipboard` sucht in Rasterschritten eine freie Stelle. Meldung: `showError` → rote `.wire-draw-error` an der Stelle der Tastenhilfe (2,5 s).
+- **Neu laden/Schließen:** `App.onBeforeUnload` fragt per Browser-Standarddialog nach, sobald Bauteile auf dem Whiteboard liegen.
 - **Tasten:** S = Simulation (App `onKeyDown`), Esc im Kabelmodus ohne laufende Leitung → Verschieben (Whiteboard `toolModeChange` → App `activeTool`).
 
 **Simulation** (`SimulationService.computeSignals(gates, wires) → Map<id, {inputSignals, outputSignals}>`; Werte `true|false|null`):
