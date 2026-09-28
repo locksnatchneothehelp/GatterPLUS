@@ -265,3 +265,10 @@ body {
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* Während des Umschaltens keine CSS-Übergänge (siehe MenuBar.toggleTheme) */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}

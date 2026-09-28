@@ -101,10 +101,18 @@ export class MenuBar {
    * ohne Unterstützung oder bei „Bewegung reduzieren“ sofortiger Wechsel.
    */
   toggleTheme(event?: MouseEvent): void {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> };
+    };
+    const root = document.documentElement;
+    // Eigene CSS-Übergänge (Hintergrundfarben von Menü, Toolbar, Minimap …) während
+    // des Umschaltens aus: sonst stehen sie im neuen Bild noch auf der alten Farbe
+    // und springen erst danach um (Flackern).
+    root.classList.add('theme-switching');
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (!doc.startViewTransition || reduce || !event) {
       this.themeService.toggleTheme();
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
       return;
     }
     const btn = (event.currentTarget as HTMLElement).getBoundingClientRect();
@@ -114,6 +122,7 @@ export class MenuBar {
       this.themeService.toggleTheme();
       this.cdr.detectChanges(); // Schalter schon im neuen Bild in der neuen Stellung
     });
+    transition.finished.finally(() => root.classList.remove('theme-switching'));
     transition.ready.then(() => {
       document.documentElement.animate(
         { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
