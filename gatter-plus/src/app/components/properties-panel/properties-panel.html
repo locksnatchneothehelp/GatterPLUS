@@ -7,11 +7,10 @@
 <div class="panel">
   <div class="panel-header">
     <span class="gate-type">Leitung</span>
-    <button class="delete-btn" [disabled]="simulationMode" (click)="deleteWire()" title="Leitung löschen (Del)">🗑</button>
   </div>
   <div class="section">
     <div class="section-title">Hinweis</div>
-    <p class="wire-hint">Verbindet zwei Bauteile. Löschen entfernt nur diese Leitung — die Bauteile bleiben erhalten.</p>
+    <p class="wire-hint">Verbindet zwei Bauteile. Mit Entf wird nur diese Leitung gelöscht, die Bauteile bleiben erhalten.</p>
   </div>
   @if (wireHasManualRoute) {
     <div class="section">
@@ -25,7 +24,6 @@
 <div class="panel">
   <div class="panel-header">
     <span class="gate-type">{{ getTypeName() }}</span>
-    <button class="delete-btn" [disabled]="simulationMode" (click)="deleteGate()" title="Löschen (Del)">🗑</button>
   </div>
 
   <!-- Strommodus: Schaltung gesperrt → alle Bearbeiten-Felder deaktiviert -->
@@ -65,16 +63,16 @@
   <div class="section">
     <div class="section-title">Verneinung (Kreis am Pin)</div>
     @if (negationPins.inputs.length) {
+    <div class="negation-label">{{ negationPins.inputs.length > 1 ? 'Eingänge' : 'Eingang' }}</div>
     <div class="negation-row">
-      <span class="negation-label">Ein</span>
       @for (name of negationPins.inputs; track $index) {
         <button class="rot-btn" [class.active]="isNegated('input', $index)" (click)="toggleNegation('input', $index)" [title]="'Eingang ' + name + ' verneinen'">{{ name }}</button>
       }
     </div>
     }
     @if (negationPins.outputs.length) {
+    <div class="negation-label">{{ negationPins.outputs.length > 1 ? 'Ausgänge' : 'Ausgang' }}</div>
     <div class="negation-row">
-      <span class="negation-label">Aus</span>
       @for (name of negationPins.outputs; track $index) {
         <button class="rot-btn" [class.active]="isNegated('output', $index)" (click)="toggleNegation('output', $index)" [title]="'Ausgang ' + name + ' verneinen'">{{ name }}</button>
       }

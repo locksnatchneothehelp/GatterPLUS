@@ -150,10 +150,10 @@ export class PropertiesPanel {
       'and': 'UND-Gatter',
       'or': 'ODER-Gatter',
       'not': 'NICHT-Gatter',
-      'xor': 'XOR-Gatter',
+      'xor': 'Exklusiv-ODER-Gatter',
       'input': 'Eingang',
       'output': 'Ausgang',
-      'jk-ff': 'JK-Flip-Flop',
+      'jk-ff': 'JK-Flipflop',
       'half-adder': 'Halbaddierer',
       'full-adder': 'Volladdierer',
       'text-label': 'Beschriftung',
@@ -165,48 +165,44 @@ export class PropertiesPanel {
   getGateDescription(): string {
     const d: Record<string, string> = {
       'and':
-        'UND-Gatter: Gibt HIGH (1) aus, wenn ALLE Eingänge HIGH sind. Sonst LOW (0).\n' +
+        'Der Ausgang ist 1, wenn alle Eingänge 1 sind. Sonst ist er 0.\n\n' +
         'Wahrheitstabelle (2 Eingänge):\n' +
-        '  0 ∧ 0 = 0\n  0 ∧ 1 = 0\n  1 ∧ 0 = 0\n  1 ∧ 1 = 1',
+        '0 ∧ 0 = 0\n0 ∧ 1 = 0\n1 ∧ 0 = 0\n1 ∧ 1 = 1',
       'or':
-        'ODER-Gatter: Gibt HIGH (1) aus, wenn MINDESTENS EIN Eingang HIGH ist.\n' +
+        'Der Ausgang ist 1, wenn mindestens ein Eingang 1 ist. Sonst ist er 0.\n\n' +
         'Wahrheitstabelle (2 Eingänge):\n' +
-        '  0 ∨ 0 = 0\n  0 ∨ 1 = 1\n  1 ∨ 0 = 1\n  1 ∨ 1 = 1',
+        '0 ∨ 0 = 0\n0 ∨ 1 = 1\n1 ∨ 0 = 1\n1 ∨ 1 = 1',
       'not':
-        'NICHT-Gatter (Inverter): Invertiert den einzigen Eingang.\n' +
-        '  NOT 0 = 1\n  NOT 1 = 0',
+        'Kehrt das Signal um: Aus 0 wird 1, aus 1 wird 0.',
       'xor':
-        'XOR-Gatter (Exklusiv-ODER): Gibt HIGH aus, wenn eine UNGERADE ANZAHL von Eingängen HIGH ist.\n' +
+        'Der Ausgang ist 1, wenn eine ungerade Anzahl von Eingängen 1 ist. ' +
+        'Bei zwei Eingängen also genau dann, wenn sie verschieden sind.\n\n' +
         'Wahrheitstabelle (2 Eingänge):\n' +
-        '  0 ⊕ 0 = 0\n  0 ⊕ 1 = 1\n  1 ⊕ 0 = 1\n  1 ⊕ 1 = 0',
+        '0 ⊕ 0 = 0\n0 ⊕ 1 = 1\n1 ⊕ 0 = 1\n1 ⊕ 1 = 0',
       'jk-ff':
-        'JK-Flip-Flop: Speichert einen Bit-Zustand (flankengesteuert).\n' +
-        '  J=0, K=0 → Halten (Q bleibt)\n' +
-        '  J=1, K=0 → Setzen (Q=1)\n' +
-        '  J=0, K=1 → Rücksetzen (Q=0)\n' +
-        '  J=1, K=1 → Togglen (Q wechselt)\n' +
-        '  S=1 → Asynchrones Setzen\n' +
-        '  R=1 → Asynchrones Rücksetzen',
+        'Speichert ein Bit. Es schaltet nur, wenn der Takt C von 0 auf 1 wechselt:\n' +
+        'J = 0, K = 0: Q bleibt\n' +
+        'J = 1, K = 0: Q wird 1\n' +
+        'J = 0, K = 1: Q wird 0\n' +
+        'J = 1, K = 1: Q wechselt\n\n' +
+        'S = 1 setzt Q sofort auf 1, R = 1 setzt Q sofort auf 0, unabhängig vom Takt.',
       'half-adder':
-        'Halbaddierer: Addiert zwei 1-Bit-Zahlen A und B (ohne Übertragseingang).\n' +
-        '  S (Summe)    = A XOR B\n' +
-        '  C (Übertrag) = A AND B',
+        'Addiert zwei einstellige Binärzahlen A und B.\n' +
+        'Summe S = A ⊕ B\n' +
+        'Übertrag C = A ∧ B',
       'full-adder':
-        'Volladdierer: Addiert drei Bits A, B und Cin (Eingangsübertrag).\n' +
-        '  S    = A XOR B XOR Cin\n' +
-        '  Cout = Majorität (mind. 2 Eingänge HIGH)',
+        'Addiert A, B und den Übertrag Cin der vorherigen Stelle.\n' +
+        'Summe S = A ⊕ B ⊕ Cin\n' +
+        'Übertrag Cout = 1, wenn mindestens zwei Eingänge 1 sind',
       'input':
-        'Eingangsschalter: Manuelle Signalquelle.\n' +
-        'Im Simulationsmodus durch Klick umschaltbar (HIGH / LOW).',
+        'Schalter als Signalquelle. In der Simulation wird er per Klick zwischen 0 und 1 umgeschaltet.',
       'output':
-        'Ausgangs-LED: Zeigt den empfangenen Signalzustand an.\n' +
-        'Grün = HIGH, Grau = LOW, kein Signal = unverbunden.',
+        'Zeigt das ankommende Signal an: grün bei 1, grau bei 0.',
       'clock-gen':
-        'Taktgeber: Erzeugt automatisch ein periodisches Rechtecksignal.\n' +
-        'Die Halbperiode entspricht der eingestellten Zeit in ms.',
+        'Wechselt in der Simulation regelmäßig zwischen 0 und 1. ' +
+        'Die eingestellte Zeit in Millisekunden gibt an, wie lange jeder Zustand dauert.',
       'text-label':
-        'Beschriftung: Passives Textelement ohne Logik.\n' +
-        'Dient zur Kommentierung und Beschriftung der Schaltung.',
+        'Freier Text zum Beschriften der Schaltung. Er hat keine Funktion in der Simulation.',
     };
     return d[this.selectedGate?.type] ?? '';
   }
@@ -214,8 +210,7 @@ export class PropertiesPanel {
   getCurrentStateDescription(): string {
     if (!this.simulationMode || !this.signalState || !this.selectedGate) return '';
     const { inputSignals, outputSignals } = this.signalState;
-    const sig = (v: boolean | null) =>
-      v === true ? 'HIGH (1)' : v === false ? 'LOW (0)' : 'unbekannt';
+    const sig = (v: boolean | null) => (v === true ? '1' : v === false ? '0' : 'offen');
     const lines: string[] = [];
 
     switch (this.selectedGate.type) {
@@ -223,35 +218,35 @@ export class PropertiesPanel {
       case 'or':
       case 'xor':
         inputSignals.forEach((v, i) => lines.push(`Eingang ${i + 1}: ${sig(v)}`));
-        lines.push(`→ Ausgang: ${sig(outputSignals[0])}`);
+        lines.push(`Ausgang: ${sig(outputSignals[0])}`);
         break;
       case 'not':
         lines.push(`Eingang: ${sig(inputSignals[0])}`);
-        lines.push(`→ Ausgang: ${sig(outputSignals[0])}`);
+        lines.push(`Ausgang: ${sig(outputSignals[0])}`);
         break;
       case 'jk-ff': {
         const labels = ['S', 'J', 'C (Takt)', 'K', 'R'];
-        inputSignals.forEach((v, i) => lines.push(`${labels[i] ?? `In${i}`}: ${sig(v)}`));
-        lines.push(`→ Q:  ${sig(outputSignals[0])}`);
-        lines.push(`→ Q̄: ${sig(outputSignals[1])}`);
+        inputSignals.forEach((v, i) => lines.push(`${labels[i] ?? `Eingang ${i + 1}`}: ${sig(v)}`));
+        lines.push(`Q: ${sig(outputSignals[0])}`);
+        lines.push(`Q̅: ${sig(outputSignals[1])}`);
         break;
       }
       case 'half-adder':
         lines.push(`A: ${sig(inputSignals[0])}`);
         lines.push(`B: ${sig(inputSignals[1])}`);
-        lines.push(`→ S (Summe):    ${sig(outputSignals[0])}`);
-        lines.push(`→ C (Übertrag): ${sig(outputSignals[1])}`);
+        lines.push(`Summe S: ${sig(outputSignals[0])}`);
+        lines.push(`Übertrag C: ${sig(outputSignals[1])}`);
         break;
       case 'full-adder':
-        lines.push(`A:   ${sig(inputSignals[0])}`);
-        lines.push(`B:   ${sig(inputSignals[1])}`);
+        lines.push(`A: ${sig(inputSignals[0])}`);
+        lines.push(`B: ${sig(inputSignals[1])}`);
         lines.push(`Cin: ${sig(inputSignals[2])}`);
-        lines.push(`→ S:    ${sig(outputSignals[0])}`);
-        lines.push(`→ Cout: ${sig(outputSignals[1])}`);
+        lines.push(`Summe S: ${sig(outputSignals[0])}`);
+        lines.push(`Übertrag Cout: ${sig(outputSignals[1])}`);
         break;
       case 'input':
       case 'clock-gen':
-        lines.push(`→ Ausgang: ${sig(outputSignals[0])}`);
+        lines.push(`Ausgang: ${sig(outputSignals[0])}`);
         break;
       case 'output':
         lines.push(`Eingang: ${sig(inputSignals[0])}`);
