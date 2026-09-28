@@ -1,6 +1,6 @@
 # GatterPLUS – Projektanalyse
 
-- **Stand:** 2026-09-27 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C, Import-Layout, UI-Feinschliff `972aa5b`)
+- **Stand:** 2026-09-28 · Analysestand Git-Commit `fcb0ec4` (+ Phase 5, 6A, 6B, negierte Eingänge, 6C, Import-Layout, UI-Feinschliff `972aa5b`, Phase 7 Schritt 1 Raster `0d3fc67`)
 - Bei Abweichungen zwischen dieser Datei und dem Code gilt der Code; Datei danach aktualisieren.
 - Pfade relativ zu `gatter-plus/src/app/`, sofern nicht anders angegeben.
 
@@ -20,7 +20,7 @@
 | Bauteil-/Leitungs-Typen, Pin-Geometrie, Rotation, Leitungsrouting | `models/gate.model.ts` |
 | Zentraler State (gates/wires), Maus/Tastatur, Undo-Aufrufe, Copy/Paste, Taktgeber | `components/whiteboard/whiteboard.ts` + `.html` |
 | Projektdatei-Format (`.gatterplus.json`, serialize/parse, ohne Laufzeit-Zustand) | `models/project-file.ts` |
-| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`; Layout wie im Original: Schalter/LED-Drehung aus der Leitung, Pins auf LogikSim-Punkten, Linien → `manualPoints`, weitere Ziele als Abzweig mit Verbindungspunkt) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
+| LogikSim-Import (`.sim` → Projekt; Binärformat, Netz-Rekonstruktion, negierte Eingänge → `negatedInputs`; Layout wie im Original: Schalter/LED-Drehung aus der Leitung, Pins auf LogikSim-Punkten (`UNIT_PX = 3 × GRID` → Pins auf dem Raster), Linien → `manualPoints`, weitere Ziele als Abzweig mit Verbindungspunkt) | `models/logiksim-file.ts`, Testdateien `models/fixtures/*.sim` |
 | Automatische Leitungsführung (A*) | `models/wire-router.ts` (+spec), Cache in `Whiteboard.autoRoutes` |
 | PNG-Export (Bounding-Box, ohne Raster; SVG-Styles werden für `html-to-image` kurz inline gesetzt) | `Whiteboard.exportPng`, `App.onExportPng` |
 | Simulation (Signalberechnung, JK-FF) | `services/simulation.service.ts` |
@@ -94,17 +94,18 @@ interface WireConnection {
 
 | Typ | Größe w×h | Eingänge | Ausgänge | Zustand |
 |---|---|---|---|---|
-| `and`/`or`/`xor` | 76×max(52,(n+1)·16+8) | n = `inputCount` (2–8) | 1 | – |
-| `not` | 76×52 | 1 | 1 | – |
-| `jk-ff` | 76×100 | 0=S, 1=J, 2=C, 3=K, 4=R | 0=Q, 1=Q̄ | `ffState`, `ffPrevClock` |
-| `half-adder` | 76×52 | A, B | S, C | – |
-| `full-adder` | 76×70 | A, B, Cin | S, Cout | – |
-| `input` | 76×52 | – | 1 | `inputValue` |
-| `output` | 76×52 | 1 | – | – |
-| `clock-gen` | 76×52 | – | 1 | `inputValue`, `clockPeriodMs` |
-| `text-label` | 80×30 | – | – | `label` |
+| `and`/`or`/`xor` | 72×(Plätze·24): n=2,3 → 72; 4,5 → 120; 8 → 216 | n = `inputCount` (2–8) | 1 | – |
+| `not` | 72×48 | 1 | 1 | – |
+| `jk-ff` | 96×120 | 0=S, 1=J, 2=C, 3=K, 4=R | 0=Q, 1=Q̄ | `ffState`, `ffPrevClock` |
+| `half-adder` | 72×48 | A, B | S, C | – |
+| `full-adder` | 96×72 | A, B, Cin | S, Cout | – |
+| `input` | 72×48 | – | 1 | `inputValue` |
+| `output` | 72×48 | 1 | – | – |
+| `clock-gen` | 72×48 | – | 1 | `inputValue`, `clockPeriodMs` |
+| `text-label` | 72×24 (Text mittig, läuft symmetrisch über) | – | – | `label` |
 
-- Pin-Offsets sind **manuell an das CSS-Layout** der Bauteil-Templates angeglichen (Kommentare in `getGatePinOffsets`). Wer Bauteil-CSS ändert, muss die Offsets anpassen.
+- **Raster (Phase 7):** `GRID = 24`. Pins eines Bauteils liegen untereinander auf Vielfachen von `GRID` (Pin in der Mitte einer 24-px-Zeile, Breiten 72/96) → nach jeder Drehung auf dem Raster, sobald ein Pin darauf liegt. and/or/xor: `getInputSlots(n)` – bei gerader Anzahl bleibt der Mittelplatz frei, Ausgang auf der Spiegelachse. `snapGateToGrid(gate)` verschiebt minimal, sodass der erste Pin (ohne Pins: die Mitte) auf dem Raster liegt. Aufrufer: `placeGate`, Drag in `onMouseMove` (gezogenes Bauteil rastet, Gruppe folgt mit demselben Delta), `updateGate` (bei `rotation`/`inputCount`), LogikSim-Import (Textfelder); `pasteClipboard` versetzt um `GRID`.
+- Pin-Offsets sind **manuell an das CSS-Layout** der Bauteil-Templates angeglichen (feste 24-px-Zeilen `.slot`/`.pin-row`, siehe `getGatePinOffsets`). Wer Bauteil-CSS ändert, muss die Offsets anpassen; Test `snapGateToGrid` in `gate.model.spec.ts` prüft Rasterlage und Spiegelsymmetrie.
 - `createGateInstance(id, type, x, y)` liefert Defaults: rotation 0, color default, inputCount 2 (and/or/xor) sonst 1, inputValue/ffState false, clockPeriodMs 1000, label 'Label' nur bei text-label.
 - Geometrie-Helfer: `getGateDimensions`, `getPinWorldPos` (mit Rotation, Vorzeichen −), `getPinDirection`, `isPointInGate` (inverse Rotation, Vorzeichen +), `computeOrthogonalWaypoints`, `PIN_HIT_RADIUS = 12`.
 - `GATE_PIN_OFFSETS`: Legacy, ungenutzt.
@@ -123,7 +124,7 @@ interface WireConnection {
 ## Darstellung / Rendering (`whiteboard.html`)
 
 Ebenen (unten → oben) im `#viewport`-Div (empfängt `mousedown`/`dblclick`; `mousemove`/`mouseup`/Tasten via `@HostListener('document:…')`):
-1. `grid-svg`: SVG-`<pattern>` Punktraster (24 px · zoom).
+1. `grid-svg`: SVG-`<pattern>` Punktraster (24 px · zoom); Kachel um den Kreis-Versatz (2 px · zoom) verschoben, damit die Punkte genau auf Vielfachen von `GRID` liegen.
 2. `gates-layer`: HTML-Divs `.placed-gate` (absolute left/top, `transform: rotate()`, Farbe per CSS-Variable `--gate-fill` aus `getGateFill`: Bauteil-SCSS nutzen `background: var(--gate-fill, <Standard>)` am Körper; Standard Gatter goldgelb `#f5b342`, I/O eigene Optik; im Strommodus Gatter grau `#f1f5f9`, HIGH-Regeln der Bauteile färben grün; Farbwerte = Farbfelder in `properties-panel.scss`) mit `@if (gate.type === …)` → Bauteil-Komponente. Transform `translate(pan) scale(zoom)`.
 3. `wires-layer`: SVG-`<polyline>` pro Leitung (`getWirePointsString`), Vorschau `wire-tentative`, Verbindungsquadrate (7×7, `getWireJunctions`: an Abzweigen und dort, wo sich Fan-out-Leitungen trennen – `pathDivergence`), Negations-Kreise (r=6).
 3b. `wire-stubs-layer` (z-index 2, über den Bauteilen): nur die Anschluss-Stummel jeder Leitung (`getWireStubPointStrings`, 12 px bzw. NOT 8 px) in Leitungsfarbe – sonst bliebe vor dem Gehäuse ein dunkles Stück.
