@@ -348,6 +348,24 @@ export function snapGateToGrid(gate: GateInstance): GateInstance {
   };
 }
 
+/**
+ * Achsenparallele Umrandung eines Bauteils in Weltkoordinaten (inkl. Anschluss-
+ * Stummel; Drehung um den Mittelpunkt berücksichtigt, wie im Whiteboard).
+ */
+export function getGateBounds(gate: GateInstance): { x1: number; y1: number; x2: number; y2: number } {
+  const dim  = getGateDimensions(gate);
+  const side = gate.rotation === 90 || gate.rotation === 270;
+  const hw = (side ? dim.h : dim.w) / 2, hh = (side ? dim.w : dim.h) / 2;
+  const cx = gate.x + dim.w / 2, cy = gate.y + dim.h / 2;
+  return { x1: cx - hw, y1: cy - hh, x2: cx + hw, y2: cy + hh };
+}
+
+/** Überlappen sich zwei Bauteile (Phase 7: nicht aufeinander ablegen)? Nur Berühren zählt nicht. */
+export function gatesOverlap(a: GateInstance, b: GateInstance): boolean {
+  const p = getGateBounds(a), q = getGateBounds(b);
+  return p.x1 < q.x2 && q.x1 < p.x2 && p.y1 < q.y2 && q.y1 < p.y2;
+}
+
 /** Achsenparalleler Einheits-Richtungsvektor (immer dx/dy ∈ {-1,0,1}). */
 export interface PinDirection {
   dx: number;
@@ -622,7 +640,24 @@ export function manualWirePath(
     }
     if (b.x !== path[path.length - 1].x || b.y !== path[path.length - 1].y) path.push(b);
   }
-  return path;
+  return removeBacktracks(path);
+}
+
+/**
+ * Entfernt Rückläufer aus einem rechtwinkligen Verlauf (Phase 7): Liegen drei
+ * aufeinanderfolgende Punkte auf einer Linie und kehrt die Richtung am
+ * mittleren um, entfällt er – sonst bliebe ein „Sporn“ stehen (z. B. wenn das
+ * Ziel-Bauteil über einen festen Punkt hinaus verschoben wurde).
+ */
+export function removeBacktracks(path: { x: number; y: number }[]): { x: number; y: number }[] {
+  const p = [...path];
+  for (let i = 1; i < p.length - 1; ) {
+    const a = p[i - 1], b = p[i], c = p[i + 1];
+    const sameX = a.x === b.x && b.x === c.x, sameY = a.y === b.y && b.y === c.y;
+    const reverses = (sameX && (b.y - a.y) * (c.y - b.y) < 0) || (sameY && (b.x - a.x) * (c.x - b.x) < 0);
+    if (reverses) { p.splice(i, 1); i = Math.max(1, i - 1); } else i++;
+  }
+  return p;
 }
 
 /**

@@ -28,7 +28,7 @@ import {
   getPinWorldPos, isPointInGate,
   PIN_HIT_RADIUS, createGateInstance, computeOrthogonalWaypoints,
   getOutputPinMaxConnections, getPinDirection, manualWirePath,
-  snapGateToGrid, GRID, lCorner, drawnWirePath,
+  snapGateToGrid, GRID, lCorner, drawnWirePath, gatesOverlap,
 } from '../../models/gate.model';
 import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
@@ -156,6 +156,10 @@ export class Whiteboard implements OnDestroy {
   tentativeY = 0;
   /** Leitung unter der Maus im Leitungs-Modus (Hervorhebung), sonst null. */
   hoverWireId: string | null = null;
+
+  /** Kurze Fehlermeldung (rot, an der Stelle der Tastenhilfe), z. B. „Platz belegt“. */
+  errorMessage: string | null = null;
+  private errorTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ─── Feste Punkte einer Leitung verschieben (Phase 7) ──────────────────────
   private handleDrag: { wireId: string; index: number; started: boolean; orig: { x: number; y: number }[] } | null = null;
@@ -297,7 +301,13 @@ export class Whiteboard implements OnDestroy {
    */
   pasteClipboard(): void {
     if (!this.clipboard || this.simulationMode) return;
-    const OFFSET = GRID; // bleibt auf dem Raster
+    // Versatz in Rasterschritten schräg nach unten rechts, bis die Kopie frei liegt
+    let OFFSET = GRID;
+    for (let k = 1; k <= 50; k++) {
+      OFFSET = k * GRID;
+      const moved = this.clipboard.gates.map(g => ({ ...g, x: g.x + OFFSET, y: g.y + OFFSET }));
+      if (!this.overlapsOthers(moved, new Set())) break;
+    }
     const idMap  = new Map<string, string>();
 
     const newGates = this.clipboard.gates.map(g => {
@@ -1012,9 +1022,29 @@ export class Whiteboard implements OnDestroy {
     }
 
     if (this.gateDragState) {
+      const drag    = this.gateDragState;
+      const dragged = this.gateDragStarted;
       this.gateDragState   = null;
       this.gateDragStarted = false;
-      this.fastRouting     = false; // jetzt einmal sauber mit A* führen
+      this.fastRouting     = false;
+      // Nicht auf einem anderen Bauteil ablegen: zurück an die Startposition
+      // (Zustand von vor dem Ziehen – pushHistory beim ersten Bewegen)
+      if (dragged) {
+        const moved = new Set([drag.gateId, ...drag.otherOrigins.keys()]);
+        if (this.overlapsOthers(this.gates.filter(g => moved.has(g.id)), moved)) {
+          const snap = this.historyService.pop();
+          if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
+          this.showError('Dort liegt schon ein Bauteil – zurück an die Startposition.');
+        } else {
+          // Bereinigten Verlauf (ohne Rückläufer) als feste Punkte übernehmen,
+          // damit keine Griffe neben der Leitung im Leeren hängen
+          this.wires = this.wires.map(w => {
+            if (!w.manualPoints?.length || (!moved.has(w.fromGateId) && !moved.has(w.toGateId))) return w;
+            const inner = (this.getWireDisplayPoints(w) ?? []).slice(1, -1);
+            return { ...w, manualPoints: inner.length > 0 ? inner : undefined };
+          });
+        }
+      }
       return;
     }
 
@@ -1046,6 +1076,24 @@ export class Whiteboard implements OnDestroy {
     this.selectedWireId  = wire.id;
     this.selectedGateId  = null;
     this.selectedGateIds.clear();
+  }
+
+  // ─── Überlappung + Fehlermeldung ───────────────────────────────────────────
+
+  /** Überlappt eines der Bauteile ein anderes Bauteil (außer denen in ignore)? */
+  private overlapsOthers(candidates: GateInstance[], ignore: Set<string>): boolean {
+    return candidates.some(c => this.gates.some(g => !ignore.has(g.id) && gatesOverlap(c, g)));
+  }
+
+  /** Rote Meldung an der Stelle der Tastenhilfe, verschwindet nach 2,5 s. */
+  private showError(message: string): void {
+    this.errorMessage = message;
+    if (this.errorTimer) clearTimeout(this.errorTimer);
+    this.errorTimer = setTimeout(() => {
+      this.errorMessage = null;
+      this.errorTimer   = null;
+      this.cdr.markForCheck(); // zoneless: Timer löst keine Änderungserkennung aus
+    }, 2500);
   }
 
   // ─── Feste Punkte einer ausgewählten Leitung bearbeiten (Phase 7) ──────────
@@ -1568,12 +1616,18 @@ export class Whiteboard implements OnDestroy {
   // ─── Bauteil platzieren ────────────────────────────────────────────────────
 
   private placeGate(type: GateType, lx: number, ly: number): void {
-    this.pushHistory(); // Zustand vor dem Platzieren sichern
-    const gate = createGateInstance(`gate-${++this.gateIdCounter}`, type, 0, 0);
+    const gate = createGateInstance(`gate-${this.gateIdCounter + 1}`, type, 0, 0);
     const dim  = getGateDimensions(gate);
     gate.x = Math.round(lx - dim.w / 2);
     gate.y = Math.round(ly - dim.h / 2);
-    this.gates = [...this.gates, snapGateToGrid(gate)];
+    const placed = snapGateToGrid(gate);
+    if (this.overlapsOthers([placed], new Set())) {
+      this.showError('Dort liegt schon ein Bauteil – nicht platziert.');
+      return;
+    }
+    this.gateIdCounter++;
+    this.pushHistory(); // Zustand vor dem Platzieren sichern
+    this.gates = [...this.gates, placed];
     if (type === 'clock-gen' && this.simulationMode) this.startClockInterval(gate);
     if (this.simulationMode) this.recomputeSimulation();
   }

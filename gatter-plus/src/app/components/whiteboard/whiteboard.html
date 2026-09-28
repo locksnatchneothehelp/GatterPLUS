@@ -299,8 +299,10 @@
   }
 
   <!-- ── Zoom-Anzeige + Minimap (unten links) ──────────────────────────── -->
-  <!-- Tastenhilfe beim Verlegen einer Leitung (Phase 7) -->
-  @if (wireDrawing) {
+  <!-- Fehlermeldung (rot) bzw. Tastenhilfe beim Verlegen einer Leitung (Phase 7) -->
+  @if (errorMessage) {
+    <div class="wire-draw-hint wire-draw-error" role="alert">{{ errorMessage }}</div>
+  } @else if (wireDrawing) {
     <div class="wire-draw-hint">
       <b>C</b> / Klick: Punkt setzen · <b>F</b>: Knick umschalten · <b>Rück</b> / Strg+Z: Punkt zurück · <b>Esc</b>: abbrechen
     </div>

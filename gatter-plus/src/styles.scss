@@ -78,6 +78,11 @@
   --text-secondary:      #475569;
   --text-muted:          #64748b;
 
+  /* Fehlermeldungen (z. B. „Platz belegt“) */
+  --error-bg:            #fee2e2;
+  --error-border:        #f87171;
+  --error-text:          #b91c1c;
+
   /* Akzentfarbe (Auswahl, Fokus) */
   --accent:              #3b82f6;
   --accent-soft:         #dbeafe;
@@ -100,6 +105,9 @@
 
 /* ─── Dark Mode ─────────────────────────────────────────────────────────────*/
 :root[data-theme="dark"] {
+  --error-bg:            #3b1519;
+  --error-border:        #b4454c;
+  --error-text:          #fca5a5;
   --bg-app:              #12141c;
 
   --menu-bg:             #1f2333;

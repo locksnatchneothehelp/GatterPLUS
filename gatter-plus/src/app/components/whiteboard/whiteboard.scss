@@ -289,6 +289,14 @@
 
 /* ── Zoom-Leiste + Minimap (unten links) ─────────────────────────────────── */
 
+/* Fehlermeldung an derselben Stelle wie die Tastenhilfe, in Rot */
+.wire-draw-hint.wire-draw-error {
+  background: var(--error-bg, #fee2e2);
+  border-color: var(--error-border, #f87171);
+  color: var(--error-text, #b91c1c);
+  font-weight: 600;
+}
+
 /* Tastenhilfe beim Verlegen (Phase 7): oben mittig, klickt nicht mit */
 .wire-draw-hint {
   position: absolute;

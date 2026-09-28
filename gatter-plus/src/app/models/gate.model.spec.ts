@@ -9,6 +9,8 @@ import {
   getPinWorldPos,
   snapGateToGrid,
   lCorner,
+  gatesOverlap,
+  removeBacktracks,
   drawnWirePath,
   GRID,
   GateType,
@@ -359,5 +361,39 @@ describe('lCorner / drawnWirePath', () => {
   it('gemischte Pin-Richtungen: ein Knick', () => {
     expect(drawnWirePath({ x: 0, y: 0 }, R, [], { x: 96, y: 96 }, D))
       .toEqual([{ x: 0, y: 0 }, { x: 96, y: 0 }, { x: 96, y: 96 }]);
+  });
+});
+
+// ─── Tests: Überlappung (Phase 7) ─────────────────────────────────────────────
+
+describe('gatesOverlap', () => {
+  const g = (x: number, y: number, rotation: 0 | 90 | 180 | 270 = 0) => ({ ...createGateInstance('g', 'and', x, y), rotation });
+
+  it('überlappende Bauteile werden erkannt, nebeneinander/berührend nicht', () => {
+    expect(gatesOverlap(g(0, 0), g(24, 24))).toBe(true);
+    expect(gatesOverlap(g(0, 0), g(72, 0))).toBe(false);   // berührt nur die Kante
+    expect(gatesOverlap(g(0, 0), g(0, 96))).toBe(false);
+  });
+
+  it('berücksichtigt die Drehung', () => {
+    // AND 72×72 bleibt quadratisch; Halbaddierer 72×48 gedreht → 48×72
+    const ha = (x: number, y: number, rotation: 0 | 90 = 0) => ({ ...createGateInstance('h', 'half-adder', x, y), rotation });
+    expect(gatesOverlap(ha(0, 0), ha(0, 48))).toBe(false);   // untereinander, berührend
+    expect(gatesOverlap(ha(0, 0, 90), ha(0, 48))).toBe(true);  // gedreht 48×72 → ragt hinein
+  });
+});
+
+// ─── Tests: Rückläufer (Phase 7) ──────────────────────────────────────────────
+
+describe('removeBacktracks', () => {
+  it('Ziel über einen festen Punkt hinaus verschoben → kein Sporn', () => {
+    const R = { dx: 1, dy: 0 }, L = { dx: -1, dy: 0 };
+    expect(manualWirePath({ x: 0, y: 0 }, R, [{ x: 120, y: 0 }, { x: 120, y: 72 }], { x: 480, y: -24 }, L))
+      .toEqual([{ x: 0, y: 0 }, { x: 120, y: 0 }, { x: 120, y: -24 }, { x: 480, y: -24 }]);
+  });
+
+  it('gerade Zwischenpunkte ohne Umkehr bleiben erhalten', () => {
+    const p = [{ x: 0, y: 0 }, { x: 48, y: 0 }, { x: 96, y: 0 }, { x: 96, y: 48 }];
+    expect(removeBacktracks(p)).toEqual(p);
   });
 });
