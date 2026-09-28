@@ -109,7 +109,10 @@
 | 23:58 | `ce1baee` | Klick auf die graue Palette während der Simulation zeigt die rote Meldung „Während der Simulation können keine Bauteile platziert werden.“ (Output `placeBlocked`, `showError` öffentlich, `pointer-events: none` entfernt) |
 | 23:58 | `8c0ba83` | Projektanalyse nachgezogen |
 | 00:04 (29.09.) | `c935e7c` | „Beispiel öffnen“ lädt jetzt die Flip-Flop-Schaltung (zwei rückgekoppelte NOR = ODER mit verneintem Ausgang, dahinter NICHT; Überschrift „Flip-Flop Schaltung“) statt des Halbaddierers; `flipFlopExample()` + Tests (Setzen/Speichern/Zurücksetzen, keine Überlappungen) |
-| – | (dieser) | Sitzungsprotokoll ergänzt · **siebzehnter Push** |
+| 00:05 | `57b3013` | Sitzungsprotokoll ergänzt · **siebzehnter Push** |
+| 00:10 | `da2771f` | Textfeld passt seine Breite dem Text an: `textLabelWidth(label)` (Zeichenzahl × 7,2 px + Innenabstand, auf das Raster aufgerundet, mind. 72 px) in `getGateDimensions` → Box, Auswahlrahmen, Klickfläche und Ablegeschutz stimmen überein; Mitte bleibt beim Umbenennen stehen (`updateGate`); LogikSim-Import und Beispiel behalten die Textmitte |
+| 00:12 | `fff2187` | Willkommensbildschirm: Häkchen „Beim Start nicht mehr anzeigen“ samt localStorage-Logik entfernt (erscheint bei jedem Start), Tastenkürzel-Hinweis mittig · **achtzehnter Push** |
+| – | (dieser) | Sitzungsprotokoll ergänzt · **neunzehnter Push** |
 
 ### Stolpersteine / Wissen für die nächste Session
 
