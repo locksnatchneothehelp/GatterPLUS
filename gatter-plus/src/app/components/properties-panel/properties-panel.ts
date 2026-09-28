@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ComponentSignalState } from '../../services/simulation.service';
+import { getGatePinOffsets } from '../../models/gate.model';
 
 export interface GatePropertyChange {
   id: string;
@@ -9,6 +10,8 @@ export interface GatePropertyChange {
   inputCount?: number;
   label?: string;
   clockPeriodMs?: number;
+  negatedInputs?: number[];
+  negatedOutputs?: number[];
 }
 
 /**
@@ -105,6 +108,36 @@ export class PropertiesPanel {
     if (!this.selectedGate) return;
     const clamped = Math.max(100, Math.min(10000, ms));
     this.gateChange.emit({ id: this.selectedGate.id, clockPeriodMs: clamped });
+  }
+
+  /** Pin-Namen für die Verneinungs-Buttons (Eingänge / Ausgänge). */
+  get negationPins(): { inputs: string[]; outputs: string[] } {
+    if (!this.selectedGate || this.selectedGate.type === 'text-label') return { inputs: [], outputs: [] };
+    const named: Record<string, { inputs: string[]; outputs: string[] }> = {
+      'jk-ff':      { inputs: ['S', 'J', 'C', 'K', 'R'], outputs: ['Q', 'Q̅'] },
+      'half-adder': { inputs: ['A', 'B'], outputs: ['S', 'C'] },
+      'full-adder': { inputs: ['A', 'B', 'Cin'], outputs: ['S', 'Cout'] },
+    };
+    if (named[this.selectedGate.type]) return named[this.selectedGate.type];
+    const off = getGatePinOffsets(this.selectedGate);
+    return {
+      inputs:  off.inputs.map((_, i) => (off.inputs.length > 1 ? `E${i + 1}` : 'E')),
+      outputs: off.outputs.map(() => 'A'),
+    };
+  }
+
+  isNegated(kind: 'input' | 'output', index: number): boolean {
+    const list: number[] = (kind === 'input' ? this.selectedGate?.negatedInputs : this.selectedGate?.negatedOutputs) ?? [];
+    return list.includes(index);
+  }
+
+  /** Verneinung eines Ein- bzw. Ausgangs umschalten (Kreis am Bauteil). */
+  toggleNegation(kind: 'input' | 'output', index: number): void {
+    if (!this.selectedGate) return;
+    const key = kind === 'input' ? 'negatedInputs' : 'negatedOutputs';
+    const cur: number[] = this.selectedGate[key] ?? [];
+    const next = cur.includes(index) ? cur.filter(i => i !== index) : [...cur, index];
+    this.gateChange.emit({ id: this.selectedGate.id, [key]: next });
   }
 
   deleteGate(): void {

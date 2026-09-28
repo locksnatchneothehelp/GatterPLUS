@@ -738,6 +738,19 @@ export class Whiteboard implements OnDestroy {
       if (this.tryToggleSwitch(lx, ly)) return;
     }
 
+    // Verneinung per Klick auf den Stummel zwischen Pin und Gehäuse (nur Pan-Modus,
+    // nicht in Simulation). Vor der Bauteil-Prüfung: der Stummel gehört zur Bauteilfläche.
+    if (!this.simulationMode && !event.ctrlKey && !event.shiftKey) {
+      for (const kind of ['output', 'input'] as const) {
+        const stubHit = this.findStubAt(lx, ly, kind, true);
+        if (stubHit) {
+          if (this.editingLabelGateId) this.commitLabel();
+          this.toggleNegation(stubHit.gate.id, stubHit.pinIndex, kind);
+          return;
+        }
+      }
+    }
+
     const hitGate = this.findGateAt(lx, ly);
     if (hitGate) {
       // Offenes Inline-Edit eines anderen Bauteils erst abschließen
@@ -792,21 +805,6 @@ export class Whiteboard implements OnDestroy {
     // Klick auf leere Fläche — offenes Inline-Edit abschließen
     if (this.editingLabelGateId) this.commitLabel();
     this.selectedWireId = null;
-
-    // Ausgangs-Stub-Klick: Verneinung ein-/ausschalten (nur im Pan-Modus, nicht in Simulation)
-    if (!this.simulationMode && !event.ctrlKey && !event.shiftKey) {
-      const stubHit = this.findOutputStubAt(lx, ly);
-      if (stubHit) {
-        this.toggleNegation(stubHit.gate.id, stubHit.pinIndex);
-        return;
-      }
-      // Eingangs-Stub: negierter Eingang (Kreis wie in LogikSim)
-      const inStubHit = this.findStubAt(lx, ly, 'input');
-      if (inStubHit) {
-        this.toggleNegation(inStubHit.gate.id, inStubHit.pinIndex, 'input');
-        return;
-      }
-    }
 
     if (event.ctrlKey || event.shiftKey) {
       // Ctrl+Drag: Auswahlrahmen aufziehen (additiv zur bestehenden Auswahl)
@@ -1437,26 +1435,33 @@ export class Whiteboard implements OnDestroy {
    * Im Pan-Modus: Verneinung setzen/entfernen; im Leitungs-Modus: Start am Ausgang.
    */
   private findStubAt(
-    lx: number, ly: number, kind: 'input' | 'output'
+    lx: number, ly: number, kind: 'input' | 'output',
+    /** true: Stummel zwischen Pin und Gehäuse (Verneinung, Phase 7), sonst 20 px außerhalb */
+    inward = false,
   ): { gate: GateInstance; pinIndex: number } | null {
-    const STUB_LEN = 20;
-    const HIT_R    = 8;
+    const HIT_R = inward ? 6 : 8;
     for (const gate of this.gates) {
       if (gate.type === 'text-label') continue;
       const offsets = getGatePinOffsets(gate);
       const pins = kind === 'output' ? offsets.outputs : offsets.inputs;
+      const len  = inward ? -this.stubLength(gate) : 20;
       for (let i = 0; i < pins.length; i++) {
         const pos = getPinWorldPos(gate, kind, i);
         const dir = getPinDirection(gate, kind);
         const { dist } = this.closestPointOnSegment(
           lx, ly,
           pos.x, pos.y,
-          pos.x + dir.dx * STUB_LEN, pos.y + dir.dy * STUB_LEN
+          pos.x + dir.dx * len, pos.y + dir.dy * len
         );
         if (dist <= HIT_R) return { gate, pinIndex: i };
       }
     }
     return null;
+  }
+
+  /** Länge des Anschluss-Stummels (Pin → Gehäuse) laut Komponenten-CSS: NOT 8 px, sonst 12 px. */
+  private stubLength(gate: GateInstance): number {
+    return gate.type === 'not' ? 8 : 12;
   }
 
   private findOutputStubAt(lx: number, ly: number): { gate: GateInstance; pinIndex: number } | null {
@@ -1486,16 +1491,18 @@ export class Whiteboard implements OnDestroy {
   getNegationDots(): { x: number; y: number; high: boolean | null }[] {
     const res: { x: number; y: number; high: boolean | null }[] = [];
     for (const gate of this.gates) {
+      // Kreis (r = 6) direkt am Gehäuse: Mittelpunkt 6 px vor dem Gehäuse, auf dem Stummel
+      const back = this.stubLength(gate) - 6;
       for (const pi of gate.negatedOutputs ?? []) {
         const pos = getPinWorldPos(gate, 'output', pi);
         const dir = getPinDirection(gate, 'output');
-        res.push({ x: pos.x + dir.dx * 10, y: pos.y + dir.dy * 10, high: this.getSignalOutput(gate.id, pi) });
+        res.push({ x: pos.x - dir.dx * back, y: pos.y - dir.dy * back, high: this.getSignalOutput(gate.id, pi) });
       }
       for (const pi of gate.negatedInputs ?? []) {
         const pos = getPinWorldPos(gate, 'input', pi);
         const dir = getPinDirection(gate, 'input');
         const v   = this.getSignalInput(gate.id, pi);
-        res.push({ x: pos.x + dir.dx * 10, y: pos.y + dir.dy * 10, high: v === null ? null : !v });
+        res.push({ x: pos.x - dir.dx * back, y: pos.y - dir.dy * back, high: v === null ? null : !v });
       }
     }
     return res;
@@ -1796,8 +1803,7 @@ export class Whiteboard implements OnDestroy {
    * Leitung blau.
    */
   getGateStubs(gate: GateInstance): { points: string; high: boolean | null; wireId: string | null }[] {
-    // Stummel-Länge laut Komponenten-CSS: NOT 8 px (Invertierkreis), sonst 12 px
-    const len = gate.type === 'not' ? 8 : 12;
+    const len = this.stubLength(gate);
     const offsets = getGatePinOffsets(gate);
     const stub = (kind: 'input' | 'output', pin: number) => {
       const p = getPinWorldPos(gate, kind, pin), d = getPinDirection(gate, kind);

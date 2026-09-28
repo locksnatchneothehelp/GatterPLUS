@@ -61,6 +61,28 @@
   </div>
   }
 
+  @if (negationPins.inputs.length || negationPins.outputs.length) {
+  <div class="section">
+    <div class="section-title">Verneinung (Kreis am Pin)</div>
+    @if (negationPins.inputs.length) {
+    <div class="negation-row">
+      <span class="negation-label">Ein</span>
+      @for (name of negationPins.inputs; track $index) {
+        <button class="rot-btn" [class.active]="isNegated('input', $index)" (click)="toggleNegation('input', $index)" [title]="'Eingang ' + name + ' verneinen'">{{ name }}</button>
+      }
+    </div>
+    }
+    @if (negationPins.outputs.length) {
+    <div class="negation-row">
+      <span class="negation-label">Aus</span>
+      @for (name of negationPins.outputs; track $index) {
+        <button class="rot-btn" [class.active]="isNegated('output', $index)" (click)="toggleNegation('output', $index)" [title]="'Ausgang ' + name + ' verneinen'">{{ name }}</button>
+      }
+    </div>
+    }
+  </div>
+  }
+
   @if (isClockGen) {
   <div class="section">
     <div class="section-title">Taktperiode (ms)</div>

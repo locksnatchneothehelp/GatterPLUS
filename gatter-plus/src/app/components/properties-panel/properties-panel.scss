@@ -87,6 +87,19 @@
   gap: 4px;
 }
 
+/* Verneinungs-Buttons: eine Zeile je Seite (Ein/Aus), Buttons wie Ausrichtung */
+.negation-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.negation-label {
+  width: 26px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
 .rot-btn {
   flex: 1;
   padding: 4px 2px;

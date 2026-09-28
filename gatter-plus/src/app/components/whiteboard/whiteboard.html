@@ -230,18 +230,6 @@
       />
     }
 
-    <!-- Verneinungs-Punkte an Ausgangs-Stubs -->
-    @for (dot of getNegationDots(); track $index) {
-      <circle
-        [attr.cx]="dot.x"
-        [attr.cy]="dot.y"
-        r="6"
-        class="negation-dot"
-        [class.negation-high]="simulationMode && dot.high === true"
-        [class.negation-low]="simulationMode && dot.high === false"
-      />
-    }
-
   </svg>
 
   <!-- ── Anschluss-Stummel in Leitungsfarbe (ÜBER den Bauteilen) ───────────
@@ -258,6 +246,18 @@
           [class.wire-selected]="s.wireId !== null && s.wireId === selectedWireId"
         />
       }
+    }
+
+    <!-- Verneinungs-Kreise direkt am Gehäuse, über den Stummeln (Phase 7) -->
+    @for (dot of getNegationDots(); track $index) {
+      <circle
+        [attr.cx]="dot.x"
+        [attr.cy]="dot.y"
+        r="6"
+        class="negation-dot"
+        [class.negation-high]="simulationMode && dot.high === true"
+        [class.negation-low]="simulationMode && dot.high === false"
+      />
     }
   </svg>
 
