@@ -28,7 +28,9 @@ jobs:
           cache: npm
           cache-dependency-path: gatter-plus/package-lock.json
       - run: npm ci
-      - run: npx ng build --base-href /GatterPLUS/
+      # BUILD_DATE: Stand-Anzeige im Hilfe-Menü (menu-bar.ts), deutsche Zeit
+      - run: |
+          npx ng build --base-href /GatterPLUS/ --define "BUILD_DATE='$(TZ=Europe/Berlin date +'%d.%m.%Y %H:%M')'"
       - run: cp dist/gatter-plus/browser/index.html dist/gatter-plus/browser/404.html
       - uses: actions/upload-pages-artifact@v3
         with:

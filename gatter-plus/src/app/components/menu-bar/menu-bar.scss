@@ -107,6 +107,17 @@
   margin: 4px 0;
 }
 
+/* Versionszeile im Hilfe-Menü (nur Anzeige) */
+.dropdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 16px 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: var(--cursor-default);
+}
+
 /* Schiebt den Theme-Umschalter nach rechts */
 .spacer {
   flex: 1;

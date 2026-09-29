@@ -1,5 +1,12 @@
 import { ChangeDetectorRef, Component, EventEmitter, HostListener, inject, Input, Output } from '@angular/core';
 import { ThemeService } from '../../services/theme.service';
+import { version } from '../../../../package.json';
+
+/**
+ * Zeitpunkt des Builds („TT.MM.JJJJ HH:MM“). Setzt der GitHub-Workflow per
+ * `ng build --define`; lokal nicht gesetzt → typeof-Prüfung statt ReferenceError.
+ */
+declare const BUILD_DATE: string | undefined;
 
 /** Name eines Menüs in der Leiste. */
 export type MenuName = 'datei' | 'bearbeiten' | 'hilfe';
@@ -182,6 +189,10 @@ export class MenuBar {
 
   /** Hilfe-Fenster „Steuerung & Tastenkürzel“ sichtbar? */
   helpOpen = false;
+
+  /** Infozeile unten im Hilfe-Menü: Version aus package.json, Stand = Build-Zeitpunkt. */
+  readonly appVersion = version;
+  readonly buildDate  = typeof BUILD_DATE !== 'undefined' ? BUILD_DATE : null;
 
   onHelp(): void { this.helpOpen = true; this.closeMenu(); }
 

@@ -62,6 +62,14 @@
       <div class="dropdown" (click)="$event.stopPropagation()">
         <button class="dropdown-item" (click)="onWelcome()">Willkommensbildschirm</button>
         <button class="dropdown-item" (click)="onHelp()">Steuerung &amp; Tastenkürzel</button>
+
+        <div class="dropdown-sep"></div>
+
+        <!-- Nur Anzeige, nicht klickbar -->
+        <div class="dropdown-info">
+          <span>Version {{ appVersion }}</span>
+          <span>{{ buildDate ? 'aktualisiert am ' + buildDate : 'lokale Entwicklungsversion' }}</span>
+        </div>
       </div>
     }
   </div>

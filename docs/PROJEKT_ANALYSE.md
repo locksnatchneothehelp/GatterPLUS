@@ -30,7 +30,7 @@
 | Palette + Werkzeug Pan/Wire + Simulations-Button | `components/toolbar-top/` |
 | App-Icon (Favicon + Toolbar links neben dem Namen) | `gatter-plus/public/icon.svg`; `public/favicon.ico` (16/32/48 px) daraus gerendert – bei Änderungen am SVG neu erzeugen |
 | Eigene Cursor (Bernstein-Stil, 28 px SVG) | `gatter-plus/src/cursors/*.svg` (in `src/`, damit Angular sie bündelt – funktioniert mit jedem base-href); Variablen `--cursor-*` in `styles.scss`, überall `cursor: var(--cursor-…)` statt System-Namen; Zeichenfläche: `Whiteboard.hoverCursor` → Klassen `over-gate`/`over-stub`/`over-switch` |
-| Menü Datei/Bearbeiten/Hilfe + Theme-Toggle | `components/menu-bar/` |
+| Menü Datei/Bearbeiten/Hilfe + Theme-Toggle; Versionszeile im Hilfe-Menü (`version` aus `package.json` per JSON-Import, `BUILD_DATE` per `ng build --define`, lokal „lokale Entwicklungsversion“; Schema siehe CLAUDE.md) | `components/menu-bar/` |
 | Willkommensbildschirm beim Start (Kacheln, „Beispiel öffnen“ → `App.onWelcomeExample`, „LogikSim importieren“, erscheint bei jedem Start, erneut über Hilfe → Willkommensbildschirm; Esc/„Los geht's“; S gesperrt solange offen; Projekt-Nennung als Fußzeile) | `components/welcome-dialog/`; Beispielschaltung Flip-Flop `models/example-circuit.ts` (+spec: rechnet richtig, keine Überdeckungen) |
 | Eigenschaften (Rotation, Farbe, Eingänge, Takt, Label, Löschen) | `components/properties-panel/` |
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
@@ -187,7 +187,7 @@ Alle Befehle in `gatter-plus/`:
 | Dev-Server | `npm start` (`ng serve`, http://localhost:4200) |
 | Build | `npm run build` (production, Ausgabe `dist/gatter-plus/browser`) |
 | Tests | `npm test` (= `vitest run`, nutzt `vitest.config.ts`: env node). `ng test` (Builder `@angular/build:unit-test`) wird nicht genutzt: er bündelt die Specs, `import.meta.url` für die LogikSim-Fixtures passt dann nicht |
-| Deploy | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
+| Deploy | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/ --define BUILD_DATE=…` (TT.MM.JJJJ HH:MM, Europe/Berlin), `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 
 - Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). `simulation.service.spec.ts`: negierte Eingänge. Keine Komponenten-Tests.
 - **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (7 Spec-Dateien). `ng test` noch nicht ausgeführt.
