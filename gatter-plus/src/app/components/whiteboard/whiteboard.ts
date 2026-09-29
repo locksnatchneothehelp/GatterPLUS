@@ -988,31 +988,9 @@ export class Whiteboard implements OnDestroy {
           };
         });
 
-        // Zweiter Durchlauf: Abzweigpunkte, deren Haupt-Leitung sich geändert hat
-        // (Ziel-Gatter der Haupt-Leitung verschoben, Quell-Gatter nicht)
-        this.wires = updatedWires.map(wire => {
-          if (!wire.branchPoint || movedIds.has(wire.fromGateId)) return wire;
-          const mainWire = updatedWires.find(
-            w => !w.branchPoint
-              && w.fromGateId   === wire.fromGateId
-              && w.fromPinIndex === wire.fromPinIndex
-              && movedIds.has(w.toGateId)
-          );
-          if (!mainWire) return wire;
-          // Tatsächlicher Verlauf der Haupt-Leitung (auch mit eigenen Knicken)
-          const path = this.getWireDisplayPoints(mainWire);
-          if (!path) return wire;
-          let bestDist = Infinity;
-          let bestPt   = wire.branchPoint!;
-          for (let i = 0; i < path.length - 1; i++) {
-            const { dist, point } = this.closestPointOnSegment(
-              wire.branchPoint!.x, wire.branchPoint!.y,
-              path[i].x, path[i].y, path[i+1].x, path[i+1].y
-            );
-            if (dist < bestDist) { bestDist = dist; bestPt = point; }
-          }
-          return { ...wire, branchPoint: bestPt };
-        });
+        // Zweiter Durchlauf: Abzweigpunkte, die nicht mehr auf ihrer Haupt-Leitung
+        // liegen (deren Verlauf hat sich geändert), wieder daraufsetzen
+        this.wires = this.reattachBranches(updatedWires);
         if (this.simulationMode) this.recomputeSimulation();
       }
   }
@@ -1136,6 +1114,31 @@ export class Whiteboard implements OnDestroy {
       if (!w.manualPoints?.length) return branchPoint ? { ...w, branchPoint } : w;
       const inner = (this.getWireDisplayPoints({ ...w, branchPoint, manualPoints: w.manualPoints.map(r) }) ?? []).slice(1, -1);
       return { ...w, branchPoint, manualPoints: inner.length > 0 ? inner : undefined };
+    });
+    // Bereinigte Verläufe (Rückläufer entfernt) können Abzweige abhängen
+    this.wires = this.reattachBranches(this.wires);
+  }
+
+  /**
+   * Setzt Abzweigpunkte, die neben jeder Leitung derselben Quelle liegen, auf
+   * den nächsten Punkt dieser Leitungen. Nötig, wenn sich der Verlauf der
+   * Haupt-Leitung ändert, z. B. weil ihre festen Punkte beim Verschieben des
+   * Quell-Bauteils liegen bleiben, der Abzweigpunkt aber mitwandert.
+   */
+  private reattachBranches(wires: WireConnection[]): WireConnection[] {
+    return wires.map(w => {
+      if (!w.branchPoint) return w;
+      const bp = w.branchPoint;
+      let best = { dist: Infinity, point: bp };
+      for (const host of wires) {
+        if (host.id === w.id || host.fromGateId !== w.fromGateId || host.fromPinIndex !== w.fromPinIndex) continue;
+        const path = this.getWireDisplayPoints(host) ?? [];
+        for (let i = 0; i < path.length - 1; i++) {
+          const r = this.closestPointOnSegment(bp.x, bp.y, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+          if (r.dist < best.dist) best = r;
+        }
+      }
+      return best.dist > 0.5 && best.dist < Infinity ? { ...w, branchPoint: best.point } : w;
     });
   }
 
