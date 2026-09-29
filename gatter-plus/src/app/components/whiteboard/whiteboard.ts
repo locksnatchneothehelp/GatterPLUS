@@ -1227,7 +1227,6 @@ export class Whiteboard implements OnDestroy {
     const p = this.snapToGrid({ x: lx, y: ly });
     const cur = wire.manualPoints?.[drag.index];
     if (cur && p.x === cur.x && p.y === cur.y) return;
-    if (!drag.started) { this.pushHistory(); drag.started = true; }
     const pts = drag.orig.map(q => ({ ...q }));
     for (const n of [drag.index - 1, drag.index + 1]) {
       const q = pts[n];
@@ -1236,6 +1235,16 @@ export class Whiteboard implements OnDestroy {
       else if (q.x === old.x) q.x = p.x;
     }
     pts[drag.index] = p;
+    // Läge der Punkt nicht mehr auf der Leitung (Rückläufer werden beim Zeichnen
+    // entfernt), bliebe der Griff neben der Linie stehen → Bewegung ablehnen
+    const path = this.getWireDisplayPoints({ ...wire, manualPoints: pts }) ?? [];
+    const onPath = path.some((a, i) => i < path.length - 1
+      && this.closestPointOnSegment(p.x, p.y, a.x, a.y, path[i + 1].x, path[i + 1].y).dist <= 0.5);
+    if (!onPath) {
+      this.showError('Weiter geht es nicht: Die Leitung würde auf sich selbst zurücklaufen.');
+      return;
+    }
+    if (!drag.started) { this.pushHistory(); drag.started = true; }
     this.replaceWirePoints(wire, pts);
   }
 
