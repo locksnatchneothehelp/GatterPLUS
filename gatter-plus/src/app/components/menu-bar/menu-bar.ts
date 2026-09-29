@@ -180,9 +180,7 @@ export class MenuBar {
   onExportPng():  void { this.exportPngClicked.emit();             this.closeMenu(); }
   onImportLws():  void { this.importLogikSimClicked.emit();        this.closeMenu(); }
 
-  // ─── Hilfe-Aktionen (Platzhalter) ──────────────────────────────────────────
-
-  onAbout(): void { console.log('[Menü] About'); this.closeMenu(); }
+  // ─── Hilfe-Aktionen ────────────────────────────────────────────────────────
 
   /** Hilfe-Fenster „Steuerung & Tastenkürzel“ sichtbar? */
   helpOpen = false;
