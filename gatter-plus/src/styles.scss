@@ -217,6 +217,14 @@ html:root[data-theme="dark"] {
   }
   .label-text { color: #e6e8ec; }
 
+  /* Helle Kontur an Gattern und NICHT-Kreis (wie EINGANG/AUSGANG), sonst
+     verschwindet die dunkle Kontur im Hintergrund. Nicht bei HIGH (grün);
+     LOW überschreibt sie unten (gleich spezifisch, später). */
+  .gate:not(.signal-high) .gate-body,
+  .gate:not(.signal-high) .invert-bubble {
+    border-color: #aeb6c4;
+  }
+
   /* Gatter mit LOW-Signal im Strommodus: dunkelgrau statt fast weiß */
   .gate.signal-low .gate-body {
     background: var(--sim-gate-fill, #3a3f49);
