@@ -13,6 +13,16 @@
 
 CLAUDE.md und docs/PROJEKT_ANALYSE.md sind bei relevanten Änderungen (Struktur, Konventionen, Datenstrukturen, Bauteiltypen, Muster, Testbefehle) zu pflegen – siehe Abschnitte 5 und 6 der Arbeitsregeln.
 
+## Versionsnummer
+
+- Steht **nur** in `gatter-plus/package.json` (`version`); das Hilfe-Menü zeigt sie an, dazu den Build-Zeitpunkt (`BUILD_DATE`, setzt der GitHub-Workflow).
+- Schema `MAJOR.MINOR.PATCH`:
+  - **MINOR** +1 (PATCH → 0): neue Funktion für den Nutzer oder abgeschlossene Phase. Herleitung: 0.5/0.6/0.7 = Phasen 5–7, 0.8.0 = Willkommensbildschirm, Icon, Dunkles Design, Aufräumen.
+  - **PATCH** +1: Fehlerbehebung oder kleiner sichtbarer Feinschliff.
+  - Keine Änderung bei reinen Doku-, Test- oder Build-Änderungen ohne sichtbare Wirkung.
+  - **1.0.0** nur, wenn der Nutzer die App ausdrücklich für fertig erklärt (z. B. Abgabe).
+- Erhöhen **einmal vor einem Push** (jeder Push auf `main` veröffentlicht): höchste Stufe der seit dem letzten Push enthaltenen Änderungen, per `npm version <x.y.z> --no-git-tag-version` in `gatter-plus/` (ändert auch `package-lock.json`), als eigener Commit „Version x.y.z“. Vorher dem Nutzer die neue Nummer nennen.
+
 ---
 
 ARBEITSREGELN (gelten in dieser und in jeder künftigen Session, ohne Ausnahme)
