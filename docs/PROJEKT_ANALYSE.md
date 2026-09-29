@@ -211,7 +211,7 @@ Alle Befehle in `gatter-plus/`:
 - **`wire.points` wird beim Rendern ignoriert:** `getWireDisplayPoints` berechnet den Verlauf über `manualPoints` bzw. ohne sie als Z-/U-Form (`manualWirePath`, rechtwinklig; Knicke rasten auf 24 px, erster/letzter Knick wird an die Pin-Achse angeglichen); `points` ist nur gespeichert/redundant.
 - **`inputCount` verringern** entfernt Leitungen an weggefallenen Pins nicht (Simulation überspringt sie, Rendering fällt auf `gate.x/y` zurück).
 - Leitungen: Klick/Doppelklick nimmt eine unsichtbare, 14 px breite Polyline `.wire-hit` unter der sichtbaren `.wire-line` an (diese hat `pointer-events: none`); Abzweigen/Hover im Kabelmodus rechnet separat mit `WIRE_HIT_RADIUS` = 8.
-- Abzweigpunkte: `reattachBranches` setzt nach dem Verschieben (`applyGateDrag`, `finishGateDrag`) jeden Abzweigpunkt, der neben allen Leitungen derselben Quelle liegt, auf deren nächsten Punkt.
+- Abzweigpunkte: `reattachBranches` setzt nach dem Verschieben (`applyGateDrag`, `finishGateDrag`) und nach Drehen/Eingangsanzahl (`updateGate`) jeden Abzweigpunkt, der neben allen Leitungen derselben Quelle liegt, auf deren nächsten Punkt.
 - **Mutation in `computeSignals`** (`ffState`, `ffPrevClock`) widerspricht dem Immutable-Pattern; Objekte werden nicht ersetzt.
 - **`app.spec.ts`** ist das CLI-Template (erwartet `<h1>Hello, gatter-plus`) → schlägt bei `ng test` vermutlich fehl, falls `ng test` `vitest.config.ts` nicht nutzt (**unsicher, nicht verifiziert**).
 - `ToolbarLeft` wird nicht gerendert; nur `ToolMode` wird daraus importiert.
