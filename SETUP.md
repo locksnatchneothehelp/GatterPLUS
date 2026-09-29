@@ -2,7 +2,7 @@
 
 ## Live-Version (kein Install nötig)
 
-**https://markheimlich.github.io/ProjektInformatikLK/**
+**https://locksnatchneothehelp.github.io/GatterPLUS/**
 
 ---
 
@@ -22,8 +22,8 @@ npm --version
 ## Schritt 1 – Repository klonen
 
 ```bash
-git clone https://github.com/markheimlich/ProjektInformatikLK.git
-cd ProjektInformatikLK
+git clone https://github.com/locksnatchneothehelp/GatterPLUS.git
+cd GatterPLUS
 ```
 
 ---
@@ -61,8 +61,8 @@ Danach im Browser öffnen:
 ## Alle Schritte auf einmal (Copy & Paste)
 
 ```bash
-git clone https://github.com/markheimlich/ProjektInformatikLK.git
-cd ProjektInformatikLK/gatter-plus
+git clone https://github.com/locksnatchneothehelp/GatterPLUS.git
+cd GatterPLUS/gatter-plus
 npm install
 npm start
 ```
