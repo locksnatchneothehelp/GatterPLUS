@@ -11,7 +11,7 @@
 - **App-Verzeichnis:** `gatter-plus/` (Repo-Root enthält nur `README.md`, `SETUP.md`, `LICENSE`, `docs/`, `CLAUDE.md`, `.github/workflows/`).
 - **Einstiege:** `gatter-plus/src/main.ts` → `app.ts` (Root, Layout + Event-Weiterleitung) → `components/whiteboard/whiteboard.ts` (**gesamter Editor-Zustand + Interaktion**).
 - **Kernlogik ohne Angular:** `models/gate.model.ts` (Typen, Geometrie, Routing), `services/simulation.service.ts` (Simulation).
-- **Deployment:** GitHub Pages automatisch per GitHub Actions bei Push auf `main` (`.github/workflows/main.yml`); zusätzlich Alt-Weg `npm run deploy` (s. Fallstricke).
+- **Deployment:** GitHub Pages automatisch per GitHub Actions bei Push auf `main` (`.github/workflows/main.yml`).
 
 ## Wo finde ich was
 
@@ -188,8 +188,7 @@ Alle Befehle in `gatter-plus/`:
 | Build | `npm run build` (production, Ausgabe `dist/gatter-plus/browser`) |
 | Tests | `npm test` (`ng test`, Builder `@angular/build:unit-test`, Vitest) |
 | Tests ohne Angular (vermutlich) | `npx vitest run` (nutzt `vitest.config.ts`: env node, schließt `app.spec.ts` aus) |
-| Deploy (Standard) | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
-| Deploy (Alt) | `npm run deploy` (angular-cli-ghpages, base-href `/ProjektInformatikLK/`) |
+| Deploy | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 
 - Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). `simulation.service.spec.ts`: negierte Eingänge. Keine Komponenten-Tests.
 - **Verifiziert (2026-09-25):** `npx vitest run` läuft nach `npm ci` grün (7 Spec-Dateien). `ng test` noch nicht ausgeführt.
@@ -223,4 +222,4 @@ Alle Befehle in `gatter-plus/`:
 - Multi-Delete (Entf bei Mehrfachauswahl) ist inline in `onDeleteKey` dupliziert statt `deleteGate` zu nutzen.
 - `ANLEITUNG-UND-TECHNOLOGIEN.md` ist veraltet (nennt HTML5-DnD, TS ~5.8).
 - Persistenz: Öffnen/Speichern vorhanden (`.gatterplus.json`); `loadProject` beendet Simulation, ist per Undo rückgängig, setzt ID-Zähler auf max(alt, Datei). Es gibt kein Speichern ohne Dialog in die zuletzt benutzte Datei mehr (früher `fileHandle`).
-- **Zwei Deploy-Wege mit unterschiedlichem base-href:** Workflow `/GatterPLUS/` vs. `npm run deploy` `/ProjektInformatikLK/` (altes Repo; auch `SETUP.md` nennt noch die alte Live-URL). Workflow führt **keine Tests** aus – jeder Push auf `main` deployt.
+- **Deploy ohne Tests:** Workflow (base-href `/GatterPLUS/`) führt **keine Tests** aus – jeder Push auf `main` deployt. `SETUP.md` nennt noch die alte Live-URL/das alte Repo.

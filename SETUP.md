@@ -79,9 +79,5 @@ npm start
 
 ## Live-Version aktualisieren (nach Code-Änderungen)
 
-```bash
-cd gatter-plus
-npm run deploy
-```
-
-Dieser Befehl baut die App neu und pusht sie automatisch auf GitHub Pages.
+Passiert automatisch: Jeder Push auf `main` baut die App per GitHub Actions
+neu und veröffentlicht sie auf GitHub Pages.
