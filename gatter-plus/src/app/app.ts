@@ -73,9 +73,18 @@ export class App implements OnInit {
     this.whiteboardRef.setToolMode(tool);
   }
 
+  /** Zeitpunkt (performance.now), bis zu dem der grüne Ring noch läuft. */
+  private simToggleLockedUntil = 0;
+
   onSimulationToggle(): void {
+    // Erst wieder umschalten, wenn der Ring ganz voll bzw. leer ist
+    // (Dauer = Übergänge in toolbar-top.scss: 0,6 s füllen, 0,4 s leeren)
+    const now = performance.now();
+    if (now < this.simToggleLockedUntil) return;
     this.whiteboardRef.toggleSimulation();
     this.simulationMode = this.whiteboardRef.simulationMode;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    this.simToggleLockedUntil = reduce ? 0 : now + (this.simulationMode ? 600 : 400);
     // Toolbar-Anzeige mit dem Modus des Whiteboards synchronisieren:
     // toggleSimulation() schaltet intern auf Pan um, daher muss activeTool
     // hier nachgezogen werden, damit der Toolbar-Button korrekt hervorgehoben ist.
