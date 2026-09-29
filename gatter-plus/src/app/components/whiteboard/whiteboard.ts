@@ -169,6 +169,8 @@ export class Whiteboard implements OnDestroy {
 
   // ─── Feste Punkte einer Leitung verschieben (Phase 7) ──────────────────────
   private handleDrag: { wireId: string; index: number; started: boolean; orig: { x: number; y: number }[] } | null = null;
+  /** Abzweigpunkt der ausgewählten Leitung wird gezogen (gleitet auf Leitungen desselben Signals). */
+  private branchDrag: { wireId: string; started: boolean } | null = null;
 
   // ─── Gatter verschieben ────────────────────────────────────────────────────
   private gateDragState:   GateDragState | null = null;
@@ -865,6 +867,7 @@ export class Whiteboard implements OnDestroy {
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
     if (this.handleDrag) { this.moveWireHandle(event); return; }
+    if (this.branchDrag) { this.moveBranchHandle(event); return; }
 
     // Panning
     if (this.isPanning) {
@@ -1000,6 +1003,7 @@ export class Whiteboard implements OnDestroy {
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent): void {
     if (this.handleDrag) { this.handleDrag = null; return; }
+    if (this.branchDrag) { this.branchDrag = null; return; }
     if (this.isPanning) {
       this.isPanning = false;
       return;
@@ -1246,6 +1250,66 @@ export class Whiteboard implements OnDestroy {
     }
     if (!drag.started) { this.pushHistory(); drag.started = true; }
     this.replaceWirePoints(wire, pts);
+  }
+
+  /** Abzweigpunkt der ausgewählten Leitung (eigener Griff in Bernstein), sonst null. */
+  getSelectedBranchHandle(): { x: number; y: number } | null {
+    if (this.simulationMode || !this.selectedWireId) return null;
+    return this.wires.find(w => w.id === this.selectedWireId)?.branchPoint ?? null;
+  }
+
+  /** Abzweig-Griff anfassen → Verschieben startet (Undo-Sicherung erst bei echter Bewegung). */
+  onBranchHandleMouseDown(event: MouseEvent): void {
+    if (event.button !== 0 || !this.selectedWireId || !this.getSelectedBranchHandle()) return;
+    event.stopPropagation();
+    event.preventDefault();
+    this.branchDrag = { wireId: this.selectedWireId, started: false };
+  }
+
+  /**
+   * Abzweigpunkt folgt der Maus – aber nur auf Leitungen desselben Signals
+   * (nicht auf der eigenen), auf dem Raster entlang des getroffenen Stücks.
+   * Würde die Abzweig-Leitung dadurch auf sich selbst zurücklaufen (ein fester
+   * Punkt fiele aus dem Verlauf), wird die Bewegung abgelehnt.
+   */
+  private moveBranchHandle(event: MouseEvent): void {
+    const wire = this.wires.find(w => w.id === this.branchDrag!.wireId);
+    if (!wire?.branchPoint) return;
+    const { lx, ly } = this.toLogical(event);
+    let best: { dist: number; point: { x: number; y: number }; a: { x: number; y: number }; b: { x: number; y: number } } | null = null;
+    for (const host of this.wires) {
+      if (host.id === wire.id || host.fromGateId !== wire.fromGateId || host.fromPinIndex !== wire.fromPinIndex) continue;
+      const path = this.getWireDisplayPoints(host) ?? [];
+      for (let i = 0; i < path.length - 1; i++) {
+        const r = this.closestPointOnSegment(lx, ly, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+        if (!best || r.dist < best.dist) best = { ...r, a: path[i], b: path[i + 1] };
+      }
+    }
+    if (!best) return;
+    // Auf dem Raster entlang des Stücks, aber nicht über dessen Enden hinaus
+    const { a, b } = best;
+    const horizontal = a.y === b.y;
+    const clamp = (v: number, p: number, q: number) => Math.min(Math.max(v, Math.min(p, q)), Math.max(p, q));
+    const s = this.snapOnWire(best.point, horizontal ? { dx: 0, dy: 1 } : { dx: 1, dy: 0 });
+    const point = horizontal ? { x: clamp(s.x, a.x, b.x), y: a.y } : { x: a.x, y: clamp(s.y, a.y, b.y) };
+    if (point.x === wire.branchPoint.x && point.y === wire.branchPoint.y) return;
+    // Austritt quer zum neuen Stück, in Richtung des nächsten Punkts der Abzweig-Leitung
+    const to   = this.gates.find(g => g.id === wire.toGateId);
+    const next = wire.manualPoints?.[0] ?? (to ? getPinWorldPos(to, 'input', wire.toPinIndex) : point);
+    const fromDir: PinDirection = horizontal
+      ? { dx: 0, dy: next.y >= point.y ? 1 : -1 }
+      : { dx: next.x >= point.x ? 1 : -1, dy: 0 };
+    const updated: WireConnection = { ...wire, branchPoint: point, fromDir };
+    const path = this.getWireDisplayPoints(updated) ?? [];
+    const onPath = (p: { x: number; y: number }) => path.some((q, i) => i < path.length - 1
+      && this.closestPointOnSegment(p.x, p.y, q.x, q.y, path[i + 1].x, path[i + 1].y).dist <= 0.5);
+    if (!(wire.manualPoints ?? []).every(onPath)) {
+      this.showError('Weiter geht es nicht: Die Leitung würde auf sich selbst zurücklaufen.');
+      return;
+    }
+    if (!this.branchDrag!.started) { this.pushHistory(); this.branchDrag!.started = true; }
+    // Abzweige, die an dieser Leitung hängen, wandern mit
+    this.wires = this.reattachBranches(this.wires.map(w => (w.id === wire.id ? updated : w)));
   }
 
   /**

@@ -165,6 +165,12 @@
   cursor: var(--cursor-move);
 }
 
+/* Griff des Abzweigpunkts: Bernstein (Akzentfarbe), unterscheidet ihn von festen Punkten */
+.wire-handle.branch-handle {
+  fill: #f59e0b;
+  stroke: #b45309;
+}
+
 /* Verbindungs-Punkt (T-Junction): ein Ausgang → mehrere Eingänge */
 .wire-junction {
   fill: var(--wire-stroke, #1e293b);

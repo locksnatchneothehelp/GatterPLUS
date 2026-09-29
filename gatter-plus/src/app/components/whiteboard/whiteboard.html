@@ -238,6 +238,16 @@
         (dblclick)="onHandleDblClick($index, $event)"
       />
     }
+    <!-- Abzweigpunkt der ausgewählten Leitung: gleitet auf Leitungen desselben Signals -->
+    @if (getSelectedBranchHandle(); as bp) {
+      <circle
+        [attr.cx]="bp.x"
+        [attr.cy]="bp.y"
+        r="5"
+        class="wire-handle branch-handle"
+        (mousedown)="onBranchHandleMouseDown($event)"
+      />
+    }
 
   </svg>
 
