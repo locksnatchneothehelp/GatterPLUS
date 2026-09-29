@@ -590,6 +590,8 @@ export class Whiteboard implements OnDestroy {
       if (g.type === 'text-label') next.x = g.x + (getGateDimensions(g).w - getGateDimensions(next).w) / 2;
       return resnap ? snapGateToGrid(next) : next;
     });
+    // Verschobene Pins ändern den Verlauf angeschlossener Leitungen → Abzweige nachführen
+    if (resnap) this.wires = this.reattachBranches(this.wires);
     if (periodChanged) {
       const gate = this.gates.find(g => g.id === changes.id);
       if (gate) this.restartClockInterval(gate);
