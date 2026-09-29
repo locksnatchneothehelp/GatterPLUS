@@ -16,7 +16,7 @@ export type MenuName = 'datei' | 'bearbeiten' | 'hilfe';
  * - Es ist immer nur ein Dropdown gleichzeitig geöffnet.
  * - Ein Klick irgendwo außerhalb der Menüleiste schließt das offene Dropdown.
  *
- * „Öffnen", „Speichern" und „Speichern unter" werden als Outputs nach außen gemeldet
+ * „Öffnen" und „Speichern" (fragt immer nach dem Ort) werden als Outputs nach außen gemeldet
  * (Logik in app.ts). Die übrigen Datei-Aktionen sind noch Platzhalter (console.log).
  * Die Bearbeiten-Aktionen (Undo/Redo/Copy/Paste) nutzen die bereits im
  * Whiteboard vorhandene echte Logik — sie kommen als Outputs von außen
@@ -51,9 +51,8 @@ export class MenuBar {
 
   /** Datei-Aktion „Neu" (leeres Whiteboard, Rückfrage in App). */
   @Output() newClicked    = new EventEmitter<void>();
-  /** Datei-Aktionen „Öffnen" (Import), „Speichern" und „Speichern unter" (Export). */
+  /** Datei-Aktionen „Öffnen" (Import) und „Speichern" (Export, fragt nach dem Ort). */
   @Output() openClicked   = new EventEmitter<void>();
-  @Output() saveClicked   = new EventEmitter<void>();
   @Output() saveAsClicked = new EventEmitter<void>();
   /** Datei-Aktion „Als PNG exportieren". */
   @Output() exportPngClicked = new EventEmitter<void>();
@@ -175,7 +174,6 @@ export class MenuBar {
 
   onNew():        void { this.newClicked.emit();                   this.closeMenu(); }
   onOpen():       void { this.openClicked.emit();                  this.closeMenu(); }
-  onSave():       void { this.saveClicked.emit();                  this.closeMenu(); }
   onSaveAs():     void { this.saveAsClicked.emit();                this.closeMenu(); }
   onExportPng():  void { this.exportPngClicked.emit();             this.closeMenu(); }
   onImportLws():  void { this.importLogikSimClicked.emit();        this.closeMenu(); }

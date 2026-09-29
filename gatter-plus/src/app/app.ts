@@ -52,7 +52,6 @@ export class App implements OnInit {
     this.welcomeOpen = false;
     this.whiteboardRef.loadProject(flipFlopExample());
     this.whiteboardRef.zoomToFit(); // wie „Alles anzeigen“: ruhig, nichts unter der Minimap
-    this.fileHandle     = null;
     this.simulationMode = this.whiteboardRef.simulationMode;
     this.activeTool     = this.whiteboardRef.toolMode;
   }
@@ -167,7 +166,7 @@ export class App implements OnInit {
   get canRedo():  boolean { return this.whiteboardRef?.canRedo  ?? false; }
   get canPaste(): boolean { return this.whiteboardRef?.canPaste ?? false; }
 
-  // ─── Datei: Öffnen / Speichern unter ───────────────────────────────────────
+  // ─── Datei: Öffnen / Speichern ─────────────────────────────────────────────
   // Chrome/Edge: echte Datei-Dialoge (File System Access API, nicht in lib.dom
   // typisiert → Zugriff über `window as any`). Andere Browser: Fallback über
   // <input type="file"> bzw. Download-Link.
@@ -176,18 +175,6 @@ export class App implements OnInit {
   private readonly pickerTypes = [
     { description: 'GatterPLUS-Projekt', accept: { 'application/json': ['.json'] } },
   ];
-
-  /**
-   * Zuletzt exportierte oder geöffnete Datei (FileSystemFileHandle, nur
-   * Chrome/Edge). „Speichern" schreibt direkt hierhin; null = unbekannt.
-   */
-  private fileHandle: any = null;
-
-  /** Aktuelles Projekt in die zuletzt benutzte Datei speichern (sonst wie „Speichern unter"). */
-  async onSave(): Promise<void> {
-    if (!this.fileHandle) return this.onSaveAs();
-    await this.writeProject(this.fileHandle);
-  }
 
   /** Schreibt das aktuelle Projekt in die Datei hinter dem Handle. */
   private async writeProject(handle: any): Promise<void> {
@@ -198,13 +185,10 @@ export class App implements OnInit {
 
   /**
    * „Neu": nach Rückfrage leeres Whiteboard (per Undo rückgängig machbar).
-   * Die gemerkte Datei wird vergessen, damit „Speichern" sie nicht mit dem
-   * leeren Board überschreibt.
    */
   onNew(): void {
     if (!confirm('Neues Whiteboard anlegen?\n\nAlle Bauteile und Leitungen werden entfernt.')) return;
     this.whiteboardRef.loadProject({ gates: [], wires: [], view: { panX: 0, panY: 0, zoom: 1 } });
-    this.fileHandle     = null;
     // loadProject() beendet ggf. die Simulation → Toolbar-Anzeige nachziehen
     this.simulationMode = this.whiteboardRef.simulationMode;
     this.activeTool     = this.whiteboardRef.toolMode;
@@ -221,8 +205,6 @@ export class App implements OnInit {
       alert(`Die Datei konnte nicht geöffnet werden.\n\n${(e as Error).message}`);
       return;
     }
-    // Erst nach erfolgreichem Laden: „Speichern" schreibt ab jetzt in diese Datei
-    this.fileHandle = picked.handle;
     // loadProject() beendet ggf. die Simulation → Toolbar-Anzeige nachziehen
     this.simulationMode = this.whiteboardRef.simulationMode;
     this.activeTool     = this.whiteboardRef.toolMode;
@@ -238,7 +220,6 @@ export class App implements OnInit {
       try {
         const handle = await w.showSaveFilePicker({ suggestedName: name, types: this.pickerTypes });
         await this.writeProject(handle);
-        this.fileHandle = handle;
       } catch (e) {
         if ((e as DOMException)?.name !== 'AbortError') throw e;
       }
@@ -288,8 +269,6 @@ export class App implements OnInit {
 
   /**
    * LogikSim-Datei (.sim) importieren. Nicht exakt Übernommenes wird gemeldet.
-   * Die .sim-Datei wird NICHT als Speicherziel gemerkt — „Speichern" fragt
-   * danach nach einer neuen GatterPLUS-Datei (die .sim bleibt unverändert).
    */
   async onImportLogikSim(): Promise<void> {
     const types = [{ description: 'LogikSim-Schaltung', accept: { 'application/octet-stream': ['.sim'] } }];
@@ -307,7 +286,6 @@ export class App implements OnInit {
       alert(`Die Datei konnte nicht importiert werden.\n\n${(e as Error).message}`);
       return;
     }
-    this.fileHandle     = null;
     this.simulationMode = this.whiteboardRef.simulationMode;
     this.activeTool     = this.whiteboardRef.toolMode;
     if (result.warnings.length > 0) {
@@ -317,7 +295,7 @@ export class App implements OnInit {
 
   /**
    * Öffnet einen Datei-Dialog und liefert Datei + Handle (null = abgebrochen).
-   * Im Fallback gibt es keinen Handle (null) → „Speichern" lädt dann neu herunter.
+   * Im Fallback gibt es keinen Handle (null).
    */
   private async pickFile(types: object[], accept: string): Promise<{ file: File; handle: any } | null> {
     const w = window as any;
