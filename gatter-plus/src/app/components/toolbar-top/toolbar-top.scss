@@ -44,7 +44,7 @@
 /* Vertikale Trennlinie zwischen Gruppen */
 .divider {
   width: 1px;
-  height: 56px; /* ohne Versatz: reicht mittig über Beschriftung + Bauteile */
+  height: 56px; /* mittig auf der Linie der Bauteile, so hoch wie die Bauteile */
   background: var(--divider);
   margin: 0 10px;
   flex-shrink: 0;
@@ -244,7 +244,7 @@
 }
 
 /* Elemente ohne Gruppenbeschriftung auf dieselbe Mittellinie wie die Bauteile */
-.app-icon, .app-title, .sim-hint, .sim-btn-wrap {
+.app-icon, .app-title, .divider, .sim-hint, .sim-btn-wrap {
   margin-top: 16px;
 }
 
