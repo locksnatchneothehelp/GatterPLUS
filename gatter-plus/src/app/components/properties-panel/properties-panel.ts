@@ -122,7 +122,8 @@ export class PropertiesPanel {
     const off = getGatePinOffsets(this.selectedGate);
     return {
       inputs:  off.inputs.map((_, i) => (off.inputs.length > 1 ? `E${i + 1}` : 'E')),
-      outputs: off.outputs.map(() => 'A'),
+      // NICHT-Gatter: Kreis am Ausgang ist Teil des Symbols → keine zweite Verneinung
+      outputs: this.selectedGate.type === 'not' ? [] : off.outputs.map(() => 'A'),
     };
   }
 

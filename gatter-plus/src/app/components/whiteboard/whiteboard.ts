@@ -1564,6 +1564,8 @@ export class Whiteboard implements OnDestroy {
     const HIT_R = inward ? 6 : 8;
     for (const gate of this.gates) {
       if (gate.type === 'text-label') continue;
+      // NICHT-Gatter hat den Kreis am Ausgang schon im Symbol → nicht doppelt verneinen
+      if (inward && kind === 'output' && gate.type === 'not') continue;
       const offsets = getGatePinOffsets(gate);
       const pins = kind === 'output' ? offsets.outputs : offsets.inputs;
       const len  = inward ? -this.stubLength(gate) : 20;
