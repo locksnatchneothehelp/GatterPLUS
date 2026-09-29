@@ -186,6 +186,13 @@
     @for (wire of wires; track wire.id) {
       @let pts = getWirePointsString(wire);
       @if (pts) {
+        <!-- Unsichtbare, breitere Klickfläche (7 px je Seite), sichtbare Linie ohne Klicks -->
+        <polyline
+          [attr.points]="pts"
+          class="wire-hit"
+          (click)="onWireClick(wire, $event)"
+          (dblclick)="onWireDblClick(wire, $event)"
+        />
         <polyline
           [attr.points]="pts"
           class="wire-line"
@@ -193,8 +200,6 @@
           [class.wire-low]="simulationMode && !isWireHigh(wire)"
           [class.wire-selected]="wire.id === selectedWireId"
           [class.wire-hover]="wire.id === hoverWireId"
-          (click)="onWireClick(wire, $event)"
-          (dblclick)="onWireDblClick(wire, $event)"
         />
       }
     }

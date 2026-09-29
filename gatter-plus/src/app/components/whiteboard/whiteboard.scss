@@ -98,6 +98,14 @@
   stroke: var(--wire-stroke, #334155);
   stroke-width: 2;
   fill: none;
+  pointer-events: none;  /* Klicks nimmt die breitere .wire-hit darunter an */
+}
+
+/* Unsichtbare Klickfläche einer Leitung: 7 px je Seite (logische px) */
+.wire-hit {
+  stroke: transparent;
+  stroke-width: 14;
+  fill: none;
   pointer-events: stroke;  /* Klick nur auf dem Strich (nicht im leeren Bereich) */
   cursor: var(--cursor-pointer);
 }
