@@ -218,6 +218,5 @@ Alle Befehle in `gatter-plus/`:
 - Pin-Offsets hängen am Bauteil-CSS (siehe Datenmodell).
 - `Whiteboard.onMouseDown` ruft `preventDefault` (verhindert Fokuswechsel) → vorher wird `document.activeElement.blur()` aufgerufen, sonst verlieren Panel-Eingabefelder nie den Fokus und `(change)` (z. B. Beschriftung) käme nicht an.
 - Multi-Delete (Entf bei Mehrfachauswahl) ist inline in `onDeleteKey` dupliziert statt `deleteGate` zu nutzen.
-- `ANLEITUNG-UND-TECHNOLOGIEN.md` ist veraltet (nennt HTML5-DnD, TS ~5.8).
 - Persistenz: Öffnen/Speichern vorhanden (`.gatterplus.json`); `loadProject` beendet Simulation, ist per Undo rückgängig, setzt ID-Zähler auf max(alt, Datei). Es gibt kein Speichern ohne Dialog in die zuletzt benutzte Datei mehr (früher `fileHandle`).
 - **Deploy ohne Tests:** Workflow (base-href `/GatterPLUS/`) führt **keine Tests** aus – jeder Push auf `main` deployt. `SETUP.md` nennt noch die alte Live-URL/das alte Repo.
