@@ -36,7 +36,7 @@
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |
 | `ToolMode`-Typ (Komponente selbst ungenutzt) | `components/toolbar-left/toolbar-left.ts` |
-| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `models/wire-router.spec.ts`, `services/simulation.service.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `app.spec.ts` |
+| Tests | `models/gate.model.spec.ts`, `models/project-file.spec.ts`, `models/logiksim-file.spec.ts`, `models/wire-router.spec.ts`, `services/simulation.service.spec.ts`, `services/history.service.spec.ts`, `services/theme.service.spec.ts`, `models/example-circuit.spec.ts` |
 | Build/Test-Konfiguration | `gatter-plus/angular.json`, `package.json`, `vitest.config.ts`, `tsconfig*.json` |
 | CI/Deployment (GitHub Pages) | `.github/workflows/main.yml` (Repo-Root) |
 
@@ -186,8 +186,7 @@ Alle Befehle in `gatter-plus/`:
 | Installieren | `npm install` |
 | Dev-Server | `npm start` (`ng serve`, http://localhost:4200) |
 | Build | `npm run build` (production, Ausgabe `dist/gatter-plus/browser`) |
-| Tests | `npm test` (`ng test`, Builder `@angular/build:unit-test`, Vitest) |
-| Tests ohne Angular (vermutlich) | `npx vitest run` (nutzt `vitest.config.ts`: env node, schließt `app.spec.ts` aus) |
+| Tests | `npm test` (= `vitest run`, nutzt `vitest.config.ts`: env node). `ng test` (Builder `@angular/build:unit-test`) wird nicht genutzt: er bündelt die Specs, `import.meta.url` für die LogikSim-Fixtures passt dann nicht |
 | Deploy | Push auf `main` → Workflow `.github/workflows/main.yml`: Node 22, `npm ci`, `npx ng build --base-href /GatterPLUS/`, `index.html` → `404.html`, `deploy-pages` (auch manuell via `workflow_dispatch`) |
 
 - Specs: reine Logik-Tests ohne TestBed (`gate.model.spec.ts`: Fan-out erlaubt, Routing, Pin-Richtung; `project-file.spec.ts`: Round-Trip + Fehlerfälle; `logiksim-file.spec.ts`: Import der Fixtures, 4-Bit-Addierer per SimulationService; `history.service.spec.ts`; `theme.service.spec.ts`). `simulation.service.spec.ts`: negierte Eingänge. Keine Komponenten-Tests.
@@ -212,7 +211,6 @@ Alle Befehle in `gatter-plus/`:
 - Leitungen: Klick/Doppelklick nimmt eine unsichtbare, 14 px breite Polyline `.wire-hit` unter der sichtbaren `.wire-line` an (diese hat `pointer-events: none`); Abzweigen/Hover im Kabelmodus rechnet separat mit `WIRE_HIT_RADIUS` = 8.
 - Abzweigpunkte: `reattachBranches` setzt nach dem Verschieben (`applyGateDrag`, `finishGateDrag`) und nach Drehen/Eingangsanzahl (`updateGate`) jeden Abzweigpunkt, der neben allen Leitungen derselben Quelle liegt, auf deren nächsten Punkt.
 - **Mutation in `computeSignals`** (`ffState`, `ffPrevClock`) widerspricht dem Immutable-Pattern; Objekte werden nicht ersetzt.
-- **`app.spec.ts`** ist das CLI-Template (erwartet `<h1>Hello, gatter-plus`) → schlägt bei `ng test` vermutlich fehl, falls `ng test` `vitest.config.ts` nicht nutzt (**unsicher, nicht verifiziert**).
 - `ToolbarLeft` wird nicht gerendert; nur `ToolMode` wird daraus importiert.
 - `DragStateService.gateType` ist `string`, wird im Whiteboard per Cast zu `GateType`.
 - `PropertiesPanel.selectedGate` ist `any`; `App.onGateChange` castet `as any`.

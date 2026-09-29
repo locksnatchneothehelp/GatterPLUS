@@ -5,6 +5,5 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.spec.ts'],
-    exclude: ['src/app/app.spec.ts'],  // Angular TestBed-Tests separat per ng test
   },
 });
