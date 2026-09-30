@@ -87,6 +87,8 @@ interface GateDragState {
   /** Bereits angewandte logische Verschiebung (für schrittweise Updates, z. B. Abzweigpunkte) */
   appliedDx: number;
   appliedDy: number;
+  /** Paare „Leitung|Bauteil“, die sich schon vor dem Ziehen kreuzten (keine Ablehnung dafür) */
+  crossingsBefore: Set<string>;
 }
 
 /** Zustand eines aufgezogenen Auswahlrechtecks (Ctrl+Drag auf leerer Fläche) */
@@ -831,6 +833,7 @@ export class Whiteboard implements OnDestroy {
         otherOrigins,
         appliedDx: 0,
         appliedDy: 0,
+        crossingsBefore: this.wireGateCrossings(this.wires),
       };
       this.gateDragStarted = false;
       return;
@@ -1123,14 +1126,10 @@ export class Whiteboard implements OnDestroy {
     });
     // Bereinigte Verläufe (Rückläufer entfernt) können Abzweige abhängen
     const wires = this.reattachBranches(cleaned);
-    // Leitungen dürfen sich kreuzen, aber nie über einem Bauteil liegen: geprüft
-    // werden Leitungen bewegter Bauteile gegen alle Bauteile und alle Leitungen
-    // gegen die bewegten Bauteile (Altlasten anderswo stören nicht)
-    const crosses = wires.some(w => {
-      const wireMoved = moved.has(w.fromGateId) || moved.has(w.toGateId);
-      const path = this.getWireDisplayPoints(w) ?? [];
-      return this.gates.some(g => (wireMoved || moved.has(g.id)) && wireCrossesGate(path, g));
-    });
+    // Leitungen dürfen sich kreuzen, aber nie über einem Bauteil liegen: abgelehnt
+    // wird nur, was durch diese Bewegung neu entsteht (Altlasten, z. B. aus einem
+    // LogikSim-Import, blockieren das Verschieben nicht)
+    const crosses = [...this.wireGateCrossings(wires)].some(key => !drag.crossingsBefore.has(key));
     if (crosses) {
       const snap = this.historyService.pop();
       if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
@@ -1164,6 +1163,21 @@ export class Whiteboard implements OnDestroy {
   }
 
   // ─── Überlappung + Fehlermeldung ───────────────────────────────────────────
+
+  /**
+   * Alle Paare „Leitung|Bauteil“, bei denen die Leitung über dem Bauteil liegt.
+   * Textfelder zählen nicht: Beschriftungen dürfen auf Leitungen liegen (wie in LogikSim).
+   */
+  private wireGateCrossings(wires: WireConnection[]): Set<string> {
+    const keys = new Set<string>();
+    for (const w of wires) {
+      const path = this.getWireDisplayPoints(w) ?? [];
+      for (const g of this.gates) {
+        if (g.type !== 'text-label' && wireCrossesGate(path, g)) keys.add(`${w.id}|${g.id}`);
+      }
+    }
+    return keys;
+  }
 
   /** Überlappt eines der Bauteile ein anderes Bauteil (außer denen in ignore)? */
   private overlapsOthers(candidates: GateInstance[], ignore: Set<string>): boolean {
