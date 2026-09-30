@@ -28,7 +28,7 @@ import {
   getPinWorldPos, isPointInGate,
   PIN_HIT_RADIUS, createGateInstance, computeOrthogonalWaypoints,
   getOutputPinMaxConnections, getPinDirection, manualWirePath,
-  snapGateToGrid, GRID, lCorner, drawnWirePath, gatesOverlap, wireCrossesGate,
+  snapGateToGrid, GRID, lCorner, drawnWirePath, gatesOverlap,
 } from '../../models/gate.model';
 import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
@@ -87,8 +87,6 @@ interface GateDragState {
   /** Bereits angewandte logische Verschiebung (für schrittweise Updates, z. B. Abzweigpunkte) */
   appliedDx: number;
   appliedDy: number;
-  /** Paare „Leitung|Bauteil“, die sich schon vor dem Ziehen kreuzten (keine Ablehnung dafür) */
-  crossingsBefore: Set<string>;
 }
 
 /** Zustand eines aufgezogenen Auswahlrechtecks (Ctrl+Drag auf leerer Fläche) */
@@ -833,7 +831,6 @@ export class Whiteboard implements OnDestroy {
         otherOrigins,
         appliedDx: 0,
         appliedDy: 0,
-        crossingsBefore: this.wireGateCrossings(this.wires),
       };
       this.gateDragStarted = false;
       return;
@@ -1117,7 +1114,7 @@ export class Whiteboard implements OnDestroy {
     // keine Griffe im Leeren hängen; auf ganze Pixel runden (beim freien Ziehen
     // summieren sich Kommaschritte auf Knick- und Abzweigpunkte)
     const r = (p: { x: number; y: number }) => ({ x: Math.round(p.x), y: Math.round(p.y) });
-    const cleaned = this.wires.map(w => {
+    this.wires = this.wires.map(w => {
       if (!moved.has(w.fromGateId) && !moved.has(w.toGateId)) return w;
       const branchPoint = w.branchPoint && r(w.branchPoint);
       if (!w.manualPoints?.length) return branchPoint ? { ...w, branchPoint } : w;
@@ -1125,18 +1122,7 @@ export class Whiteboard implements OnDestroy {
       return { ...w, branchPoint, manualPoints: inner.length > 0 ? inner : undefined };
     });
     // Bereinigte Verläufe (Rückläufer entfernt) können Abzweige abhängen
-    const wires = this.reattachBranches(cleaned);
-    // Leitungen dürfen sich kreuzen, aber nie über einem Bauteil liegen: abgelehnt
-    // wird nur, was durch diese Bewegung neu entsteht (Altlasten, z. B. aus einem
-    // LogikSim-Import, blockieren das Verschieben nicht)
-    const crosses = [...this.wireGateCrossings(wires)].some(key => !drag.crossingsBefore.has(key));
-    if (crosses) {
-      const snap = this.historyService.pop();
-      if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
-      this.showError('Die Leitung würde über ein Bauteil laufen, zurück an die letzte Position.');
-      return;
-    }
-    this.wires = wires;
+    this.wires = this.reattachBranches(this.wires);
   }
 
   /**
@@ -1163,21 +1149,6 @@ export class Whiteboard implements OnDestroy {
   }
 
   // ─── Überlappung + Fehlermeldung ───────────────────────────────────────────
-
-  /**
-   * Alle Paare „Leitung|Bauteil“, bei denen die Leitung über dem Bauteil liegt.
-   * Textfelder zählen nicht: Beschriftungen dürfen auf Leitungen liegen (wie in LogikSim).
-   */
-  private wireGateCrossings(wires: WireConnection[]): Set<string> {
-    const keys = new Set<string>();
-    for (const w of wires) {
-      const path = this.getWireDisplayPoints(w) ?? [];
-      for (const g of this.gates) {
-        if (g.type !== 'text-label' && wireCrossesGate(path, g)) keys.add(`${w.id}|${g.id}`);
-      }
-    }
-    return keys;
-  }
 
   /** Überlappt eines der Bauteile ein anderes Bauteil (außer denen in ignore)? */
   private overlapsOthers(candidates: GateInstance[], ignore: Set<string>): boolean {

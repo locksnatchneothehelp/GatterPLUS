@@ -376,20 +376,6 @@ export function gatesOverlap(a: GateInstance, b: GateInstance): boolean {
   return p.x1 < q.x2 && q.x1 < p.x2 && p.y1 < q.y2 && q.y1 < p.y2;
 }
 
-/**
- * Läuft ein rechtwinkliger Leitungsverlauf über das Bauteil? Pins liegen auf dem
- * Rand der Umrandung – nur ein Stück durch das Innere zählt, Berühren nicht.
- */
-export function wireCrossesGate(path: { x: number; y: number }[], gate: GateInstance): boolean {
-  const b = getGateBounds(gate);
-  for (let i = 0; i < path.length - 1; i++) {
-    const p = path[i], q = path[i + 1];
-    if (Math.min(p.x, q.x) < b.x2 && Math.max(p.x, q.x) > b.x1 &&
-        Math.min(p.y, q.y) < b.y2 && Math.max(p.y, q.y) > b.y1) return true;
-  }
-  return false;
-}
-
 /** Achsenparalleler Einheits-Richtungsvektor (immer dx/dy ∈ {-1,0,1}). */
 export interface PinDirection {
   dx: number;
