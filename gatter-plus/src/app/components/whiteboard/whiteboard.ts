@@ -28,7 +28,7 @@ import {
   getPinWorldPos, isPointInGate,
   PIN_HIT_RADIUS, createGateInstance, computeOrthogonalWaypoints,
   getOutputPinMaxConnections, getPinDirection, manualWirePath,
-  snapGateToGrid, GRID, lCorner, drawnWirePath, gatesOverlap,
+  snapGateToGrid, GRID, lCorner, drawnWirePath, gatesOverlap, wireCrossesGate,
 } from '../../models/gate.model';
 import { DragStateService }    from '../../services/drag-state.service';
 import { SimulationService, ComponentSignalState } from '../../services/simulation.service';
@@ -1114,7 +1114,7 @@ export class Whiteboard implements OnDestroy {
     // keine Griffe im Leeren hängen; auf ganze Pixel runden (beim freien Ziehen
     // summieren sich Kommaschritte auf Knick- und Abzweigpunkte)
     const r = (p: { x: number; y: number }) => ({ x: Math.round(p.x), y: Math.round(p.y) });
-    this.wires = this.wires.map(w => {
+    const cleaned = this.wires.map(w => {
       if (!moved.has(w.fromGateId) && !moved.has(w.toGateId)) return w;
       const branchPoint = w.branchPoint && r(w.branchPoint);
       if (!w.manualPoints?.length) return branchPoint ? { ...w, branchPoint } : w;
@@ -1122,7 +1122,22 @@ export class Whiteboard implements OnDestroy {
       return { ...w, branchPoint, manualPoints: inner.length > 0 ? inner : undefined };
     });
     // Bereinigte Verläufe (Rückläufer entfernt) können Abzweige abhängen
-    this.wires = this.reattachBranches(this.wires);
+    const wires = this.reattachBranches(cleaned);
+    // Leitungen dürfen sich kreuzen, aber nie über einem Bauteil liegen: geprüft
+    // werden Leitungen bewegter Bauteile gegen alle Bauteile und alle Leitungen
+    // gegen die bewegten Bauteile (Altlasten anderswo stören nicht)
+    const crosses = wires.some(w => {
+      const wireMoved = moved.has(w.fromGateId) || moved.has(w.toGateId);
+      const path = this.getWireDisplayPoints(w) ?? [];
+      return this.gates.some(g => (wireMoved || moved.has(g.id)) && wireCrossesGate(path, g));
+    });
+    if (crosses) {
+      const snap = this.historyService.pop();
+      if (snap) { this.gates = snap.gates; this.wires = snap.wires; }
+      this.showError('Die Leitung würde über ein Bauteil laufen, zurück an die letzte Position.');
+      return;
+    }
+    this.wires = wires;
   }
 
   /**

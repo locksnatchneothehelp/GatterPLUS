@@ -11,6 +11,7 @@ import {
   snapGateToGrid,
   lCorner,
   gatesOverlap,
+  wireCrossesGate,
   removeBacktracks,
   drawnWirePath,
   GRID,
@@ -381,6 +382,25 @@ describe('gatesOverlap', () => {
     const ha = (x: number, y: number, rotation: 0 | 90 = 0) => ({ ...createGateInstance('h', 'half-adder', x, y), rotation });
     expect(gatesOverlap(ha(0, 0), ha(0, 48))).toBe(false);   // untereinander, berührend
     expect(gatesOverlap(ha(0, 0, 90), ha(0, 48))).toBe(true);  // gedreht 48×72 → ragt hinein
+  });
+});
+
+describe('wireCrossesGate', () => {
+  // Eingang 72×48 bei (0,0), Ausgangs-Pin bei (72,24)
+  const input = createGateInstance('i', 'input', 0, 0);
+
+  it('Leitung vom Pin nach außen → nicht über dem Bauteil', () => {
+    expect(wireCrossesGate([{ x: 72, y: 24 }, { x: 168, y: 24 }, { x: 168, y: 120 }], input)).toBe(false);
+  });
+
+  it('Leitung läuft vom Ausgang zurück durch das eigene Bauteil → erkannt', () => {
+    expect(wireCrossesGate([{ x: 72, y: 24 }, { x: -24, y: 24 }, { x: -24, y: 120 }], input)).toBe(true);
+  });
+
+  it('fremde Leitung quer durch das Bauteil erkannt, am Rand entlang nicht', () => {
+    expect(wireCrossesGate([{ x: 36, y: -48 }, { x: 36, y: 96 }], input)).toBe(true);
+    expect(wireCrossesGate([{ x: -24, y: 48 }, { x: 120, y: 48 }], input)).toBe(false);
+    expect(wireCrossesGate([{ x: 0, y: -48 }, { x: 0, y: 96 }], input)).toBe(false);
   });
 });
 
