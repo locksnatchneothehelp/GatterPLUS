@@ -163,7 +163,7 @@ Beispiel Menüeintrag (analog Undo):
 - Löschen eines Bauteils entfernt alle anhängenden Leitungen.
 - **Nicht aufeinander ablegen:** `gatesOverlap`/`getGateBounds` (model). Ziehen: landet ein bewegtes Bauteil auf einem anderen, stellt `onMouseUp` den Zustand von vor dem Ziehen her (`historyService.pop()`), sonst werden die festen Punkte angehängter Leitungen auf den bereinigten Verlauf gesetzt (`removeBacktracks` in `manualWirePath` entfernt Rückläufer/Sporne). `placeGate` lehnt belegte Stellen ab, `pasteClipboard` sucht in Rasterschritten eine freie Stelle. Meldung: `showError` → rote `.wire-draw-error` an der Stelle der Tastenhilfe (2,5 s).
 - **Neu laden/Schließen:** `App.onBeforeUnload` fragt per Browser-Standarddialog nach, sobald Bauteile auf dem Whiteboard liegen.
-- **Tasten:** S = Simulation (App `onKeyDown`; Knopf und S gesperrt, solange der grüne Ring läuft: `simToggleLockedUntil`, 600/400 ms = Übergänge in `toolbar-top.scss`), Esc im Kabelmodus ohne laufende Leitung → Verschieben (Whiteboard `toolModeChange` → App `activeTool`).
+- **Tasten:** S = Simulation (App `onKeyDown`; Knopf und S gesperrt, solange der grüne Ring läuft: `simToggleLockedUntil`, 600/400 ms = Übergänge in `toolbar-top.scss`), V = Verkabeln ein/aus (ebenfalls App `onKeyDown`, nicht in der Simulation), Esc im Kabelmodus ohne laufende Leitung → Verschieben (Whiteboard `toolModeChange` → App `activeTool`).
 
 **Simulation** (`SimulationService.computeSignals(gates, wires) → Map<id, {inputSignals, outputSignals}>`; Werte `true|false|null`):
 1. Ausgänge initialisieren: Quellen (`input`, `clock-gen`) aus `inputValue`, JK-FF aus `ffState`, übrige aus `prevOutputs` (Rückkopplungsstart).
