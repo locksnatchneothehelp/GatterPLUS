@@ -102,13 +102,23 @@ export class App implements OnInit {
     event.returnValue = ''; // ältere Browser brauchen zusätzlich returnValue
   }
 
-  /** Taste S: Simulation starten/stoppen (nicht beim Tippen und nicht beim Verlegen einer Leitung). */
+  /**
+   * Taste S: Simulation starten/stoppen; Taste V: Verkabeln ein/aus
+   * (nicht beim Tippen und nicht beim Verlegen einer Leitung; V nicht in der Simulation).
+   */
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    if (event.key.toLowerCase() !== 's' || event.ctrlKey || event.metaKey || event.altKey) return;
+    const key = event.key.toLowerCase();
+    if ((key !== 's' && key !== 'v') || event.ctrlKey || event.metaKey || event.altKey) return;
     const active = document.activeElement;
     if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
     if (this.whiteboardRef?.isDrawingWire || this.welcomeOpen) return;
+    if (key === 'v') {
+      if (this.simulationMode) return; // Werkzeugknopf ist dann ohnehin gesperrt
+      event.preventDefault();
+      this.onToolSelected(this.activeTool === 'wire' ? 'pan' : 'wire');
+      return;
+    }
     event.preventDefault();
     this.onSimulationToggle();
   }
