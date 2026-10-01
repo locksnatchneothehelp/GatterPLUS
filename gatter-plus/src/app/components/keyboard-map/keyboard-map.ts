@@ -37,7 +37,7 @@ const HELP_KEYBOARD: HelpKey[][] = [
     ...plain('A'),
     { label: 'S', any: 'Simulation', title: 'Simulation starten / stoppen' },
     ...plain('D'),
-    { label: 'F', wire: 'Knick', title: 'Beim Verkabeln: Knick umschalten (erst waagerecht / erst senkrecht)' },
+    { label: 'F', wire: 'Kabel invertieren', title: 'Beim Verkabeln: Knick umschalten (erst waagerecht / erst senkrecht)' },
     ...plain('GHJKLÖÄ'),
   ],
   [
@@ -66,4 +66,7 @@ const HELP_KEYBOARD: HelpKey[][] = [
 })
 export class KeyboardMap {
   readonly rows = HELP_KEYBOARD;
+
+  /** Taste unter der Maus – ihre Beschreibung steht sofort unter der Tastatur. */
+  hovered: HelpKey | null = null;
 }

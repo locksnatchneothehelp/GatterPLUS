@@ -16,14 +16,14 @@
   display: flex;
   gap: 4px;
   /* versetzte Reihen wie auf einer echten Tastatur (Reihe 1 = Esc) */
-  &:nth-child(3) { padding-left: 12px; }
-  &:nth-child(4) { padding-left: 24px; }
+  &:nth-child(3) { padding-left: 14px; }
+  &:nth-child(4) { padding-left: 28px; }
   /* Reihe 1: Esc links, Entf/Rück rechts (wie der Block oben rechts) */
   &:first-child .kb-key:nth-child(2) { margin-left: auto; }
 }
 .kb-key {
-  width: 56px;
-  height: 54px; /* Platz für Zeichen + zwei Beschriftungen */
+  width: 64px;
+  height: 62px; /* Platz für Zeichen + zwei Beschriftungszeilen */
   flex: none;
   display: flex;
   flex-direction: column;
@@ -38,12 +38,13 @@
   opacity: 0.45;
   cursor: default;
 
-  &.wide { width: 68px; }
+  &.wide { width: 80px; }
   &.used, &.mod { opacity: 1; border-color: var(--text-muted); }
   &.mod { border-style: dashed; }
+  &.used.hovered { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 }
 .kb-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--text-primary);
@@ -52,9 +53,9 @@
   max-width: 100%;
   padding: 0 2px;
   border-radius: 3px;
-  font-size: 9.5px;
-  line-height: 13px;
-  white-space: nowrap;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center; /* längere Beschriftungen (z. B. F) brechen um */
   overflow: hidden;
 
   &.any  { background: var(--btn-bg); color: var(--btn-text); }
@@ -70,8 +71,15 @@
 
   .kb-cap { font-size: 11px; line-height: 16px; padding: 0 6px; }
 }
-.kb-hint {
-  margin-left: auto;
-  font-size: 11px;
+/* Beschreibung der Taste unter der Maus; feste Höhe, damit nichts springt */
+.kb-desc {
+  width: 0;          /* langer Text macht die Box nicht breiter … */
+  min-width: 100%;   /* … sondern bricht auf Tastaturbreite um */
+  min-height: 2.9em;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
   color: var(--text-muted);
+
+  &.active { color: var(--text-primary); }
 }

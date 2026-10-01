@@ -198,7 +198,7 @@
   background: rgba(0, 0, 0, 0.35);
 }
 .help-dialog {
-  width: min(720px, calc(100vw - 32px)); /* Platz für die Tastatur-Abbildung */
+  width: min(840px, calc(100vw - 32px)); /* Platz für die Tastatur-Abbildung */
   max-height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
