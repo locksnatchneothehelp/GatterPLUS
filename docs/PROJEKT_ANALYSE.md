@@ -32,6 +32,8 @@
 | Eigene Cursor (Bernstein-Stil, 28 px SVG) | `gatter-plus/src/cursors/*.svg` (in `src/`, damit Angular sie bündelt – funktioniert mit jedem base-href); Variablen `--cursor-*` in `styles.scss`, überall `cursor: var(--cursor-…)` statt System-Namen; Zeichenfläche: `Whiteboard.hoverCursor` → Klassen `over-gate`/`over-stub`/`over-switch` |
 | Menü Datei/Bearbeiten/Hilfe + Theme-Toggle; Versionszeile im Hilfe-Menü (`version` aus `package.json` per JSON-Import, `BUILD_DATE` per `ng build --define`, lokal „lokale Entwicklungsversion“; Schema siehe CLAUDE.md) | `components/menu-bar/` |
 | Willkommensbildschirm beim Start (Kacheln, „Beispiel öffnen“ → `App.onWelcomeExample`, „LogikSim importieren“, erscheint bei jedem Start, erneut über Hilfe → Willkommensbildschirm; Esc/„Los geht's“; S gesperrt solange offen; Projekt-Nennung als Fußzeile) | `components/welcome-dialog/`; Beispielschaltung Flip-Flop `models/example-circuit.ts` (+spec: rechnet richtig, keine Überdeckungen) |
+| Tastenkürzel-Bildschirm: nur beim Start nach dem Willkommensbildschirm (jeder Knopf/Esc → `App.closeWelcome`, nicht nach Hilfe → Willkommensbildschirm); Häkchen „Beim Start nicht mehr anzeigen“ (localStorage `gatterplus-shortcuts-hidden`); S/V gesperrt solange offen | `components/shortcuts-dialog/` |
+| Tastatur-Abbildung (QWERTZ, belegte Tasten farbig: immer / beim Verkabeln / mit Strg; Tooltip = Beschreibung) – im Hilfe-Fenster und im Tastenkürzel-Bildschirm; **bei neuen Tasten hier ergänzen** | `components/keyboard-map/` (`HELP_KEYBOARD`) |
 | Eigenschaften (Rotation, Farbe, Eingänge, Takt, Label, Löschen) | `components/properties-panel/` |
 | Darstellung einzelner Bauteile | `components/gates/*`, `components/io/*` |
 | Root-Layout, Verdrahtung der Komponenten | `app.ts`, `app.html` |
