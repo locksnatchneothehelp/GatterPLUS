@@ -1,0 +1,22 @@
+<!-- Belegte Tasten farbig; Tooltip zeigt die ausführliche Beschreibung -->
+<div class="keyboard">
+  @for (row of rows; track $index) {
+    <div class="kb-row">
+      @for (key of row; track key.label) {
+        <div class="kb-key" [class.wide]="key.wide" [class.mod]="key.mod"
+             [class.used]="key.any || key.wire || key.ctrl" [title]="key.title ?? ''">
+          <span class="kb-label">{{ key.label }}</span>
+          @if (key.any)  { <span class="kb-cap any">{{ key.any }}</span> }
+          @if (key.wire) { <span class="kb-cap wire">{{ key.wire }}</span> }
+          @if (key.ctrl) { <span class="kb-cap ctrl">{{ key.ctrl }}</span> }
+        </div>
+      }
+    </div>
+  }
+</div>
+<div class="kb-legend">
+  <span class="kb-cap any">immer</span>
+  <span class="kb-cap wire">beim Verkabeln</span>
+  <span class="kb-cap ctrl">mit Strg</span>
+  <span class="kb-hint">Maus über eine Taste: genaue Beschreibung</span>
+</div>
