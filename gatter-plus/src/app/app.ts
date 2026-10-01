@@ -4,6 +4,7 @@ import { ToolbarTop }    from './components/toolbar-top/toolbar-top';
 import { Whiteboard }    from './components/whiteboard/whiteboard';
 import { PropertiesPanel, GatePropertyChange } from './components/properties-panel/properties-panel';
 import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog';
+import { ShortcutsDialog, showShortcutsOnStart } from './components/shortcuts-dialog/shortcuts-dialog';
 import { ToolMode }      from './components/toolbar-left/toolbar-left';
 import { GateInstance }  from './models/gate.model';
 import { ThemeService }  from './services/theme.service';
@@ -28,7 +29,7 @@ import { flipFlopExample } from './models/example-circuit';
  */
 @Component({
   selector: 'app-root',
-  imports: [MenuBar, ToolbarTop, Whiteboard, PropertiesPanel, WelcomeDialog],
+  imports: [MenuBar, ToolbarTop, Whiteboard, PropertiesPanel, WelcomeDialog, ShortcutsDialog],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -44,12 +45,24 @@ export class App implements OnInit {
    * Hilfe-Menü öffnet ihn erneut.
    */
   welcomeOpen = true;
+  /** Tastenkürzel-Bildschirm (nur beim Start, nach dem Willkommensbildschirm). */
+  shortcutsOpen = false;
+  /** Ob der offene Willkommensbildschirm der beim Start ist (nicht über Hilfe geöffnet). */
+  private welcomeAtStart = true;
+
+  /** Willkommensbildschirm schließen; beim Start folgt der Tastenkürzel-Bildschirm. */
+  closeWelcome(): void {
+    this.welcomeOpen = false;
+    if (!this.welcomeAtStart) return;
+    this.welcomeAtStart = false;
+    this.shortcutsOpen  = showShortcutsOnStart();
+  }
 
   /** Willkommensbildschirm: Beispielschaltung (Flip-Flop) laden. */
   onWelcomeExample(): void {
     if (this.whiteboardRef.gates.length > 0
         && !confirm('Beispiel öffnen?\n\nDie aktuelle Schaltung wird ersetzt (Rückgängig mit Strg+Z).')) return;
-    this.welcomeOpen = false;
+    this.closeWelcome();
     this.whiteboardRef.loadProject(flipFlopExample());
     this.whiteboardRef.zoomToFit(); // wie „Alles anzeigen“: ruhig, nichts unter der Minimap
     this.simulationMode = this.whiteboardRef.simulationMode;
@@ -58,7 +71,7 @@ export class App implements OnInit {
 
   /** Willkommensbildschirm: LogikSim-Datei importieren. */
   onWelcomeImport(): void {
-    this.welcomeOpen = false;
+    this.closeWelcome();
     this.onImportLogikSim();
   }
 
@@ -112,7 +125,7 @@ export class App implements OnInit {
     if ((key !== 's' && key !== 'v') || event.ctrlKey || event.metaKey || event.altKey) return;
     const active = document.activeElement;
     if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
-    if (this.whiteboardRef?.isDrawingWire || this.welcomeOpen) return;
+    if (this.whiteboardRef?.isDrawingWire || this.welcomeOpen || this.shortcutsOpen) return;
     if (key === 'v') {
       if (this.simulationMode) return; // Werkzeugknopf ist dann ohnehin gesperrt
       event.preventDefault();

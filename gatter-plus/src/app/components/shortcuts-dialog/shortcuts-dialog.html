@@ -1,0 +1,29 @@
+<!-- Tastenkürzel-Bildschirm (beim Start nach dem Willkommensbildschirm) -->
+<div class="shortcuts-backdrop">
+  <div class="shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+
+    <!-- Kopf: Bernstein wie der Willkommensbildschirm, hier schmal -->
+    <div class="shortcuts-hero">
+      <svg class="shortcuts-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+        <path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M10 13h4M7 16h10"></path>
+      </svg>
+      <div>
+        <h1 id="shortcuts-title">Schneller mit der Tastatur</h1>
+        <p class="shortcuts-sub">Diese Tasten erleichtern dir die Arbeit – jederzeit nachzulesen unter Hilfe → Steuerung &amp; Tastenkürzel</p>
+      </div>
+    </div>
+
+    <div class="shortcuts-body">
+      <app-keyboard-map></app-keyboard-map>
+    </div>
+
+    <div class="shortcuts-footer">
+      <label class="shortcuts-check">
+        <input type="checkbox" [checked]="hideOnStart" (change)="setHideOnStart($any($event).target.checked)">
+        Beim Start nicht mehr anzeigen
+      </label>
+      <button class="shortcuts-start" (click)="close.emit()">Verstanden</button>
+    </div>
+  </div>
+</div>

@@ -60,8 +60,13 @@
 <!-- Willkommensbildschirm beim Start -->
 @if (welcomeOpen) {
   <app-welcome-dialog
-    (close)="welcomeOpen = false"
+    (close)="closeWelcome()"
     (example)="onWelcomeExample()"
     (importLogikSim)="onWelcomeImport()"
   ></app-welcome-dialog>
+}
+
+<!-- Tastenkürzel-Bildschirm: beim Start nach dem Willkommensbildschirm -->
+@if (shortcutsOpen) {
+  <app-shortcuts-dialog (close)="shortcutsOpen = false"></app-shortcuts-dialog>
 }
