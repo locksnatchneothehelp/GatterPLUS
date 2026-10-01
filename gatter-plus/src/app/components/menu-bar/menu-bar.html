@@ -115,7 +115,7 @@
         <h3>Überblick</h3>
         <p>
           Bauteile werden aus der Leiste oben auf das Whiteboard gezogen und rasten dort auf dem Punktraster ein.
-          Verbunden wird mit dem Werkzeug „Verkabeln“: auf einen Ausgang klicken, das Kabel über das Raster führen
+          Verbunden wird mit dem Werkzeug „Verkabeln“ (Taste <kbd>V</kbd>): auf einen Ausgang klicken, das Kabel über das Raster führen
           und auf einen Eingang klicken. Der Power-Knopf oben rechts oder die Taste <kbd>S</kbd> startet die Simulation,
           danach lassen sich die Schalter per Klick umschalten. Grüne Leitungen führen eine 1, graue eine 0.
         </p>
@@ -134,16 +134,28 @@
         </table>
 
         <h3>Tastatur</h3>
-        <table>
-          <tr><td><kbd>S</kbd></td><td>Simulation starten / stoppen</td></tr>
-          <tr><td><kbd>C</kbd> oder Klick</td><td>beim Verkabeln: festen Punkt setzen</td></tr>
-          <tr><td><kbd>F</kbd></td><td>beim Verkabeln: Knick umschalten (erst waagerecht / erst senkrecht)</td></tr>
-          <tr><td><kbd>Rück</kbd> / <kbd>Strg</kbd>+<kbd>Z</kbd></td><td>beim Verkabeln: letzten Punkt zurücknehmen</td></tr>
-          <tr><td><kbd>Esc</kbd></td><td>Verkabeln abbrechen; danach zurück zu „Verschieben“; Auswahl aufheben</td></tr>
-          <tr><td><kbd>Entf</kbd> / <kbd>Rück</kbd></td><td>Ausgewähltes löschen</td></tr>
-          <tr><td><kbd>Strg</kbd>+<kbd>Z</kbd> / <kbd>Strg</kbd>+<kbd>Y</kbd></td><td>Rückgängig / Wiederherstellen</td></tr>
-          <tr><td><kbd>Strg</kbd>+<kbd>C</kbd> / <kbd>Strg</kbd>+<kbd>V</kbd></td><td>Kopieren / Einfügen (an freier Stelle)</td></tr>
-        </table>
+        <!-- Belegte Tasten farbig; Tooltip zeigt die ausführliche Beschreibung -->
+        <div class="keyboard">
+          @for (row of helpKeyboard; track $index) {
+            <div class="kb-row">
+              @for (key of row; track key.label) {
+                <div class="kb-key" [class.wide]="key.wide" [class.mod]="key.mod"
+                     [class.used]="key.any || key.wire || key.ctrl" [title]="key.title ?? ''">
+                  <span class="kb-label">{{ key.label }}</span>
+                  @if (key.any)  { <span class="kb-cap any">{{ key.any }}</span> }
+                  @if (key.wire) { <span class="kb-cap wire">{{ key.wire }}</span> }
+                  @if (key.ctrl) { <span class="kb-cap ctrl">{{ key.ctrl }}</span> }
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <div class="kb-legend">
+          <span class="kb-cap any">immer</span>
+          <span class="kb-cap wire">beim Verkabeln</span>
+          <span class="kb-cap ctrl">mit Strg</span>
+          <span class="kb-hint">Maus über eine Taste: genaue Beschreibung</span>
+        </div>
       </div>
     </div>
   </div>
